@@ -41,37 +41,3 @@ For y’all have knocked her up” sözleriyle başlayan, albümle aynı ismi ta
 Hendrix vari solodaki melankolikliği George Clinton’ın Hazel’a “Annen ölmüş gibi çal” demesine borçluyuz. Gerçekten A sınıfı bir iş çıkarıp bizlere rock müziğin nasıl olmasını gerektiğini özetliyorlar. Albümün kalanında bir başka uzun parça olan Wars of Armageddon ile politik duruşlarını da gösteriyor. Saf rock müzik için tavsiye edeceğim albümlerden bir tanesi 54 dakikalık şölen ile kesinlikle bu olur.
 
 Umarım haftanız güzel geçer ve biraz da olsa korkularımızı ve endişelerimizi bir kenara bırakırız.
-
-<script>
-    $('.spotify-embed-close').on('click', function() {
-	if($('.spotify-embed-block').is(':hidden') && $(window).width() > 768){
-		$('.spotify-embed-close').animate({
-			bottom: 250
-		}, 400);
-		var top_text = 'Hide <i class="fa fa-angle-down">'
-		$('.close-text').empty().append(top_text);
-	} else if($('.spotify-embed-block').is(':hidden') && $(window).width() <= 768){
-		$('.spotify-embed-close').animate({
-			bottom: 80
-		}, 400);
-		var top_text = 'Hide <i class="fa fa-angle-down">'
-		$('.close-text').empty().append(top_text);
-	}
-	else {
-		$('.spotify-embed-close').animate({
-			bottom: 0
-		}, 400);
-		var bottom_text = '<i class="fa fa-music">'
-		$('.close-text').empty().append(bottom_text);
-	}
-	$('.spotify-embed-block').slideToggle();
-});
-</script>
-
-<div class="spotify-embed-close text-center"><p class="close-text"><i class="fa fa-music"></i></p></div>
-<div class="spotify-embed-block" style="display: none;">
-  <iframe src="https://open.spotify.com/embed?uri=!!!SPOTIFY_URI_HERE!!!&theme=white" width="300" height="80" frameborder="0" allowtransparency="true"></iframe>
-    <div class="spotify-embed-blurb">
-      !!!BLURB ABOUT WHY YOU CHOSE THIS SONG GOES HERE IF YOU WANT IT!!!
-    </div>
-</div>
