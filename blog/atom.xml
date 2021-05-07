@@ -4,15 +4,15 @@ layout: nil
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en-US">
  
-  <title>tonsky.me</title>
-  <subtitle>Nikita Prokopov’s blog</subtitle>
-  <link type="application/atom+xml" href="https://tonsky.me/blog/atom.xml" rel="self" />
-  <link rel="alternate" type="text/html" href="https://tonsky.me/" />
-  <id>https://tonsky.me/</id>
+  <title>buralarda iken</title>
+  <subtitle>atr0p’s blog</subtitle>
+  <link type="application/atom+xml" href="https://mertturunc.github.io/blog/atom.xml" rel="self" />
+  <link rel="alternate" type="text/html" href="https://mertturunc.github.io/" />
+  <id>https://mertturunc.github.io/</id>
   <updated>{{ site.time | date_to_xmlschema }}</updated>
   <author>
-    <name>Nikita Prokopov</name>
-    <email>niki@tonsky.me</email>
+    <name>Mert Turunç</name>
+    <email>mertturunç@gmail.com</email>
   </author>
  
   {% assign everything = site.posts | concat: site.data.feed | concat: site.data.design | sort: "date" | reverse %}
@@ -23,7 +23,7 @@ layout: nil
     {% if prefix == "http" %}
       {% assign absolute_url = post.url %}
     {% else %}
-      {% assign absolute_url = post.url | prepend: "https://tonsky.me" %}
+      {% assign absolute_url = post.url | prepend: "https://mertturunc.github.io" %}
     {% endif %}
     
     <entry>
@@ -47,15 +47,15 @@ layout: nil
         {% assign src_prefix = 'src="' | append: img_rel_prefix %}
         {% assign srcset_prefix = 'srcset="' | append: img_rel_prefix %}
         {% assign srcset_prefix_comma = ', ' | append: img_rel_prefix %}
-        {{ post.content | replace:'src="./',src_prefix | replace:'srcset="./',srcset_prefix | replace:', ./',srcset_prefix_comma | replace:'href="./',rel_prefix | replace:'src="/','src="https://tonsky.me/rss/' | replace:'href="/','href="https://tonsky.me/' }}
+        {{ post.content | replace:'src="./',src_prefix | replace:'srcset="./',srcset_prefix | replace:', ./',srcset_prefix_comma | replace:'href="./',rel_prefix | replace:'src="/','src="https://mertturunc.github.io/rss/' | replace:'href="/','href="https://mertturunc.github.io/' }}
         {% if post.embed %}
           <br />
           {{ post.embed }}
         {% endif %}
       ]]></content>  
       <author>
-        <name>Nikita Prokopov</name>
-        <email>niki@tonsky.me</email>
+        <name>Mert Turunç</name>
+        <email>mertturunç@mertturunç.com</email>
       </author>
     </entry>
   {% endif %}
