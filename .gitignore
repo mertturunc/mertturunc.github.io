@@ -1,0 +1,10 @@
+*.pxm
+.DS_Store
+_site
+*.sketch
+.vscode
+blog/readable-clojure/originals/*
+blog/readable-clojure/snippets/*
+vendor
+.jekyll-cache
+patrons/*.edn

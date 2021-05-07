@@ -1,0 +1,6 @@
+permalink: /:categories/:title/
+markdown: kramdown
+plugins:
+  - jekyll-redirect-from
+exclude:
+  - "vendor"
