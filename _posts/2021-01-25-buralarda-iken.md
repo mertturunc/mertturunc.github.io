@@ -7,7 +7,7 @@ starred: true
 ---
 
 <figure>
-    <img src="http://https://miro.medium.com/max/2400/1*tMecGHqHvqGTtpHcTTvt6g.jpeg" style="height: 360px">
+    <img src="miro.medium.com/max/2400/1*tMecGHqHvqGTtpHcTTvt6g.jpeg" style="height: 360px">
     Photo by <a href="https://unsplash.com/@ilyapla">Ilya Plakhuta</a>.
 </figure>
 
