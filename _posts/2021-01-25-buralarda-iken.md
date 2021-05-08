@@ -8,7 +8,7 @@ starred: true
 
 <figure>
     <img src="miro.medium.com/max/2400/1*tMecGHqHvqGTtpHcTTvt6g.jpeg" style="height: 360px">
-    Photo by <a href="https://unsplash.com/@ilyapla">Ilya Plakhuta</a>.
+    Photo by <a href="https://unsplash.com/@ilyapla"  target="_blank">Ilya Plakhuta</a>.
 </figure>
 
 Karışık Kaset’te başladığım yazı serisinin devamı niteliğinde olacak bu yazıda yine albüm önerilerinde bulunacağım. Bunun yanında birazcık da bir şeyler anlatmayı umuyorum.
