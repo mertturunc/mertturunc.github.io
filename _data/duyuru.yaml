@@ -1,7 +1,6 @@
-- date:    2021-05-08 00:00:00 +0000
-  title:   'Blog yayında (sanırım)'
-  url:     https://mertturunc.github.io
-  desc:    'Tonsky'ın statik tasarımı sayesinde içime sinen bir kişisel siteye kavuştuğumu düşünüyorum. Hep birlikte göreceğiz.'
-  content: |-
+date:    2021-05-08 00:00:00 +0000
+title:   'Blog yayında (sanırım)'
+url:     https://mertturunc.github.io
+desc:    'Tonsky'ın statik tasarımı sayesinde içime sinen bir kişisel siteye kavuştuğumu düşünüyorum. Hep birlikte göreceğiz.'
 
     <p>Tonsky'ın statik tasarımı sayesinde içime sinen bir kişisel siteye kavuştuğumu düşünüyorum. Hep birlikte göreceğiz.</p>
