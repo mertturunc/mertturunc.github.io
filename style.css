@@ -163,15 +163,6 @@ sub { top: .5ex; }
   background-image: url(/i/flashlight.png);
 }
 
-.talk-view-stub {
-  background: hsla(0, 0%, 100%, 0.1)  !important;
-}
-
-.talk-version,
-.talk-version_active,
-.talk-version:hover {
-  color: rgba(197 ,207 ,210 ,50%) !important;
-}
 
 .popup {
   color: #ffffff8c;
