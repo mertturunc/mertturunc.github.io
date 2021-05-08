@@ -1,0 +1,9 @@
+
+- date:    2021-05-08 00:00:00 +0000
+  title:   'Blog yayında (sanırım)'
+  id:      duyuru
+  url:     /
+  desc:    'Tonsky'ın statik tasarımı sayesinde içime sinen bir kişisel siteye kavuştuğumu düşünüyorum. Hep birlikte göreceğiz.'
+  content: |-
+
+    <p>Tonsky'ın statik tasarımı sayesinde içime sinen bir kişisel siteye kavuştuğumu düşünüyorum. Hep birlikte göreceğiz.</p>
