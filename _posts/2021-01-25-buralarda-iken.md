@@ -6,6 +6,11 @@ summary: "Karışık Kaset’te başladığım yazı serisinin devamı niteliği
 starred: true
 ---
 
+<figure>
+    <img src="http://https://miro.medium.com/max/2400/1*tMecGHqHvqGTtpHcTTvt6g.jpeg" style="height: 360px">
+    Photo by <a href="https://unsplash.com/@ilyapla">Ilya Plakhuta</a>.
+</figure>
+
 Karışık Kaset’te başladığım yazı serisinin devamı niteliğinde olacak bu yazıda yine albüm önerilerinde bulunacağım. Bunun yanında birazcık da bir şeyler anlatmayı umuyorum.
 
 Dinleyicileri farklı şekillerde sınıflandırabiliriz, ele alacağım sınıflandırma yeni müziklere ve keşfetmeye açık olan veya olmayan insanlar üzerine. Çevremde iki türden de örnekler mevcut; bazı dostlarım bir yıl boyunca sadece sevdiği sanatçı ve albümleri dinlerken diğerleri ise beğendiği türlere ait başka sanatçılar bulmayı hatta yeni türler dinlemeyi tercih ediyor. Eldekiyle yetinmek, cesaret edip vakit harcamak istemeyenlerin nasıl bir mindset ile hareket ettiklerini merak ediyorum.
@@ -22,17 +27,29 @@ Serinin ilk yazısında başladığım önerilere devam edecek olur isek bu sefe
 
 ## Silk Degrees — Boz Scags
 
+<figure>
+    <img src="https://is4-ssl.mzstatic.com/image/thumb/Music124/v4/52/ab/ec/52abec64-adf9-6ffc-2a3b-225c789e90b3/source/600x600bb.jpg" style="height: 200px">
+</figure>
+
 Geç olsun güç olmasın keşiflerimden birisi Boz Scags’ın beş kez platinum albüm sertifikası almış olan Silk Degrees oldu. İçerisinde Lido Shuffle ve Lowdown hitlerini de bulunduran bu albüm soft rock ve blues türünde denebilir hatta soul vari bir havası da olduğunu söylemeliyim.
 
 Radyolarda ve müzik listelerinde uzun süre yer edinen şarkıları bir yana Lowdown’ın yaklaşık 39 farklı parçada sample olarak kullanıldığı, hiphop camiası tarafından epeyce benimsenen bir parça olduğunu eklemeden edemeyeceğim. Bu güzel albümü dinlemenizi şiddetle tavsiye ediyorum.
 
 ## A Fireside Chat with Lucifer — Sun Ra
 
+<figure>
+    <img src="https://is5-ssl.mzstatic.com/image/thumb/Music124/v4/94/62/59/94625986-7107-6f3b-20cd-d91efd4d9abf/source/600x600bb.jpg" style="height: 200px">
+</figure>
+
 Herman Poole Blount, diğer adıyla Sun Ra deneysel jazz müziğinin atalarından olarak tarihe geçmiş isimlerden. Binden fazla parçada ve sayısız albümde imzası bulunan Sun Ra vakti zamanında İstiklal Caddesi’nde kamyonet arkasında canlı performansta bulundu. Albümden daha çok müzikal dehayı anlatmak daha mantıklı olacaktır diye düşünüyorum çünkü tek bir albümde yargılanacak bir isimden ziyade bütün yaptığı işlere göre yorumlanması gerekiyor.
 
 1953'ten 1990'a 37 yıllık müzikal kariyeri boyunca elde ettiği başarılar ve yarattığı afrofütürist akım başlı başına neden bu kadar önemsenmesi gerektiğini anlatıyor. Bunu ayrı bir yazı olarak anlatmayı çok isterim, şimdilik sizi albüm ile başbaşa bırakıyorum.
 
 ## Maggot Brain — Funkadelic
+
+<figure>
+    <img src="https://is2-ssl.mzstatic.com/image/thumb/Music124/v4/1a/44/8d/1a448d99-f1b2-5180-fc5f-1a152ae94c23/source/600x600bb.jpg" style="height: 200px">
+</figure>
 
 Eko yapan bir sesin “Mother Earth is pregnant for the third time.
 
