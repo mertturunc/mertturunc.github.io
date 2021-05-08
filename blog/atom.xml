@@ -12,7 +12,7 @@ layout: nil
   <updated>{{ site.time | date_to_xmlschema }}</updated>
   <author>
     <name>Mert Turunç</name>
-    <email>mertturunç@gmail.com</email>
+    <email>mertturunc@gmail.com</email>
   </author>
  
   {% assign everything = site.posts | concat: site.data.feed | concat: site.data.design | sort: "date" | reverse %}
@@ -55,7 +55,7 @@ layout: nil
       ]]></content>  
       <author>
         <name>Mert Turunç</name>
-        <email>mertturunç@mertturunç.com</email>
+        <email>mertturunç@mertturunc.com</email>
       </author>
     </entry>
   {% endif %}
