@@ -1,0 +1,33 @@
+---
+layout: default
+title: Radyo
+---
+
+<style>
+  .table { font-size: 15px; line-height: 25px; display: grid; grid-template-columns: max-content 1fr; grid-gap: 5px 10px; }
+  .table > div:nth-child(2n+1) { font-weight: 300; } 
+  figure { width: 650px; margin: 120px -26px -85px; }
+  figure > a { border: none; display: block; }
+  h1 { margin-bottom: -80px; }
+  h2 { margin-top: 120px; }
+  .gh-stars:before { content:"★"; font-size: 20px; vertical-align: baseline; position: relative; top: -1px; margin: 0 5px 0 10px; }
+  .gh-stars { color: #00000090; }
+  .icon { width: 128px; height: 128px; position: absolute; margin: 120px 0 0 -148px; }
+  blockquote { position: relative; margin-bottom: 3em; }
+  .quote-author { position: absolute; right: 0; }
+  .svglogo { color: #000000; }
+
+  @media print {
+    .svglogo, .gh-stars { color: black; }
+  }
+</style>
+
+<ul class=menu>
+  <li><a class="menu__item" href="/">Blog</a></li>
+  <div class="spacer"></div>
+</ul>
+
+<p>Test amaçlı sayfa.</p>
+
+
+<iframe id="embed_player" frameborder="0" width="280" height="216" src="https://radioatrop.airtime.pro/embed/player?stream=auto&skin=1"></iframe>
