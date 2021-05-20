@@ -24,7 +24,7 @@ title: Blog
   {% for year in posts_by_year %}
     <h1>{{ year.name }}</h1>
     {% for post in year.items %}
-      <p>{% if post.starred %}<span class="starred">★</span>{% endif %}<a href="{{ post.url }}">{{ post.title }}</a> <span class="date">{{ post.date | date: "%-m/%-d"}}</span>
+      <p>{% if post.starred %}<span class="starred">★</span>{% endif %} {% if post.music %}<span class="music">♫</span>{% endif %}<a href="{{ post.url }}">{{ post.title }}</a> <span class="date">{{ post.date | date: "%-m/%-d"}}</span>
     {% endfor %}
   {% endfor %}
 
