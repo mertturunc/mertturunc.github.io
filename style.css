@@ -175,6 +175,12 @@ sub { top: .5ex; }
 .tooltip {
   position: relative;
   display: inline-block;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 
 }
 
@@ -190,12 +196,6 @@ font-size: 11pt;
 right: 125%;
 position: absolute;
 z-index: 1;
--webkit-touch-callout: none;
--webkit-user-select: none;
--khtml-user-select: none;
--moz-user-select: none;
--ms-user-select: none;
-user-select: none;
 }
 
 .tooltip:hover .tooltiptext {
