@@ -179,19 +179,17 @@ sub { top: .5ex; }
 }
 
 .tooltip .tooltiptext {
-  visibility: hidden;
-  width: 80px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 10px;
-  padding: 2px;
-  font-size: 10pt;
-  right: 105%;
-
-  /* Position the tooltip */
-  position: absolute;
-  z-index: 1;
+visibility: hidden;
+width: 60px;
+background-color: #1e1d1d;
+color: #c5cfd2;
+text-align: center;
+border-radius: 10px;
+padding: 2px;
+font-size: 11pt;
+right: 125%;
+position: absolute;
+z-index: 1;
 }
 
 .tooltip:hover .tooltiptext {
