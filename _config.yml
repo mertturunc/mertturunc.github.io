@@ -4,3 +4,8 @@ plugins:
   - jekyll-redirect-from
 exclude:
   - "vendor"
+defaults:
+  - layout: post
+  - category: blog
+  - starred: false
+  - music: false
