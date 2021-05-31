@@ -1,6 +1,5 @@
 ---
-title: "buralarda iken"
-summary: "Karışık Kaset’te başladığım yazı serisinin devamı niteliğinde olacak bu yazıda yine albüm önerilerinde bulunacağım. Bunun yanında birazcık da bir şeyler anlatmayı umuyorum."
+title: "neden playlist dinlemeyi bıraktım"
 starred: true
 music: true
 ---
