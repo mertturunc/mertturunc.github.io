@@ -1,4 +1,5 @@
 ---
+category: blog
 title: "markdown showdown"
 ---
 
