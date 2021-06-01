@@ -12,6 +12,8 @@ Ancak kullanıcı için hazırlanan listeler ne kadar özel? Dolaşımdaki liste
 
 Bu yazımda kültür endüstrisini ve yapay zekanın kullanıcıyı ne kadar “özgür” hissettirdiği hakkında konuşacağım.
 
+<figure><img src="../i/filler.png" /></figure>
+
 Sosyoloji alanında yaptığı çalışmalarla bilinen Theodor W. Adorno popüler müzik adına da çalışmalar yapmıştır. Adorno’ya göre popüler kültür sermaye ve güç sahibi kişiler tarafından üretilmekte ve kişileri yönlendirmektedir. Ve yeni medya ile sunulan “kişiye özel” durumunu sahte bireyselleştirme olarak görmektedir.
 
 Adorno kültür endüstrisinin popüler kültürü kitlelere farkında olmadan kabul ettirmesinde önemli bir araç olarak kitle iletişim araçlarını gösterir (Çuhadar, 2020). Kitle iletişim araçlarıyla gerçekleştirilen pazarlama stratejileri, bireylerin bu ürünlerin tüketiminde elde edecekleri haz ve mutlulukla güdülenmesi esasıyla işler ve popüler kültür ürünlerinin sanki yeniymiş gibi sunulmasında olduğu gibi bireyselmiş yanılsamasını yaratan da yine kitle iletişim araçları olur (Adorno, 2011).
@@ -19,6 +21,8 @@ Adorno kültür endüstrisinin popüler kültürü kitlelere farkında olmadan k
 Popüler müzikte iki farklı sahte bireyselleşmeden bahsetmektedir. İlki; dinleyicinin belirli kurallarla yeniden üretilen müziklerde kendi güven sahasından çıkmadan “sözde” yeni müzikler dinlerken önceden dinlediğini unutması, böylece yeni deneyim yaşadığı algısıyla haz duymasıdır.
 
 İkinci biçimi ise; bireye birbirine çok benzeyen ve benzer biçimlerde sunulan popüler müzik ürünleri arasında seçme şansı varmış gibi bir yanılgı hissinin yaratılmasıdır.
+
+<figure><img src="../i/filler.png" /></figure>
 
 Adorno’ya göre kültür endüstrisinde yer alan ürünler hem herkes tarafından bilinmeli hem de hiç duyulmamış olması gereken şeylerdir. Bu sayede bireyler güven sahalarının dışında çıkmadan “yeni” müziği deneyimleyebilmektedir. “Kültür endüstrisinde ilerleme olarak gösterilen, sürekli yeni diye yüceltilen her şey, başsız sonsuz bir aynılığı gizlemektedir.”(Adorno, 2003, s.78).
 
@@ -29,6 +33,8 @@ Kaset, plak ve CD medyalarını geride bıraktığımız dijital çağda streami
 Dijital müzik medyaları, özelde farklılaşan çalışma prensiplerine sahip olsalar da temelde benzer “avantajlar” sağlayarak dinleyiciler tarafından birincil müzik dinleme araçlarına dönüşmektedir.(Çuhadar, 2020) Kullanıcıya sağlanan avantajlar; kolay erişim, ucuzluk, çok sayıda seçenek bulunması, yeni müzik keşfedilebilmesi, çalan müziğe istenildiği gibi müdahale edilmesi ve tercih yapmaya gerek kalmadan oluşturulan otomatik listeler olarak sıralanabilir.
 
 Dijital müzik medyası, şirketler ve müzisyenler için yeni bir ticari alan ve olanak olmuştur. Eskinin radyo programcılığı artık çalma listesi küratörlüğü biçimini almış ve eskiden olduğundan daha fazla manipüle edilebilir hale gelmiştir. Yeni müzik medyasındaki bu manipülasyon işi artık ticari bir boyut kazandığından dolayı bağımsız müzisyenlerin kendilerini öne çıkarabilmeleri için bu liste hazırlayan şirketlerle beraber çalışmak zorunda kalmaları gerekmektedir. Dolaşımdaki “özenle” hazırlanmış listelerin aslında ticari ilişkilerden ibaret oluştuğu gerçeği kullanıcılar tarafından bilinmemektedir.
+
+<figure><img src="../i/filler.png" /></figure>
 
 Adorno’nun düşüncelerinden bahsedip biraz da kürate edilmiş listelerin arkaplanını anlattıktan sonra konu teknoloji harikası öneri algoritmalarına geliyor.
 
