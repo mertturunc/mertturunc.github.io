@@ -1,7 +1,7 @@
 ---
 category: blog
 title: "buralarda iken"
-summary: "{% include read_time.html %} | Karışık Kaset’te başladığım yazı serisinin devamı niteliğinde olacak bu yazıda yine albüm önerilerinde bulunacağım. Bunun yanında birazcık da bir şeyler anlatmayı umuyorum."
+summary: "Karışık Kaset’te başladığım yazı serisinin devamı niteliğinde olacak bu yazıda yine albüm önerilerinde bulunacağım. Bunun yanında birazcık da bir şeyler anlatmayı umuyorum."
 starred: true
 music: true
 ---

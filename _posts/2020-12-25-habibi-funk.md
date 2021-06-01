@@ -1,7 +1,7 @@
 ---
 category: blog
 title: "habibi funk: arap müziğinden seçmeler ve kaybolup gidenleri kurtarma"
-summary: "{% include read_time.html %} | Alman DJ Jannis Stürtz'ün bir kurtarma projesi olan Habibi Funk Records Arap yarımadasındaki unutulmaya yüz tutmuş psychedelic, funk ve soul müziğini günümüz dünyasına taşımaya çalışıyor."
+summary: "Alman DJ Jannis Stürtz'ün bir kurtarma projesi olan Habibi Funk Records Arap yarımadasındaki unutulmaya yüz tutmuş psychedelic, funk ve soul müziğini günümüz dünyasına taşımaya çalışıyor."
 starred: true
 music: true
 ---

@@ -1,7 +1,7 @@
 ---
 category: blog
 title: "oyun müzikleri"
-summary: "{% include read_time.html %} | Bu müziklerin kendisine ait bir türü olmasına rağmen her birinin farklı türde yazılmış olmaları ve oyuncuya/dinleyiciye sunduğu çeşitlilik dinleyici için bir nimet."
+summary: "Bu müziklerin kendisine ait bir türü olmasına rağmen her birinin farklı türde yazılmış olmaları ve oyuncuya/dinleyiciye sunduğu çeşitlilik dinleyici için bir nimet."
 music: true
 ---
 
