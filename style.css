@@ -551,7 +551,7 @@ SETTINGS
   --mainColor: #673AB7;
   --accentColor: #2a748c;
   --accentColorDark: #f15493;
-  --blackColor: #c5cfd2;
+  --blackColor: #fff;
   --whiteColor: #fff;
   --rLinkTextColor: var(--blackColor);
 }
