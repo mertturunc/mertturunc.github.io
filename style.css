@@ -85,14 +85,7 @@ h1 + h2 { margin: -0.75em 0 0.9em; }
 p > img, .fig, figure { margin: 2em 0; }
 img { max-width: 100%; }
 
-.fig, figure { text-align: center; font-size: 12px; line-height: 20px; font-style: italic; 
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  }
+.fig, figure { text-align: center; font-size: 12px; line-height: 20px; font-style: italic; }
 @media (min-width: 600px) {
   .fig, figure { width: 600px; margin-left: -28px; margin-right: -28px; }
 }
@@ -208,4 +201,13 @@ z-index: 1;
 
 .tooltip:hover .tooltiptext {
   visibility: visible;
+}
+
+figure {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
