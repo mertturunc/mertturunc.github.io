@@ -8,47 +8,8 @@ layout: default
   <div class="spacer"></div>
 </ul>
 
-<style>
-atr0p_child {
-  
-  cursor: pointer;
-  position: relative;
-  display: inline-block;
-  font-size: 3rem;
-  background: linear-gradient(to bottom, #fff, #fff 60%, #000 60%, #000 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  background-repeat: no-repeat;
-  transition: background 0.2s ease-out;
-  white-space: nowrap;
-}
-
-atr0p_title {
-  position: relative;
-}
-
-atr0p_title:before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 15px;
-  background: #2a748c;
-  bottom: 9px;
-  transition: all 0.2s ease-out;
-}
-
-atr0p_child:hover {
-  background-position: 0 11px;
-}
-
-atr0p_title:hover:before {
-  transform: translateY(10px)
-}
-</style>
 <div class="post">
-  <atr0p_title><atr0p_child>{{ page.title }}</atr0p_child></atr0p_title>
+  <h1 class="title">{{ page.title }}</h1>
 
   <p>{{ page.permalink }}</p>
 
