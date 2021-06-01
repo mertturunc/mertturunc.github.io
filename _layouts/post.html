@@ -9,15 +9,7 @@ layout: default
 </ul>
 
 <style>
-
-main {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-}
-
-p {
+atr0p_child {
   
   cursor: pointer;
   position: relative;
@@ -47,7 +39,7 @@ atr0p_title:before {
   transition: all 0.2s ease-out;
 }
 
-p:hover {
+atr0p_child:hover {
   background-position: 0 11px;
 }
 
@@ -56,7 +48,7 @@ atr0p_title:hover:before {
 }
 </style>
 <div class="post">
-  <atr0p_title><p>{{ page.title }}</p></atr0p_title>
+  <atr0p_title><atr0p_child>{{ page.title }}</atr0p_child></atr0p_title>
 
   <p>{{ page.permalink }}</p>
 
