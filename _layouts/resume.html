@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" prefix="og: http://ogp.me/ns#" xmlns:og="http://opengraphprotocol.org/schema/">
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
+  {% if page.class == "page_wide" %}
+    <meta name="viewport" content="width=900" />
+  {% else %}
+    <meta name="viewport" content="width=640" />
+  {% endif %}
+  <meta name="theme-color" content="hsl(51, 100%, 59%)">
+  <link href="/i/vesikalık_32.png" rel="icon" sizes="32x32">
+  <meta property="og:image" content=/i/vesikalık.jpg />
+
+  <link href='/style.css?v=20201203' rel='stylesheet' type='text/css' />
+  <title>{{ page.title }} @ buralarda iken</title>
+
+  <link href="/blog/atom.xml" rel="alternate" title="atr0p’s blog" type="application/atom+xml" />
+
+  <meta name="author" content="Mert Turunç" />
+
+  <meta property="og:title" content="{{ page.title }} @ buralarda iken" />
+  <meta property="og:url" content="https://mertturunc.github.io{{ page.url }}" />
+  {% if page.categories contains 'blog' %}
+    <meta property="og:type" content="article" />
+
+    <meta property="article:published_time" content='{{ page.date | date: "%Y-%m-%d" }}' />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="{{ page.title }}" />
+  {% endif %}
+
+  {% if page.summary %}
+    <meta property="og:description" content="{{ page.summary }}" />
+    <meta name="twitter:description" content="{{ page.summary }}" />
+  {% else %}
+    <meta property="og:description" content="Merhaba Ben Mert, Karışık Kaset ve Medium üzerinden denediğim blog işini kendime ait bir siteye taşımak istedim." />
+
+  {% endif %}
+
+  <meta property="og:site_name" content="mertturunc.github.io" />
+  <meta property="article:author" content="https://www.facebook.com/mtrnc" />
+  <meta property="profile:first_name" content="Mert" />
+  <meta property="profile:last_name" content="Turunç" />
+  <meta property="profile:username" content="atr0p" />
+  <meta property="profile:gender" content="male" />
+
+  <meta name="twitter:creator" content="@therealatropos" />
+</head>
+<body>
+<div class="page {{ page.class }}">
+
+{{ content }}
+
+<div class="preload"></div>
+
+
