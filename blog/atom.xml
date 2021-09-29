@@ -35,7 +35,6 @@ layout: nil
       {% if post.summary %}
         <summary type="html"><![CDATA[
           {{ post.summary }}
-          {% include read_time.html %}
         ]]></summary>
       {% endif %}
       <content type="html"><![CDATA[
