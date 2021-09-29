@@ -31,6 +31,9 @@
 
   {% if page.summary %}
     <meta property="og:description" content="{{ page.summary }}" />
+    <div style="font-size:12px; opacity:.25"><i>
+      {% include read_time.html %} </i>
+    </div>
     <meta name="twitter:description" content="{{ page.summary }}" />
   {% else %}
     <meta property="og:description" content="Merhaba Ben Mert, Karışık Kaset ve Medium üzerinden denediğim blog işini kendime ait bir siteye taşımak istedim." />
