@@ -1,7 +1,7 @@
 ---
 category: blog
 title: "neden playlist dinlemeyi bıraktım"
-summary: "{% include read_time.html %}"
+summary: "Bağımsız müzik yapan sanatçıların dijital medya dünyasında ticari bir anlaşma veya ödeme yapmadan kendilerini duyurması neredeyse imkansız kılan bu durum kullanıcıların güven sahasından çıkmasını da engelliyor."
 starred: true
 music: true
 ---
