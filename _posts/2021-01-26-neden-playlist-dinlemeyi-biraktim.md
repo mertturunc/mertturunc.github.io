@@ -1,7 +1,7 @@
 ---
 category: blog
 title: "neden playlist dinlemeyi bıraktım"
-summary: {% include read_time.html %}
+summary: "{% include read_time.html %}"
 starred: true
 music: true
 ---
