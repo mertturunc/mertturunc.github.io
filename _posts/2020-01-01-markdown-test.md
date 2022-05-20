@@ -2,6 +2,7 @@
 category: blog
 title: "markdown showdown"
 published: false
+hidden: true
 ---
 
 # This is an <h1> tag
