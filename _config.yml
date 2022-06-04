@@ -5,6 +5,10 @@ plugins:
 exclude:
   - "vendor"
 defaults:
-  - layout: post
-  - starred: false
-  - music: false
+  -
+    scope:
+      path: "" # an empty string here means all files in the project
+    values:
+      layout: "post"
+      starred: "false"
+      music: "false"            

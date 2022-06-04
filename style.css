@@ -406,7 +406,6 @@ sub {
 
 .preload::after {
   content: '';
-  background-image: url(/i/flashlight.png);
 }
 
 
