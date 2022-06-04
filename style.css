@@ -111,6 +111,13 @@ a.menu__item_selected,
 a.menu__item:hover {
   color: #2a748c;
   border-bottom: 2px solid #2a748c;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
 }
 
 .menu__item_inside,
