@@ -64,39 +64,80 @@ summary: Mert Turunç | Harita Mühendisliği | Öğrenci
 
   figure.full { padding: 0; }
 
-  .table { font-size: 12px; line-height: 25px; display: grid; grid-template-columns: max-content 1fr; grid-gap: 1px 10px; }
-  .table > div:nth-child(2n+1) { font-weight: 300; } 
-  figure { width: 650px; margin: 120px -26px -85px; }
-  figure > a { border: none; display: block; }
-  h5 { margin-top: auto; font-weight: 100; }
-  .gh-stars:before { content:"★"; font-size: 20px; vertical-align: baseline; position: relative; top: -1px; margin: 0 5px 0 10px; }
-  .gh-stars { color: #00000090; }
-  .icon { width: 128px; height: 128px; position: absolute; margin: 120px 0 0 -148px; }
-  blockquote { position: relative; margin-bottom: 3em; }
-  .quote-author { position: absolute; right: 0; }
-  .svglogo { color: #000000; }
-  h1, h2 {    margin: 1em 0 0.5em;}
-  h4 { padding-bottom: 0.5em; padding-top: 0.5em;}
-  ul>li, ol>li {    margin: 0em 0em 1em;}
+  .table {
+  font-size: 12px;
+  line-height: 25px;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  grid-gap: 1px 10px;
+}
+.table > div:nth-child(2n+1) {
+  font-weight: 300;
+} 
 
-  @media print {
-    .svglogo, .gh-stars { color: black; }
-  }
+.ikili {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
 
-.ikili{ display: grid; grid-template-columns:300px 300px;}
-.summary {font-size:13px;width: 275px;line-height: 1.25em;padding-bottom:10px;min-height: 13em;}
-.summary1 {font-size:13px;width: 275px;line-height: 1.25em;padding-bottom:10px;min-height: 6em;}
+.summary,
+.summary1 {
+  font-size: 13px;
+  width: 275px;
+  line-height: 1.25em;
+  padding-bottom: 10px;
+  min-height: 6em;
+}
+
 br {
   content: "";
   margin: 3.935em;
   display: block;
   font-size: 69%;
 }
+
 p {
-margin: 0;
+  margin: 0;
 }
+
 img {
-    margin-bottom: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+@media print {
+  .svglogo,
+  .gh-stars {
+    color: black;
+  }
+}
+
+/* Eklenen Stil Kuralları */
+
+body {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1,
+h2 {
+  margin: 1em 0 0.5em;
+}
+
+h4 {
+  padding-bottom: 0.5em;
+  padding-top: 0.5em;
+}
+
+ul > li,
+ol > li {
+  margin: 0em 0em 1em;
+}
+
+@media (max-width: 600px) {
+  .ikili {
+    grid-template-columns: 1fr;
+  }
 }
 
 </style>
@@ -109,7 +150,7 @@ img {
 </ul>
 
 <h1>Mert Turunç</h1>
-<h5>Harita Mühendisliği, Öğrenci.</h5>
+<h5>Geomatik, Öğrenci.</h5>
 
 <img src="/i/vesikalık.jpg" "="" style="height: 175px">
 <p></p>
@@ -174,80 +215,98 @@ img {
 </div>
 <h1>Deneyim</h1>
 <div class="ikili">
-
   <div class="deneyim">
     <h4>Mavi Harita</h4>
     <div class="summary">
-    <ul>
-      <li>Saha çalışmalarını yürüttüm ve ölçüm aletlerini kullandım.</li>
-    </ul>
+      <ul>
+        <li>Saha çalışmalarını yürüttüm ve ölçüm aletlerini kullandım.</li>
+      </ul>
     </div>
     <div class="table">
-      <div>Ünvan</div><div>Topoğraf</div>
-      <div>Lokasyon</div><div>Süleymanpaşa, Tekirdağ</div>
-      <div>Departman</div><div>-</div>
-      <div>Yıl</div><div>Temmuz '19 - Eylül '19</div>
+      <div>Ünvan</div>
+      <div>Topoğraf</div>
+      <div>Lokasyon</div>
+      <div>Süleymanpaşa, Tekirdağ</div>
+      <div>Departman</div>
+      <div>-</div>
+      <div>Yıl</div>
+      <div>Temmuz '19 - Eylül '19</div>
     </div>
-    </div>
+  </div>
       
-<div class="deneyim">
+  <div class="deneyim">
+    <h4>Süleymanpaşa Belediyesi</h4>
+    <div class="summary">
+      <ul>
+        <li>İmar ve Şehircilik Müdürlüğü dışında Etüd Proje Müdürlüğü ile arazi çalışmalarında bulundum.</li>
+        <li>Kurum içerisinde kullanılmak üzere Global Mapper ile ortofoto haritalar ürettim.</li>
+        <li>Personel yükünü azaltmak adına resmi yazışmaları hazırlayarak yardımcı oldum.</li>
+      </ul>
+    </div>
+    <div class="table">
+      <div>Ünvan</div>
+      <div>Stajyer</div>
+      <div>Lokasyon</div>
+      <div>Süleymanpaşa, Tekirdağ</div>
+      <div>Departman</div>
+      <div>İmar ve Şehircilik Müdürlüğü</div>
+      <div>Yıl</div>
+      <div>Temmuz '19 - Eylül '19</div>
+    </div>
+  </div>
 
-<h4>Süleymanpaşa Belediyesi</h4>
-<div class="summary">
-<ul>
-<li>İmar ve Şehircilik Müdürlüğü dışında Etüd Proje Müdürlüğü ile arazi çalışmalarında bulundum.</li>
-<li>Kurum içerisinde kullanılmak üzere Global Mapper ile ortofoto haritalar ürettim.</li>
-<li>Personel yükünü azaltmak adına resmi yazışmaları hazırlayarak yardımcı oldum.</li>
-</ul>
-</div>
-<div class="table">
-  <div>Ünvan</div><div>Stajyer</div>
-  <div>Lokasyon</div><div>Süleymanpaşa, Tekirdağ</div>
-  <div>Departman</div><div>İmar ve Şehircilik Müdürlüğü</div>
-  <div>Yıl</div><div>Temmuz '19 - Eylül '19</div>
-</div>
+  <div class="deneyim">
+    <h4>TESKİ</h4>
+    <div class="summary">
+      NetCAD'in CBS modülünü kullanarak kurumun web servisi için data entegrasyonu yaptım.
+    </div>
+    <div class="table">
+      <div>Ünvan</div>
+      <div>Stajyer</div>
+      <div>Lokasyon</div>
+      <div>Süleymanpaşa, Tekirdağ</div>
+      <div>Departman</div>
+      <div>CBS</div>
+      <div>Yıl</div>
+      <div>Haziran '18 - Temmuz '18</div>
+    </div>
+  </div>
+
+  <div class="deneyim">
+    <h4>CK Enerji Boğaziçi Elektrik</h4>
+    <div class="summary">
+      Bir aylık stajın sonunda sözleşmeli personel olarak çalışmaya başladım. Stajyer iken yaptığım entegrasyon işine devam ettim.
+    </div>
+    <div class="table">
+      <div>Ünvan</div>
+      <div>CBS Entegrasyon Operatörü</div>
+      <div>Lokasyon</div>
+      <div>Beyoğlu, İstanbul</div>
+      <div>Departman</div>
+      <div>CBS Entegrasyon</div>
+      <div>Yıl</div>
+      <div>Ağustos '17 - Eylül '17</div>
+    </div>
+  </div>
+
+  <div class="deneyim">
+    <h4>Emi Grup Bilgi Teknolojileri A.Ş.</h4>
+    <div class="summary">
+      CBS departmanında stajyer olarak çalıştım. ArcGIS ve Oracle SQL Developer programlarını kullandım.
+    </div>
+    <div class="table">
+      <div>Ünvan</div>
+      <div>Stajyer</div>
+      <div>Lokasyon</div>
+      <div>Beyoğlu, İstanbul</div>
+      <div>Departman</div>
+      <div>CBS Entegrasyon</div>
+      <div>Yıl</div>
+      <div>Haziran '17 - Haziran '17</div>
+    </div>
+  </div>
 </div>
 
-<div class="deneyim">
-<h4>TESKİ</h4>
-<div class="summary">
-  NetCAD'in CBS modülünü kullanarak kurumun web servisi için data entegrasyonu yaptım.
-</div>
-<div class="table">
-  <div>Ünvan</div><div>Stajyer</div>
-  <div>Lokasyon</div><div>Süleymanpaşa, Tekirdağ</div>
-  <div>Departman</div><div>CBS</div>
-  <div>Yıl</div><div>Haziran '18 - Temmuz '18</div>
-</div>
-</div>
-
-<div class="deneyim">
-<h4>CK Enerji Boğaziçi Elektrik</h4>
-<div class="summary1">
-  Bir aylık stajın sonunda sözleşmeli personel olarak çalışmaya başladım. Stajyer iken yaptığım entegrasyon işine devam ettim.
-</div>
-<div class="table">
-  <div>Ünvan</div><div>CBS Entegrasyon Operatörü</div>
-  <div>Lokasyon</div><div>Beyoğlu, İstanbul</div>
-  <div>Departman</div><div>CBS Entegrasyon</div>
-  <div>Yıl</div><div>Ağustos '17 - Eylül '17</div>
-</div>
-</div>
-
-<div class="deneyim">
-<h4>Emi Grup Bilgi Teknolojileri A.Ş.</h4>
-<div class="summary1">
-  CBS departmanında stajyer olarak çalıştım. ArcGIS ve Oracle SQL Developer programlarını kullandım.
-</div>
-<div class="table">
-  <div>Ünvan</div><div>Stajyer</div>
-  <div>Lokasyon</div><div>Beyoğlu, İstanbul</div>
-  <div>Departman</div><div>CBS Entegrasyon</div>
-  <div>Yıl</div><div>Haziran '17 - Haziran '17</div>
-</div>
-</div>
-
-</div>
 
 <h1>Faaliyetler</h1>
 <div class="table">
