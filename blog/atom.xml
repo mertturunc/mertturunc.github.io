@@ -13,7 +13,10 @@ layout: nil
     <name>Mert Turunç</name>
     <email>mertturunc@gmail.com</email>
   </author>
-  {% assign everything = site.posts | concat: site.data.feed | concat: site.data.design | sort: "date" | reverse %}
+  {% assign site_posts = site.posts | default: [] %}
+  {% assign site_data_feed = site.data.feed | default: [] %}
+  {% assign site_data_design = site.data.design | default: [] %}
+  {% assign everything = site_posts | concat: site_data_feed | concat: site_data_design | sort: "date" | reverse %}
 
   {% for post in everything limit: 10 %}
     {% if post.draft != true %}
