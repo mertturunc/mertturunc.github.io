@@ -13,52 +13,62 @@ layout: nil
     <name>Mert Turunç</name>
     <email>mertturunc@gmail.com</email>
   </author>
-  {% assign site_posts = site.posts | default: [] %}
-  {% assign site_data_feed = site.data.feed | default: [] %}
-  {% assign site_data_design = site.data.design | default: [] %}
-  {% assign everything = site_posts | concat: site_data_feed | concat: site_data_design | sort: "date" | reverse %}
-
-  {% for post in everything limit: 10 %}
-    {% if post.draft != true %}
-      {% assign prefix = post.url | slice: 0, 4 %}
-      {% if prefix == "http" %}
-        {% assign absolute_url = post.url %}
-      {% else %}
-        {% assign absolute_url = post.url | prepend: "https://mertturunc.github.io" %}
+  {% capture all_posts %}
+    {% for post in site.posts %}
+      {% if post.draft != true %}
+        {{ post | jsonify }},
       {% endif %}
-      
-      <entry>
-        <title>{{ post.title }}</title>
-        <link rel="alternate" type="text/html" href="{{ absolute_url }}" />
-        <id>{{ absolute_url }}</id>
-        <published>{{ post.date | date_to_xmlschema }}</published>
-        <updated>{{ post.date | date_to_xmlschema }}</updated>
-        {% if post.summary %}
-          <summary type="html"><![CDATA[
-            {{ post.summary }}
-          ]]></summary>
-        {% endif %}
-        <content type="html"><![CDATA[
-          {% assign rel_prefix = absolute_url | prepend: 'href="' %}
-          {% if post.img_rel %}
-            {% assign img_rel_prefix = absolute_url | append:'rss/' %}
-          {% else %}
-            {% assign img_rel_prefix = absolute_url %}
-          {% endif %}
-          {% assign src_prefix = 'src="' | append: img_rel_prefix %}
-          {% assign srcset_prefix = 'srcset="' | append: img_rel_prefix %}
-          {% assign srcset_prefix_comma = ', ' | append: img_rel_prefix %}
-          {{ post.content | replace:'src="./',src_prefix | replace:'srcset="./',srcset_prefix | replace:', ./',srcset_prefix_comma | replace:'href="./',rel_prefix | replace:'src="/','src="https://mertturunc.github.io/rss/' | replace:'href="/','href="https://mertturunc.github.io/' }}
-          {% if post.embed %}
-            <br />
-            {{ post.embed }}
-          {% endif %}
-        ]]></content>  
-        <author>
-          <name>Mert Turunç</name>
-          <email>mertturunç@mertturunc.com</email>
-        </author>
-      </entry>
+    {% endfor %}
+    {% for post in site.data.feed %}
+      {{ post | jsonify }},
+    {% endfor %}
+    {% for post in site.data.design %}
+      {{ post | jsonify }},
+    {% endfor %}
+  {% endcapture %}
+  {% assign everything = all_posts | split: '},' %}
+  {% for post in everything %}
+    {% assign post_data = post | append: '}' | split: ', ' %}
+    {% assign post_json = post_data | join: ', ' %}
+    {% assign post_obj = post_json | parse_json %}
+    {% assign prefix = post_obj.url | slice: 0, 4 %}
+    {% if prefix == "http" %}
+      {% assign absolute_url = post_obj.url %}
+    {% else %}
+      {% assign absolute_url = post_obj.url | prepend: "https://mertturunc.github.io" %}
     {% endif %}
+      
+    <entry>
+      <title>{{ post_obj.title }}</title>
+      <link rel="alternate" type="text/html" href="{{ absolute_url }}" />
+      <id>{{ absolute_url }}</id>
+      <published>{{ post_obj.date | date_to_xmlschema }}</published>
+      <updated>{{ post_obj.date | date_to_xmlschema }}</updated>
+      {% if post_obj.summary %}
+        <summary type="html"><![CDATA[
+          {{ post_obj.summary }}
+        ]]></summary>
+      {% endif %}
+      <content type="html"><![CDATA[
+        {% assign rel_prefix = absolute_url | prepend: 'href="' %}
+        {% if post_obj.img_rel %}
+          {% assign img_rel_prefix = absolute_url | append:'rss/' %}
+        {% else %}
+          {% assign img_rel_prefix = absolute_url %}
+        {% endif %}
+        {% assign src_prefix = 'src="' | append: img_rel_prefix %}
+        {% assign srcset_prefix = 'srcset="' | append: img_rel_prefix %}
+        {% assign srcset_prefix_comma = ', ' | append: img_rel_prefix %}
+        {{ post_obj.content | replace:'src="./',src_prefix | replace:'srcset="./',srcset_prefix | replace:', ./',srcset_prefix_comma | replace:'href="./',rel_prefix | replace:'src="/','src="https://mertturunc.github.io/rss/' | replace:'href="/','href="https://mertturunc.github.io/' }}
+        {% if post_obj.embed %}
+          <br />
+          {{ post_obj.embed }}
+        {% endif %}
+      ]]></content>  
+      <author>
+        <name>Mert Turunç</name>
+        <email>mertturunç@mertturunc.com</email>
+      </author>
+    </entry>
   {% endfor %}
 </feed>
