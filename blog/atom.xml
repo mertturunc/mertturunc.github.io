@@ -3,83 +3,62 @@ layout: nil
 ---
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en-US">
+ 
   <title>buralarda iken</title>
-  <subtitle>atr0p’s blog</subtitle>
-  <link type="application/atom+xml" href="https://mertturunc.github.io/blog/atom.xml" rel="self" />
-  <link rel="stylesheet" href="{{page.stylesheet}}" />  
+  <subtitle>Mert Turunç'un  blogu</subtitle>
+  <link type="application/atom+xml" href="https://mertturunc.github.io//blog/atom.xml" rel="self" />
+  <link rel="alternate" type="text/html" href="https://mertturunc.github.io/" />
   <id>https://mertturunc.github.io/</id>
   <updated>{{ site.time | date_to_xmlschema }}</updated>
   <author>
     <name>Mert Turunç</name>
     <email>mertturunc@gmail.com</email>
   </author>
+ 
+  {% assign everything = site.posts | concat: site.data.talks | concat: site.data.feed | concat: site.data.design | sort: "date" | reverse %}
 
-  {% capture all_posts %}
-    {% for post in site.posts %}
-      {% if post.draft != true %}
-        {{ post | jsonify }},
-      {% endif %}
-    {% endfor %}
-    {% for post in site.data.feed %}
-      {{ post | jsonify }},
-    {% endfor %}
-    {% for post in site.data.design %}
-      {{ post | jsonify }},
-    {% endfor %}
-  {% endcapture %}
-
-  {% assign everything = all_posts | split: '},' %}
-
-  {% for post in everything %}
-    {% assign post_data = post | append: '}' | split: ', ' %}
-    {% assign post_json = post_data | join: ', ' %}
-    {% assign post_obj = post_json | parse_json %}
-    {% assign prefix = post_obj.url | slice: 0, 4 %}
-
+  {% for post in everything limit: 10 %}
+  {% if post.draft != true %}
+    {% assign prefix = post.url | slice: 0, 4 %}
     {% if prefix == "http" %}
-      {% assign absolute_url = post_obj.url %}
+      {% assign absolute_url = post.url %}
     {% else %}
-      {% assign absolute_url = post_obj.url | prepend: "https://mertturunc.github.io" %}
+      {% assign absolute_url = post.url | prepend: "https://mertturunc.github.io" %}
     {% endif %}
-      
+    
     <entry>
-      <title>{{ post_obj.title }}</title>
+      <title>{{ post.title }}</title>
       <link rel="alternate" type="text/html" href="{{ absolute_url }}" />
       <id>{{ absolute_url }}</id>
-      <published>{{ post_obj.date | date_to_xmlschema }}</published>
-      <updated>{{ post_obj.date | date_to_xmlschema }}</updated>
-
-      {% if post_obj.summary %}
+      <published>{{ post.date | date_to_xmlschema }}</published>
+      <updated>{{ post.date | date_to_xmlschema }}</updated>
+      {% if post.summary %}
         <summary type="html"><![CDATA[
-          {{ post_obj.summary }}
+          {{ post.summary }}
         ]]></summary>
       {% endif %}
-
       <content type="html"><![CDATA[
         {% assign rel_prefix = absolute_url | prepend: 'href="' %}
-
-        {% if post_obj.img_rel %}
+        {% if post.img_rel %}
           {% assign img_rel_prefix = absolute_url | append:'rss/' %}
         {% else %}
           {% assign img_rel_prefix = absolute_url %}
         {% endif %}
-
         {% assign src_prefix = 'src="' | append: img_rel_prefix %}
         {% assign srcset_prefix = 'srcset="' | append: img_rel_prefix %}
         {% assign srcset_prefix_comma = ', ' | append: img_rel_prefix %}
-
-        {{ post_obj.content | replace:'src="./',src_prefix | replace:'srcset="./',srcset_prefix | replace:', ./',srcset_prefix_comma | replace:'href="./',rel_prefix | replace:'src="/','src="https://mertturunc.github.io/rss/' | replace:'href="/','href="https://mertturunc.github.io/' }}
-
-        {% if post_obj.embed %}
+        {{ post.content | replace:'src="./',src_prefix | replace:'srcset="./',srcset_prefix | replace:', ./',srcset_prefix_comma | replace:'href="./',rel_prefix | replace:'src="/','src="https://tonsky.me/rss/' | replace:'href="/','href="https://tonsky.me/' }}
+        {% if post.embed %}
           <br />
-          {{ post_obj.embed }}
+          {{ post.embed }}
         {% endif %}
       ]]></content>  
-
       <author>
         <name>Mert Turunç</name>
-        <email>mertturunç@mertturunc.com</email>
+        <email>mertturunc@gmail.com</email>
       </author>
     </entry>
+  {% endif %}
   {% endfor %}
+ 
 </feed>
