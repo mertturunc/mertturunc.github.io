@@ -19,12 +19,56 @@ summary: Siteyi hazırlarken koyduğum bu sayfayı elbet bir gün doldurup aktif
   .quote-author { position: absolute; right: 0; }
   .svglogo { color: #000000; }
 
-  .kategori{ display: grid; grid-template-columns:300px 300px;}
+  .kategori{ display: grid;}
+
+
+
+  /* Style the button that is used to open and close the collapsible content */
+.collapsible {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .collapsible:hover {
+  background-color: #ccc;
+}
+
+/* Style the collapsible content. Note: hidden by default */
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
 
   @media print {
     .svglogo, .gh-stars { color: black; }
   }
 </style>
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.display === "block") {
+      content.style.display = "none";
+    } else {
+      content.style.display = "block";
+    }
+  });
+}
+</script>
 
 <ul class=menu>
   <li><a class="menu__item" href="/">Blog</a></li>
@@ -37,9 +81,11 @@ summary: Siteyi hazırlarken koyduğum bu sayfayı elbet bir gün doldurup aktif
 
 <div class="kategori">
   <div class="baslik">
-  <h4>Fotogrametri</h4>
+    <h4>Fotogrametri</h4>
   </div>
-  <div class="icerik">
+  <button type="button" class="collapsible">Tekirdağ'dan bir friz</button>
+  <div class="content">
     <div class="sketchfab-embed-wrapper"> <iframe title="Frieze in Tekirdag Museum" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="500" height="300" src="https://sketchfab.com/models/1c3c4a57c4604ecc890e7c437b5a9f84/embed?ui_theme=dark"> </iframe> </div>
   </div>
+
 </div>
