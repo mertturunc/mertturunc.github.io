@@ -47,7 +47,7 @@ layout: nil
         {% assign src_prefix = 'src="' | append: img_rel_prefix %}
         {% assign srcset_prefix = 'srcset="' | append: img_rel_prefix %}
         {% assign srcset_prefix_comma = ', ' | append: img_rel_prefix %}
-        {{ post.content | replace:'src="./',src_prefix | replace:'srcset="./',srcset_prefix | replace:', ./',srcset_prefix_comma | replace:'href="./',rel_prefix | replace:'src="/','src="https://tonsky.me/rss/' | replace:'href="/','href="https://tonsky.me/' }}
+        {{ post.content | replace:'src="./',src_prefix | replace:'srcset="./',srcset_prefix | replace:', ./',srcset_prefix_comma | replace:'href="./',rel_prefix | replace:'src="/','src="https://mertturunc.github.io/rss/' | replace:'href="/','href="https://mertturunc.github.io/' }}
         {% if post.embed %}
           <br />
           {{ post.embed }}
