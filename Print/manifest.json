@@ -9,7 +9,9 @@
   "copyright": "2022",
   "license": "http://www.apache.org/licenses/LICENSE-2.0",
   "properties": {},
-  "translatedLocales": ["en"],
+  "translatedLocales": [
+    "en"
+  ],
   "dependency": [
     "jimu-arcgis"
   ],
