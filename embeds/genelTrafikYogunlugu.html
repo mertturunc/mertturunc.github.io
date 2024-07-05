@@ -1,0 +1,14 @@
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch('https://tkmservices.ibb.gov.tr/web/api/TrafficData/v1/TrafficIndex_Sc1_Cont')  // Replace with your API endpoint
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('api-data');
+                container.innerHTML = JSON.stringify(data, null, 2); // Format the data as JSON string
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    });
+    </script>
+
+<div id="api-data"></div>
+    
