@@ -1,14 +1,92 @@
+<style>
+    .gauge {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        position: relative;
+        margin: 20px;
+    }
+    .gauge-value {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        position: absolute;
+        clip: rect(0px, 100px, 100px, 50px);
+    }
+    .gauge .pie {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        position: absolute;
+        clip: rect(0px, 50px, 100px, 0px);
+    }
+    .gauge .pie .half {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        position: absolute;
+        background: #ff6384;
+    }
+    .gauge .overlay {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 50%;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        text-align: center;
+        line-height: 80px;
+        font-weight: bold;
+    }
+</style>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         fetch('https://tkmservices.ibb.gov.tr/web/api/TrafficData/v1/TrafficIndex_Sc1_Cont')  // Replace with your API endpoint
             .then(response => response.json())
             .then(data => {
-                const container = document.getElementById('api-data');
-                container.innerHTML = JSON.stringify(data, null, 2); // Format the data as JSON string
+                const tiData = data.TI;
+                const tiAnData = data.TI_An;
+                const tiAvData = data.TI_Av;
+    
+                const setGauge = (gaugeId, value) => {
+                    const gauge = document.getElementById(gaugeId);
+                    const angle = (value / 100) * 360;
+                    const pie = document.createElement('div');
+                    pie.className = 'pie';
+                    const half = document.createElement('div');
+                    half.className = 'half';
+                    if (angle <= 180) {
+                        half.style.transform = `rotate(${angle}deg)`;
+                    } else {
+                        half.style.transform = 'rotate(180deg)';
+                        const half2 = document.createElement('div');
+                        half2.className = 'half';
+                        half2.style.transform = `rotate(${angle - 180}deg)`;
+                        pie.appendChild(half2);
+                    }
+                    pie.appendChild(half);
+                    gauge.appendChild(pie);
+    
+                    const overlay = document.createElement('div');
+                    overlay.className = 'overlay';
+                    overlay.textContent = value + '%';
+                    gauge.appendChild(overlay);
+                };
+    
+                setGauge('tiGauge', tiData);
+                setGauge('tiAnGauge', tiAnData);
+                setGauge('tiAvGauge', tiAvData);
             })
             .catch(error => console.error('Error fetching data:', error));
     });
     </script>
-
-<div id="api-data"></div>
-    
+<div class="gauge" id="tiGauge">
+<div class="gauge-value" id="tiValue"></div>
+</div>
+<div class="gauge" id="tiAnGauge">
+    <div class="gauge-value" id="tiAnValue"></div>
+</div>
+<div class="gauge" id="tiAvGauge">
+    <div class="gauge-value" id="tiAvValue"></div>
+</div>
