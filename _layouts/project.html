@@ -1,0 +1,71 @@
+---
+layout: default
+---
+<head>
+  <script>
+    // Preload the projects page
+    const projectsLink = document.querySelector('a[href="/projects/"]');
+    if (projectsLink) {
+      projectsLink.addEventListener('mouseover', function() {
+        const preloadLink = document.createElement('link');
+        preloadLink.rel = 'prefetch';
+        preloadLink.href = '/projects/';
+        document.head.appendChild(preloadLink);
+      });
+    }
+  </script>
+</head>
+<style>
+  .return-button {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #777;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.2s ease;
+  }
+
+  .return-button:hover {
+    color: #555;
+  }
+
+  .return-button::before {
+    content: "←";
+    margin-right: 5px;
+  }
+
+  .project-content {
+    margin-top: 20px;
+  }
+
+  /* Optimize iframe loading */
+  .sketchfab-embed-wrapper iframe {
+    loading: lazy;
+  }
+</style>
+
+<ul class=menu>
+  <li><a class="menu__item" href="/">Blog</a></li>
+  <li><a class="menu__item" href="/projects/">Yaptıklarım</a></li>
+  <li><a class="menu__item" href="/resume/">Özgeçmiş</a></li>
+  <div class="spacer"></div>
+</ul>
+
+<div class="post">
+  <a href="/projects/" class="return-button">Projelere Dön</a>
+  
+  <h1>{{ page.title }}</h1>
+  {% if page.description %}
+  <p class="description">{{ page.description }}</p>
+  {% endif %}
+  
+  {% if page.embed_url %}
+  <div class="sketchfab-embed-wrapper">
+    <iframe title="{{ page.title }}" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ page.embed_url }}" loading="lazy"></iframe>
+  </div>
+  {% endif %}
+
+  <div class="project-content">
+    {{ content }}
+  </div>
+</div>

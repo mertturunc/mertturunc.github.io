@@ -5,6 +5,23 @@ redirect_from: "/about/"
 summary: Portfolyo sayılabilecek bir sayfa
 ---
 <head>
+  <script>
+    // Cache the collapsible elements
+    document.addEventListener('DOMContentLoaded', function() {
+      const coll = document.getElementsByClassName("collapsible");
+      for (let i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+          this.classList.toggle("active");
+          const content = this.nextElementSibling;
+          if (content.style.display === "block") {
+            content.style.display = "none";
+          } else {
+            content.style.display = "block";
+          }
+        });
+      }
+    });
+  </script>
 </head>
 <body>
 <style>
@@ -24,38 +41,62 @@ summary: Portfolyo sayılabilecek bir sayfa
   .kategori{ display: grid;}
 
   .collapsible {
-  background-color: #777;
-  color: white;
-  cursor: pointer;
-  padding: 18px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  font-size: 15px;
-  margin-top: 10px;
-}
+    background-color: #777;
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+    margin-top: 10px;
+  }
 
-.active, .collapsible:hover {
-  background-color: #555;
-}
+  .active, .collapsible:hover {
+    background-color: #555;
+  }
 
-.content {
-  display: none;
-  overflow: hidden;
-  max-height: 800px;
-}
+  .content {
+    display: none;
+    overflow: hidden;
+    max-height: 800px;
+    padding: 15px;
+  }
 
-iframe {
-  width: 100%;
-  border: none;
-  overflow: hidden;
-}
+  iframe {
+    width: 100%;
+    border: none;
+    overflow: hidden;
+  }
 
-#map-cyprus {
-  height: 400px;
-}
+  #map-cyprus {
+    height: 400px;
+  }
 
+  .project-link {
+    color: #777;
+    text-decoration: none;
+    font-size: 0.9em;
+    margin-left: 10px;
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid #777;
+    border-radius: 3px;
+  }
+
+  .project-link:hover {
+    color: #555;
+    border-color: #555;
+    background-color: #f5f5f5;
+  }
+
+  .project-description {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 </style>
 
 <ul class=menu>
@@ -65,61 +106,34 @@ iframe {
   <div class="spacer"></div>
 </ul>
 
-<div class="kategori">
-  <div class="baslik">
-    <h4>Karto Test</h4>
-  </div>
-  <button type="button" class="collapsible">Test</button>
-  <div class="content">
-    <iframe
-  id="map-cyprus"
-  title="Inline Map Example"
-  src="/maptest/7_1.html">
-</iframe>
-
-  </div>
-  </div>
-
-
-<div class="kategori">
-  <div class="baslik">
-    <h4>Fotogrametri</h4>
-  </div>
-  <button type="button" class="collapsible">Tekirdağ'dan bir friz</button>
-  <div class="content">
-    <div class="sketchfab-embed-wrapper"> <iframe title="Frieze in Tekirdag Museum" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="https://sketchfab.com/models/1c3c4a57c4604ecc890e7c437b5a9f84/embed?ui_theme=dark"> </iframe> </div>
-  </div>
-  <button type="button" class="collapsible">Konya'dan bir mezar</button>
-  <div class="content">
-    <div class="sketchfab-embed-wrapper"> <iframe title="Old Tomb in Konya" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="https://sketchfab.com/models/f5b4afb75f844c7394870344c74a7b53/embed?ui_theme=dark"> </iframe> </div>
-  </div>
-
+{% if site.projects.size > 0 %}
+  {% assign categories = site.projects | sort: "date" | reverse | group_by: "category" %}
+  {% for category in categories %}
   <div class="kategori">
     <div class="baslik">
-      <h4>Mapbox Tasarımları</h4>
+      <h4>{{ category.name }}</h4>
     </div>
-    <button type="button" class="collapsible">istNOMbul</button>
+    {% for project in category.items %}
+    <button type="button" class="collapsible">{{ project.title }}</button>
     <div class="content">
-      <iframe width='100%' height='300px' src="https://api.mapbox.com/styles/v1/mertturunc/clevexal800ho01o9hn9owlp4.html?title=false&access_token=pk.eyJ1IjoibWVydHR1cnVuYyIsImEiOiJjbGNzYTB6ZzgwMW55M29vZGIzdW96ZmMxIn0.-U-Cljwku_TEqYngV_e10w&zoomwheel=false#11.89/41.04264/28.97401" title="LezzetEkini-1" style="border:none;"></iframe>
+      {% if project.embed_url %}
+      <div class="sketchfab-embed-wrapper">
+        <iframe title="{{ project.title }}" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ project.embed_url }}"></iframe>
+      </div>
+      {% endif %}
+      <div class="project-description">
+        {% if project.description %}
+        <p>{{ project.description }}</p>
+        {% endif %}
+        {% if project.has_full_page %}
+        <a href="{{ project.url }}" class="project-link">Detaylı Bilgi</a>
+        {% endif %}
+      </div>
     </div>
-
-
-</div>
-
-<script>
-  var coll = document.getElementsByClassName("collapsible");
-  var i;
-  
-  for (i = 0; i < coll.length; i++) {
-    coll[i].addEventListener("click", function() {
-      this.classList.toggle("active");
-      var content = this.nextElementSibling;
-      if (content.style.display === "block") {
-        content.style.display = "none";
-      } else {
-        content.style.display = "block";
-      }
-    });
-  }
-</script>
+    {% endfor %}
+  </div>
+  {% endfor %}
+{% else %}
+  <p>Henüz proje eklenmemiş.</p>
+{% endif %}
 </body>

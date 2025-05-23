@@ -2,6 +2,13 @@ permalink: /:categories/:title/
 markdown: kramdown
 plugins:
   - jekyll-redirect-from
+
+# Collections configuration
+collections:
+  projects:
+    output: true
+    permalink: /:collection/:name/
+
 exclude:
   - "vendor"
 defaults:
@@ -11,4 +18,10 @@ defaults:
     values:
       layout: "post"
       starred: "false"
-      music: "false"            
+      music: "false"
+  -
+    scope:
+      path: "_projects"
+      type: "projects"
+    values:
+      layout: "project"            
