@@ -1,0 +1,21 @@
+{% comment %}
+Inline language switcher for posts - shows next to reading time when translations exist
+{% endcomment %}
+{% include language-utils.html %}
+
+{% if has_translations %}
+<div class="post-language-switcher">
+  <span class="post-language-switcher__label">{{ t.post.available_in }}</span>
+  {% for translation in page.translations %}
+    {% if translation.lang != current_lang %}
+      <a href="{{ translation.url }}" class="post-language-switcher__link">
+        {% if translation.lang == 'tr' %}
+          🇹🇷 {{ t.general.turkish }}
+        {% else %}
+          🇺🇸 {{ t.general.english }}
+        {% endif %}
+      </a>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %} 

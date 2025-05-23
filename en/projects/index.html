@@ -1,10 +1,10 @@
 ---
 layout: default
-title: Yaptıklarım
-lang: tr
+title: Projects
+lang: en
 language_reference: projects
-redirect_from: "/about/"
-summary: Portfolyo sayılabilecek bir sayfa
+permalink: /en/projects/
+summary: A portfolio page
 ---
 {% include language-utils.html %}
 
@@ -216,9 +216,9 @@ summary: Portfolyo sayılabilecek bir sayfa
 </style>
 
 <ul class=menu>
-  <li><a class="menu__item" href="/">{{ t.nav.blog }}</a></li>
-  <li><span class="menu__item menu__item_selected" href="/projects/">{{ t.nav.projects }}</span></li>
-  <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
+  <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
+  <li><span class="menu__item menu__item_selected" href="/en/projects/">{{ t.nav.projects }}</span></li>
+  <li><a class="menu__item" href="/en/resume/">{{ t.nav.resume }}</a></li>
   <div class="spacer"></div>
 </ul>
 
@@ -256,26 +256,26 @@ summary: Portfolyo sayılabilecek bir sayfa
         {% comment %} Group already processed, skip this iteration {% endcomment %}
         {% assign should_include = false %}
       {% else %}
-        {% comment %} First time seeing this group, find the best version for Turkish page {% endcomment %}
+        {% comment %} First time seeing this group, find the best version for English page {% endcomment %}
         {% assign processed_groups = processed_groups | push: group_id %}
         
-        {% comment %} Look for Turkish version in this translation group {% endcomment %}
-        {% assign turkish_project = null %}
+        {% comment %} Look for English version in this translation group {% endcomment %}
+        {% assign english_project = null %}
         {% assign fallback_project = project %}
         
         {% comment %} Check current project {% endcomment %}
-        {% if project_lang == 'tr' %}
-          {% assign turkish_project = project %}
+        {% if project_lang == 'en' %}
+          {% assign english_project = project %}
         {% endif %}
         
-        {% comment %} Check other translations if we haven't found Turkish version yet {% endcomment %}
-        {% unless turkish_project %}
+        {% comment %} Check other translations if we haven't found English version yet {% endcomment %}
+        {% unless english_project %}
           {% for translation in project.translations %}
-            {% if translation.lang == 'tr' %}
-              {% comment %} Find the actual Turkish project object {% endcomment %}
+            {% if translation.lang == 'en' %}
+              {% comment %} Find the actual English project object {% endcomment %}
               {% for other_project in all_projects %}
                 {% if other_project.url == translation.url %}
-                  {% assign turkish_project = other_project %}
+                  {% assign english_project = other_project %}
                   {% break %}
                 {% endif %}
               {% endfor %}
@@ -284,9 +284,9 @@ summary: Portfolyo sayılabilecek bir sayfa
           {% endfor %}
         {% endunless %}
         
-        {% comment %} Use Turkish version if found, otherwise use current project {% endcomment %}
-        {% if turkish_project %}
-          {% assign unique_projects = unique_projects | push: turkish_project %}
+        {% comment %} Use English version if found, otherwise use current project {% endcomment %}
+        {% if english_project %}
+          {% assign unique_projects = unique_projects | push: english_project %}
         {% else %}
           {% assign unique_projects = unique_projects | push: fallback_project %}
         {% endif %}
@@ -356,11 +356,7 @@ summary: Portfolyo sayılabilecek bir sayfa
         <p>{{ project.description }}</p>
         {% endif %}
         {% if project.has_full_page %}
-        {% if current_lang == 'tr' %}
-        <a href="{{ project.url }}" class="project-link">Detaylı Bilgi</a>
-        {% else %}
-        <a href="{{ project.url }}" class="project-link">More Details</a>
-        {% endif %}
+        <a href="/en{{ project.url }}" class="project-link">{{ t.project.view_project }}</a>
         {% endif %}
       </div>
     </div>
@@ -368,10 +364,6 @@ summary: Portfolyo sayılabilecek bir sayfa
   </div>
   {% endfor %}
 {% else %}
-  {% if current_lang == 'tr' %}
-  <p>Henüz proje eklenmemiş.</p>
-  {% else %}
   <p>No projects added yet.</p>
-  {% endif %}
 {% endif %}
-</body>
+</body> 

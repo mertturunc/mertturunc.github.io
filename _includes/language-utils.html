@@ -1,0 +1,88 @@
+{% comment %}
+Language utility functions for the multilingual Jekyll site
+{% endcomment %}
+
+{% comment %} Detect current language from page URL {% endcomment %}
+{% assign current_lang = site.default_lang %}
+{% if page.url contains '/en/' %}
+  {% assign current_lang = 'en' %}
+{% elsif page.lang %}
+  {% assign current_lang = page.lang %}
+{% endif %}
+
+{% comment %} Get translations for current language {% endcomment %}
+{% assign t = site.data.translations[current_lang] %}
+
+{% comment %} Simple URL mapping for language switching {% endcomment %}
+{% assign current_url = page.url %}
+{% assign alternate_url = '' %}
+{% assign page_exists = false %}
+
+{% comment %} Check if this is a blog post with translations {% endcomment %}
+{% if page.translations and page.translations.size > 0 %}
+  {% assign alternate_lang = '' %}
+  {% if current_lang == 'tr' %}
+    {% assign alternate_lang = 'en' %}
+  {% else %}
+    {% assign alternate_lang = 'tr' %}
+  {% endif %}
+  
+  {% comment %} Find translation URL for the alternate language {% endcomment %}
+  {% for translation in page.translations %}
+    {% if translation.lang == alternate_lang %}
+      {% assign alternate_url = translation.url %}
+      {% assign page_exists = true %}
+      {% break %}
+    {% endif %}
+  {% endfor %}
+  
+  {% comment %} If no specific translation found, fall back to homepage {% endcomment %}
+  {% unless page_exists %}
+    {% if alternate_lang == 'en' %}
+      {% assign alternate_url = '/en/' %}
+    {% else %}
+      {% assign alternate_url = '/' %}
+    {% endif %}
+    {% assign page_exists = true %}
+  {% endunless %}
+{% else %}
+  {% comment %} Static page language switching logic {% endcomment %}
+  {% if current_lang == 'tr' %}
+    {% assign alternate_lang = 'en' %}
+    {% if current_url == '/' %}
+      {% assign alternate_url = '/en/' %}
+      {% assign page_exists = true %}
+    {% elsif current_url == '/projects/' %}
+      {% assign alternate_url = '/en/projects/' %}
+      {% assign page_exists = true %}
+    {% elsif current_url == '/resume/' %}
+      {% assign alternate_url = '/en/resume/' %}
+      {% assign page_exists = false %}
+    {% else %}
+      {% assign alternate_url = '/en/' %}
+      {% assign page_exists = true %}
+    {% endif %}
+  {% else %}
+    {% assign alternate_lang = 'tr' %}
+    {% if current_url == '/en/' %}
+      {% assign alternate_url = '/' %}
+      {% assign page_exists = true %}
+    {% elsif current_url == '/en/projects/' %}
+      {% assign alternate_url = '/projects/' %}
+      {% assign page_exists = true %}
+    {% elsif current_url == '/en/resume/' %}
+      {% assign alternate_url = '/resume/' %}
+      {% assign page_exists = true %}
+    {% else %}
+      {% assign alternate_url = '/' %}
+      {% assign page_exists = true %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+{% comment %} Helper to check if a translation exists for current post/page {% endcomment %}
+{% if page.translations %}
+  {% assign has_translations = true %}
+{% else %}
+  {% assign has_translations = false %}
+{% endif %} 

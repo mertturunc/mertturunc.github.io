@@ -1,0 +1,46 @@
+{% include language-utils.html %}
+
+<div class="language-switcher">
+  <div class="language-switcher__toggle" id="lang-toggle">
+    <span class="language-switcher__icon">🌐</span>
+    <span class="language-switcher__current">
+      {% if current_lang == 'tr' %}{{ t.general.turkish }}{% else %}{{ t.general.english }}{% endif %}
+    </span>
+    <span class="language-switcher__arrow">▼</span>
+  </div>
+  
+  <div class="language-switcher__menu" id="lang-menu">
+    <div class="language-switcher__section">
+      {% if current_lang == 'tr' %}
+        <a href="{{ alternate_url }}" class="language-switcher__link">🇺🇸 {{ t.general.english }}</a>
+      {% else %}
+        <a href="{{ alternate_url }}" class="language-switcher__link">🇹🇷 {{ t.general.turkish }}</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggle = document.getElementById('lang-toggle');
+  const menu = document.getElementById('lang-menu');
+  const switcher = toggle ? toggle.closest('.language-switcher') : null;
+  
+  if (toggle && menu && switcher) {
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      menu.classList.toggle('language-switcher__menu--open');
+      switcher.classList.toggle('language-switcher--open');
+    });
+    
+    document.addEventListener('click', function() {
+      menu.classList.remove('language-switcher__menu--open');
+      switcher.classList.remove('language-switcher--open');
+    });
+    
+    menu.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  }
+});
+</script> 

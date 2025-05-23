@@ -1,11 +1,11 @@
 ---
-layout: nil
+layout: null
 ---
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en-US">
  
   <title>buralarda iken</title>
-  <subtitle>Mert Turunç'un  blogu</subtitle>
+  <subtitle>Mert Turunç'un blogu</subtitle>
   <link type="application/atom+xml" href="https://mertturunc.github.io//blog/atom.xml" rel="self" />
   <link rel="alternate" type="text/html" href="https://mertturunc.github.io/" />
   <id>https://mertturunc.github.io/</id>

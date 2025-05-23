@@ -1,5 +1,6 @@
+{% include language-utils.html %}
 <!doctype html>
-<html lang="en" prefix="og: http://ogp.me/ns#" xmlns:og="http://opengraphprotocol.org/schema/">
+<html lang="{{ current_lang }}" prefix="og: http://ogp.me/ns#" xmlns:og="http://opengraphprotocol.org/schema/">
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
   {% if page.class == "page_wide" %}
@@ -21,7 +22,7 @@
   </script>
 
   <link href='/style.css?v=20201203' rel='stylesheet' type='text/css' />
-  <title>{{ page.title }} @ buralarda iken</title>
+  <title>{{ page.title }} @ {{ t.site_title }}</title>
 
   <link href="/blog/atom.xml" rel="alternate" title="atr0p's blog" type="application/atom+xml" />
 
@@ -31,7 +32,7 @@
   {%else %}
   <meta property="og:image" content=/i/favicon_normal.jpg />
   {% endif %}
-  <meta property="og:title" content="{{ page.title }} @ buralarda iken" />
+  <meta property="og:title" content="{{ page.title }} @ {{ t.site_title }}" />
   <meta property="og:url" content="https://mertturunc.github.io{{ page.url }}" />
   {% if page.categories contains 'blog' %}
     <meta property="og:type" content="article" />
@@ -46,7 +47,7 @@
     <meta property="og:description" content="{{ page.summary }}" />
     <meta name="twitter:description" content="{{ page.summary }}" />
   {% else %}
-    <meta property="og:description" content="Merhaba Ben Mert, Karışık Kaset ve Medium üzerinden denediğim blog işini kendime ait bir siteye taşımak istedim." />
+    <meta property="og:description" content="{{ t.site_description }}" />
 
   {% endif %}
 
@@ -58,12 +59,27 @@
   <meta property="profile:gender" content="male" />
 
   <meta name="twitter:creator" content="@therealatropos" />
+  
+  {% comment %} Add alternate language links {% endcomment %}
+  {% if current_lang == 'tr' %}
+    <link rel="alternate" hreflang="en" href="https://mertturunc.github.io/en{{ page.url }}" />
+    <link rel="alternate" hreflang="tr" href="https://mertturunc.github.io{{ page.url }}" />
+  {% else %}
+    <link rel="alternate" hreflang="tr" href="https://mertturunc.github.io{{ page.url | remove: '/en' }}" />
+    <link rel="alternate" hreflang="en" href="https://mertturunc.github.io{{ page.url }}" />
+  {% endif %}
 </head>
 <body>
-<!-- Theme Toggle Button -->
-<button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-  <span id="theme-icon">☀️</span>
-</button>
+<!-- Top controls -->
+<div class="top-controls">
+  <!-- Theme Toggle Button -->
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+    <span id="theme-icon">☀️</span>
+  </button>
+  
+  <!-- Language Switcher -->
+  {% include language-switcher.html %}
+</div>
 
 <div class="page {{ page.class }}">
 

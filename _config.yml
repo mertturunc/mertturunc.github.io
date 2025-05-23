@@ -3,6 +3,11 @@ markdown: kramdown
 plugins:
   - jekyll-redirect-from
 
+# Multilingual configuration
+languages: ["tr", "en"]
+default_lang: "tr"
+exclude_from_localization: ["i", "fonts", "f", "style.css", "sw.js", "maptest", "script", "vendor", "_site"]
+
 # Collections configuration
 collections:
   projects:

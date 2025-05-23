@@ -1,14 +1,15 @@
 ---
 layout: default
 title: Blog
-lang: tr
+lang: en
+permalink: /en/
 ---
 {% include language-utils.html %}
 
 <ul class=menu>
-  <li><span class="menu__item menu__item_selected" href="/">{{ t.nav.blog }}</span></li>
-  <li><a class="menu__item" href="/projects/">{{ t.nav.projects }}</a></li>
-  <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
+  <li><span class="menu__item menu__item_selected" href="/en/">{{ t.nav.blog }}</span></li>
+  <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
+  <li><a class="menu__item" href="/en/resume/">{{ t.nav.resume }}</a></li>
   <div class="spacer"></div>
 </ul>
 
@@ -61,15 +62,15 @@ lang: tr
   {% for year in posts_by_year %}
     <h1>{{ year.name }}</h1>
     {% for post in year.items %}
-      {% comment %} Find the Turkish version of this post for display {% endcomment %}
+      {% comment %} Find the English version of this post for display {% endcomment %}
       {% assign display_post = post %}
       {% assign display_url = post.url %}
       
       {% if post.translations %}
-        {% comment %} Look for Turkish version {% endcomment %}
+        {% comment %} Look for English version {% endcomment %}
         {% for translation in post.translations %}
-          {% if translation.lang == 'tr' %}
-            {% comment %} Find the actual Turkish post {% endcomment %}
+          {% if translation.lang == 'en' %}
+            {% comment %} Find the actual English post {% endcomment %}
             {% for site_post in site.posts %}
               {% if site_post.url == translation.url %}
                 {% assign display_post = site_post %}
@@ -129,4 +130,4 @@ lang: tr
   
 </p>
 
-</div>
+</div> 

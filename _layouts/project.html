@@ -1,6 +1,8 @@
 ---
 layout: default
 ---
+{% include language-utils.html %}
+
 <head>
   <script>
     // Preload the projects page
@@ -45,16 +47,45 @@ layout: default
 </style>
 
 <ul class=menu>
-  <li><a class="menu__item" href="/">Blog</a></li>
-  <li><a class="menu__item" href="/projects/">Yaptıklarım</a></li>
-  <li><a class="menu__item" href="/resume/">Özgeçmiş</a></li>
+  {% if current_lang == 'en' %}
+    <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
+    <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
+    <li><a class="menu__item" href="/en/resume/">{{ t.nav.resume }}</a></li>
+  {% else %}
+    <li><a class="menu__item" href="/">{{ t.nav.blog }}</a></li>
+    <li><a class="menu__item" href="/projects/">{{ t.nav.projects }}</a></li>
+    <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
+  {% endif %}
   <div class="spacer"></div>
 </ul>
 
 <div class="post">
-  <a href="/projects/" class="return-button">Projelere Dön</a>
+  {% if current_lang == 'en' %}
+    <a href="/en/projects/" class="return-button">Return to Projects</a>
+  {% else %}
+    <a href="/projects/" class="return-button">Projelere Dön</a>
+  {% endif %}
   
   <h1>{{ page.title }}</h1>
+  
+  {% comment %} Show translation links if available {% endcomment %}
+  {% if page.translations %}
+    <div class="translation-links">
+      <span class="translation-links__label">{{ t.project.available_in }}</span>
+      {% for translation in page.translations %}
+        {% if translation.lang != current_lang %}
+          <a href="{{ translation.url }}" class="translation-links__link">
+            {% if translation.lang == 'tr' %}
+              🇹🇷 {{ t.general.turkish }}
+            {% else %}
+              🇺🇸 {{ t.general.english }}
+            {% endif %}
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+  
   {% if page.description %}
   <p class="description">{{ page.description }}</p>
   {% endif %}
