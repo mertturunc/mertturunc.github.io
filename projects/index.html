@@ -6,33 +6,87 @@ summary: Portfolyo sayılabilecek bir sayfa
 ---
 <head>
   <script>
-    // Cache the collapsible elements with accordion behavior
+    // Cache the collapsible elements with accordion behavior and URL hash support
     document.addEventListener('DOMContentLoaded', function() {
       const coll = document.getElementsByClassName("collapsible");
+      
+      // Function to close all containers
+      function closeAllContainers() {
+        for (let j = 0; j < coll.length; j++) {
+          coll[j].classList.remove("active");
+          const content = coll[j].nextElementSibling;
+          content.classList.remove("content-open");
+        }
+      }
+      
+      // Function to open specific container by index
+      function openContainer(index) {
+        if (index >= 0 && index < coll.length) {
+          coll[index].classList.add("active");
+          const content = coll[index].nextElementSibling;
+          content.classList.add("content-open");
+        }
+      }
+      
+      // Function to generate hash from project title
+      function generateHash(title) {
+        return title.toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim();
+      }
+      
+      // Set up click handlers
       for (let i = 0; i < coll.length; i++) {
+        const projectTitle = coll[i].textContent;
+        const projectHash = generateHash(projectTitle);
+        coll[i].setAttribute('data-hash', projectHash);
+        
         coll[i].addEventListener("click", function() {
           const content = this.nextElementSibling;
           const isCurrentlyOpen = content.classList.contains("content-open");
           
           // Close all other collapsible content with animation
-          for (let j = 0; j < coll.length; j++) {
-            if (j !== i) {
-              coll[j].classList.remove("active");
-              const otherContent = coll[j].nextElementSibling;
-              otherContent.classList.remove("content-open");
-            }
-          }
+          closeAllContainers();
           
-          // Toggle current content with animation
+          // Toggle current content with animation and update URL
           if (isCurrentlyOpen) {
-            this.classList.remove("active");
-            content.classList.remove("content-open");
+            // If closing, remove hash from URL
+            history.pushState(null, null, window.location.pathname);
           } else {
+            // If opening, add hash to URL
             this.classList.add("active");
             content.classList.add("content-open");
+            history.pushState(null, null, '#' + projectHash);
           }
         });
       }
+      
+      // Handle direct hash navigation and browser back/forward
+      function handleHashChange() {
+        const hash = window.location.hash.substring(1);
+        closeAllContainers();
+        
+        if (hash) {
+          for (let i = 0; i < coll.length; i++) {
+            if (coll[i].getAttribute('data-hash') === hash) {
+              openContainer(i);
+              // Smooth scroll to the opened container
+              setTimeout(() => {
+                coll[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+              break;
+            }
+          }
+        }
+      }
+      
+      // Listen for hash changes (browser back/forward)
+      window.addEventListener('hashchange', handleHashChange);
+      
+      // Handle initial hash on page load
+      handleHashChange();
     });
   </script>
 </head>
