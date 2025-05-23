@@ -10,10 +10,20 @@
   <meta name="theme-color" content="hsl(51, 100%, 59%)">
   <link href="/i/favicon.png" rel="icon" sizes="32x32">
 
+  <!-- Apply theme immediately to prevent flash -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
   <link href='/style.css?v=20201203' rel='stylesheet' type='text/css' />
   <title>{{ page.title }} @ buralarda iken</title>
 
-  <link href="/blog/atom.xml" rel="alternate" title="atr0p’s blog" type="application/atom+xml" />
+  <link href="/blog/atom.xml" rel="alternate" title="atr0p's blog" type="application/atom+xml" />
 
   <meta name="author" content="Mert Turunç" />
   {%if page.header %}
@@ -50,10 +60,61 @@
   <meta name="twitter:creator" content="@therealatropos" />
 </head>
 <body>
+<!-- Theme Toggle Button -->
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+  <span id="theme-icon">☀️</span>
+</button>
+
 <div class="page {{ page.class }}">
 
 {{ content }}
 
 <div class="preload"></div>
+
+<script>
+// Theme switching functionality
+(function() {
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  const html = document.documentElement;
+  
+  // Get current theme state
+  const currentTheme = localStorage.getItem('theme') || 'dark';
+  
+  // Update icon based on current theme
+  function updateIcon(theme) {
+    if (theme === 'dark') {
+      themeIcon.textContent = '☀️';
+    } else {
+      themeIcon.textContent = '🌙';
+    }
+  }
+  
+  // Initialize icon
+  updateIcon(currentTheme);
+  
+  // Theme toggle click handler
+  themeToggle.addEventListener('click', function() {
+    const isCurrentlyDark = html.hasAttribute('data-theme');
+    const newTheme = isCurrentlyDark ? 'light' : 'dark';
+    
+    // Apply new theme
+    if (newTheme === 'dark') {
+      html.setAttribute('data-theme', 'dark');
+    } else {
+      html.removeAttribute('data-theme');
+    }
+    
+    // Update icon
+    updateIcon(newTheme);
+    
+    // Save preference
+    localStorage.setItem('theme', newTheme);
+  });
+})();
+</script>
+
+</body>
+</html>
 
 
