@@ -1,5 +1,6 @@
 {% include language-utils.html %}
 
+<!-- Full Language Switcher (Desktop) -->
 <div class="language-switcher">
   <div class="language-switcher__toggle" id="lang-toggle">
     <span class="language-switcher__icon">🌐</span>
@@ -19,6 +20,11 @@
     </div>
   </div>
 </div>
+
+<!-- Minimal Language Switcher (Mobile) -->
+<a href="{{ alternate_url }}" class="language-switcher-minimal" title="{% if current_lang == 'tr' %}{{ t.general.english }}{% else %}{{ t.general.turkish }}{% endif %}">
+  {% if current_lang == 'tr' %}🇺🇸{% else %}🇹🇷{% endif %}
+</a>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
