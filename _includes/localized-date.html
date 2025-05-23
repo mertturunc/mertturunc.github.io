@@ -1,0 +1,18 @@
+{% comment %}
+Localized date formatting for different languages
+Usage: {% include localized-date.html date=page.date %}
+{% endcomment %}
+
+{% include language-utils.html %}
+
+{% assign input_date = include.date %}
+{% assign day = input_date | date: "%-d" %}
+{% assign month_index = input_date | date: "%-m" | minus: 1 %}
+{% assign year = input_date | date: "%Y" %}
+{% assign month_name = t.months[month_index] %}
+
+{% if current_lang == 'tr' %}
+{{ day }} {{ month_name }} {{ year }}
+{% else %}
+{{ month_name }} {{ day }}, {{ year }}
+{% endif %} 

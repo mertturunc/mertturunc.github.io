@@ -1,0 +1,16 @@
+{% comment %}
+Short date formatting for homepage
+Usage: {% include short-date.html date=post.date %}
+{% endcomment %}
+
+{% include language-utils.html %}
+
+{% assign input_date = include.date %}
+{% assign day = input_date | date: "%-d" %}
+{% assign month = input_date | date: "%-m" %}
+
+{% if current_lang == 'tr' %}
+{{ day }}/{{ month }}
+{% else %}
+{{ month }}/{{ day }}
+{% endif %} 

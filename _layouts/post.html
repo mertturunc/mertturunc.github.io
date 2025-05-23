@@ -47,11 +47,13 @@ layout: default
 
   {{ content }}
 
+  {% include share-buttons.html %}
+
   <p class=footer>
-    <span>{{ page.date | date: "%B %-d, %Y" }}</span>
+    <span>{% include localized-date.html date=page.date %}</span>
     {% if page.related_url and page.related_title %}
       <span class="separator">·</span>
-      <span>Related</span>
+      <span>{{ t.post.related }}</span>
       <a href="{{ page.related_url }}">{{ page.related_title }}</a>
     {% endif %}
   </p>

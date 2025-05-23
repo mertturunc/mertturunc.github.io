@@ -122,7 +122,7 @@ permalink: /en/
         {% endif %}
       {% endif %}
       
-      <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %}<a href="{{ display_url }}"> {{ display_post.title }}</a> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date">{{ display_post.date | date: "%-m/%-d"}}</span>
+      <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %}<a href="{{ display_url }}"> {{ display_post.title }}</a> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date">{% include short-date.html date=display_post.date %}</span>
     {% endfor %}
   {% endfor %}
 

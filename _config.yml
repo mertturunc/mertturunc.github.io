@@ -3,6 +3,9 @@ markdown: kramdown
 plugins:
   - jekyll-redirect-from
 
+# Site configuration
+url: "https://mertturunc.github.io"
+
 # Multilingual configuration
 languages: ["tr", "en"]
 default_lang: "tr"

@@ -61,12 +61,18 @@ layout: default
 
 <div class="post">
   {% if current_lang == 'en' %}
-    <a href="/en/projects/" class="return-button">Return to Projects</a>
+    <a href="/en/projects/" class="return-button">{{ t.project.return_to_projects }}</a>
   {% else %}
-    <a href="/projects/" class="return-button">Projelere Dön</a>
+    <a href="/projects/" class="return-button">{{ t.project.return_to_projects }}</a>
   {% endif %}
   
-  <h1>{{ page.title }}</h1>
+  <h1>
+    {% if current_lang == 'en' and page.title_en %}
+      {{ page.title_en }}
+    {% else %}
+      {{ page.title }}
+    {% endif %}
+  </h1>
   
   {% comment %} Show translation links if available {% endcomment %}
   {% if page.translations %}
@@ -86,17 +92,33 @@ layout: default
     </div>
   {% endif %}
   
-  {% if page.description %}
-  <p class="description">{{ page.description }}</p>
+  {% comment %} Display description in appropriate language {% endcomment %}
+  {% assign description_to_show = "" %}
+  {% if current_lang == 'en' and page.description_en %}
+    {% assign description_to_show = page.description_en %}
+  {% elsif page.description %}
+    {% assign description_to_show = page.description %}
+  {% endif %}
+  
+  {% if description_to_show != "" %}
+  <p class="description">{{ description_to_show }}</p>
   {% endif %}
   
   {% if page.embed_url %}
   <div class="sketchfab-embed-wrapper">
-    <iframe title="{{ page.title }}" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ page.embed_url }}" loading="lazy"></iframe>
+    <iframe title="
+    {%- if current_lang == 'en' and page.title_en -%}
+      {{ page.title_en }}
+    {%- else -%}
+      {{ page.title }}
+    {%- endif -%}
+    " frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ page.embed_url }}" loading="lazy"></iframe>
   </div>
   {% endif %}
 
   <div class="project-content">
     {{ content }}
   </div>
+
+  {% include share-buttons.html %}
 </div>

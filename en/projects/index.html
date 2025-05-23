@@ -337,23 +337,47 @@ summary: A portfolio page
         {% assign lang_indicators = "[TR]" %}
       {% endif %}
     {% else %}
-      {% if project_lang == 'en' %}
-        {% assign lang_indicators = "[EN]" %}
+      {% comment %} No translations, check if we have English fields {% endcomment %}
+      {% assign has_en_fields = false %}
+      {% if project.title_en or project.description_en %}
+        {% assign has_en_fields = true %}
+      {% endif %}
+      
+      {% if project_lang == 'en' or has_en_fields %}
+        {% if has_en_fields %}
+          {% assign lang_indicators = "[TR/EN]" %}
+        {% else %}
+          {% assign lang_indicators = "[EN]" %}
+        {% endif %}
       {% else %}
         {% assign lang_indicators = "[TR]" %}
       {% endif %}
     {% endif %}
     
-    <button type="button" class="collapsible">{{ project.title }} <span class="language-indicator">{{ lang_indicators }}</span></button>
+    {% comment %} Determine display title and description for English site {% endcomment %}
+    {% assign display_title = project.title %}
+    {% assign display_description = project.description %}
+    {% assign iframe_title = project.title %}
+    
+    {% if project.title_en %}
+      {% assign display_title = project.title_en %}
+      {% assign iframe_title = project.title_en %}
+    {% endif %}
+    
+    {% if project.description_en %}
+      {% assign display_description = project.description_en %}
+    {% endif %}
+    
+    <button type="button" class="collapsible">{{ display_title }}{% if project.has_full_page %} <span class="language-indicator">{{ lang_indicators }}</span>{% endif %}</button>
     <div class="content">
       {% if project.embed_url %}
       <div class="sketchfab-embed-wrapper">
-        <iframe title="{{ project.title }}" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ project.embed_url }}"></iframe>
+        <iframe title="{{ iframe_title }}" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ project.embed_url }}"></iframe>
       </div>
       {% endif %}
       <div class="project-description">
-        {% if project.description %}
-        <p>{{ project.description }}</p>
+        {% if display_description %}
+        <p>{{ display_description }}</p>
         {% endif %}
         {% if project.has_full_page %}
         <a href="/en{{ project.url }}" class="project-link">{{ t.project.view_project }}</a>

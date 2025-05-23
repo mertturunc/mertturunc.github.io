@@ -27,39 +27,39 @@
   <link href="/blog/atom.xml" rel="alternate" title="atr0p's blog" type="application/atom+xml" />
 
   <meta name="author" content="Mert Turunç" />
-  {%if page.header %}
-  <meta property="og:image" content="{{ page.header }}" />
-  {%else %}
-  <meta property="og:image" content=/i/favicon_normal.jpg />
-  {% endif %}
-  <meta property="og:title" content="{{ page.title }} @ {{ t.site_title }}" />
-  <meta property="og:url" content="https://mertturunc.github.io{{ page.url }}" />
-  {% if page.categories contains 'blog' %}
-    <meta property="og:type" content="article" />
-
-    <meta property="article:published_time" content='{{ page.date | date: "%Y-%m-%d" }}' />
-
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="{{ page.title }}" />
-  {% endif %}
-
-  {% if page.summary %}
-    <meta property="og:description" content="{{ page.summary }}" />
-    <meta name="twitter:description" content="{{ page.summary }}" />
-  {% else %}
-    <meta property="og:description" content="{{ t.site_description }}" />
-
-  {% endif %}
-
-  <meta property="og:site_name" content="mertturunc.github.io" />
-  <meta property="article:author" content="https://www.facebook.com/mtrnc" />
-  <meta property="profile:first_name" content="Mert" />
-  <meta property="profile:last_name" content="Turunç" />
-  <meta property="profile:username" content="atr0p" />
-  <meta property="profile:gender" content="male" />
-
-  <meta name="twitter:creator" content="@therealatropos" />
   
+  <!-- Open Graph meta tags for LinkedIn and other social media -->
+  <meta property="og:type" content="{% if page.categories contains 'blog' %}article{% else %}website{% endif %}" />
+  <meta property="og:title" content="{{ page.title }}" />
+  <meta property="og:description" content="{% if page.summary %}{{ page.summary }}{% elsif page.description %}{{ page.description }}{% else %}{{ t.site_description }}{% endif %}" />
+  <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+  <meta property="og:site_name" content="{{ t.site_title }}" />
+  {% if page.header %}
+    <meta property="og:image" content="{{ site.url }}{{ page.header }}" />
+  {% else %}
+    <meta property="og:image" content="{{ site.url }}/i/favicon_normal.jpg" />
+  {% endif %}
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  
+  {% if page.categories contains 'blog' %}
+    <meta property="article:published_time" content="{{ page.date | date: '%Y-%m-%d' }}" />
+    <meta property="article:author" content="Mert Turunç" />
+  {% endif %}
+
+  <!-- Twitter Card meta tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@therealatropos" />
+  <meta name="twitter:creator" content="@therealatropos" />
+  <meta name="twitter:title" content="{{ page.title }}" />
+  <meta name="twitter:description" content="{% if page.summary %}{{ page.summary }}{% elsif page.description %}{{ page.description }}{% else %}{{ t.site_description }}{% endif %}" />
+  {% if page.header %}
+    <meta name="twitter:image" content="{{ site.url }}{{ page.header }}" />
+  {% else %}
+    <meta name="twitter:image" content="{{ site.url }}/i/favicon_normal.jpg" />
+  {% endif %}
+
   {% comment %} Add alternate language links {% endcomment %}
   {% if current_lang == 'tr' %}
     <link rel="alternate" hreflang="en" href="https://mertturunc.github.io/en{{ page.url }}" />

@@ -8,3 +8,4 @@ blog/readable-clojure/snippets/*
 vendor
 .jekyll-cache
 patrons/*.edn
+OPEN_GRAPH_IMAGE_REQUIREMENTS.md

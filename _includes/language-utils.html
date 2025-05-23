@@ -2,12 +2,12 @@
 Language utility functions for the multilingual Jekyll site
 {% endcomment %}
 
-{% comment %} Detect current language from page URL {% endcomment %}
+{% comment %} Detect current language from page properties first, then URL {% endcomment %}
 {% assign current_lang = site.default_lang %}
-{% if page.url contains '/en/' %}
-  {% assign current_lang = 'en' %}
-{% elsif page.lang %}
+{% if page.lang %}
   {% assign current_lang = page.lang %}
+{% elsif page.url contains '/en/' %}
+  {% assign current_lang = 'en' %}
 {% endif %}
 
 {% comment %} Get translations for current language {% endcomment %}

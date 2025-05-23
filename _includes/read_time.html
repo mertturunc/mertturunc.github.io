@@ -1,6 +1,7 @@
+{% include language-utils.html %}
 {% capture words %}
 {{ content | number_of_words | minus: 180 }}
 {% endcapture %}
 {% unless words contains '-' %}
-{{ words | plus: 150 | divided_by: 150 | append: ' dakika okuma süresi' }}
+{{ words | plus: 150 | divided_by: 150 | append: ' ' | append: t.post.read_time }}
 {% endunless %}
