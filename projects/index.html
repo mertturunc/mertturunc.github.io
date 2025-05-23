@@ -43,8 +43,18 @@ summary: Portfolyo sayılabilecek bir sayfa
 .content {
   display: none;
   overflow: hidden;
+  max-height: 800px;
 }
 
+iframe {
+  width: 100%;
+  border: none;
+  overflow: hidden;
+}
+
+#map-cyprus {
+  height: 400px;
+}
 
 </style>
 
@@ -62,11 +72,9 @@ summary: Portfolyo sayılabilecek bir sayfa
   <button type="button" class="collapsible">Test</button>
   <div class="content">
     <iframe
-  id="inlineFrameExample"
-  title="Inline Frame Example"
-  width="300"
-  height="200"
-  src="https://mertturunc.github.io/maptest/7_1.html">
+  id="map-cyprus"
+  title="Inline Map Example"
+  src="/maptest/7_1.html">
 </iframe>
 
   </div>
