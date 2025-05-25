@@ -20,7 +20,7 @@ sitemap:
     - "/blog/vibe-coding-a-chrome-extension/"
 
 # Site configuration
-url: "https://mertturunc.github.io"
+url: "https://blog.atr0p.dev"
 
 # Multilingual configuration
 languages: ["tr", "en"]

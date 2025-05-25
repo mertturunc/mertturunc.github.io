@@ -23,4 +23,4 @@ Disallow: /*?draft=*
 Disallow: /*?hidden=*
 
 # Sitemap location
-Sitemap: https://mertturunc.github.io/sitemap.xml 
+Sitemap: https://blog.atr0p.dev/sitemap.xml 
