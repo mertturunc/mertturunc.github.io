@@ -5,6 +5,7 @@ summary: "how can we visit as many great pubs as possible without walking all ov
 lang: en
 geo: true
 hidden: true
+sitemap: false
 ---
 
 

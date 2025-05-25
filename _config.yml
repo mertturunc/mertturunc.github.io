@@ -3,6 +3,21 @@ markdown: kramdown
 highlighter: rouge
 plugins:
   - jekyll-redirect-from
+  - jekyll-sitemap
+
+# Sitemap configuration
+sitemap:
+  exclude:
+    - "/maptest/"
+    - "/script/"
+    - "/vendor/"
+    - "/resume/"
+    - "/en/resume/"
+    - "*.json"
+    - "*.xml"
+    - "*.pdf"
+    - "/blog/pub-crawling-in-istanbul-with-tsp/"
+    - "/blog/vibe-coding-a-chrome-extension/"
 
 # Site configuration
 url: "https://mertturunc.github.io"
@@ -20,6 +35,9 @@ collections:
 
 exclude:
   - "vendor"
+  - "maptest"
+  - "script"
+  - "resume/cv.pdf"
 defaults:
   -
     scope:

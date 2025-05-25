@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Block development and build directories
+Disallow: /_site/
+Disallow: /vendor/
+Disallow: /.bundle/
+Disallow: /script/
+Disallow: /resume/
+
+# Block test directories
+Disallow: /maptest/
+
+# Allow important content
+Allow: /blog/
+Allow: /projects/
+Allow: /en/
+Allow: /_posts/
+Allow: /_projects/
+
+# Block hidden or draft content (if any)
+Disallow: /*?draft=*
+Disallow: /*?hidden=*
+
+# Sitemap location
+Sitemap: https://mertturunc.github.io/sitemap.xml 

@@ -249,6 +249,7 @@ a.menu__item_inside {
 .post {
   width: 544px;
   margin: 15px auto;
+  position: relative; /* Allow absolute positioning of child elements */
 }
 
 /* Post title specific spacing */
@@ -738,6 +739,43 @@ sub {
 
 .about_inner>p {
   margin: 0 0 8px;
+}
+
+.about-image {
+  position: absolute;
+  left: -120px; /* Position image outside the post container with space */
+  top: 20px; /* Position to align with the about section */
+  z-index: 10; /* Ensure image is above other elements */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; /* Make image unselectable */
+  pointer-events: none; /* Disable all mouse interactions */
+}
+
+.about-image img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.about {
+  /* No special positioning needed */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .about-image {
+    position: static;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .about-image img {
+    width: 80px;
+    height: 80px;
+  }
 }
 
 .btn-subscribe {

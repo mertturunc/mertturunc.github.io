@@ -5,6 +5,7 @@ summary: "after taking a huge meaningless break in blogging scene i finally mana
 lang: en
 geo: true
 hidden: true
+sitemap: false
 ---
 
 # intro
