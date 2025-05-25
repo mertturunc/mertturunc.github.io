@@ -3,7 +3,7 @@ layout: default
 ---
 {% include language-utils.html %}
 
-<ul class=menu>
+<ul class="menu">
   {% if current_lang == 'en' %}
     <li><a class="menu__item menu__item_inside" href="/en/">{{ t.nav.blog }}</a></li>
     <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
@@ -49,7 +49,7 @@ layout: default
 
   {% include share-buttons.html %}
 
-  <p class=footer>
+  <p class="footer">
     <span>{% include localized-date.html date=page.date %}</span>
     {% if page.related_url and page.related_title %}
       <span class="separator">·</span>

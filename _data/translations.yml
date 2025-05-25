@@ -11,6 +11,7 @@ tr:
   post:
     starred_tooltip: "yıldızlı"
     music_tooltip: "müzik"
+    geo_tooltip: "lokasyon"
     read_in: "Bu yazıyı şu dilde oku:"
     available_in: "Bu yazı şu dillerde mevcut:"
     original_lang: "Orijinal dil:"
@@ -54,6 +55,7 @@ en:
   post:
     starred_tooltip: "starred"
     music_tooltip: "music"
+    geo_tooltip: "location"
     read_in: "Read this post in:"
     available_in: "This post is available in:"
     original_lang: "Original language:"

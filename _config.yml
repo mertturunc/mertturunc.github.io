@@ -1,5 +1,6 @@
 permalink: /:categories/:title/
 markdown: kramdown
+highlighter: rouge
 plugins:
   - jekyll-redirect-from
 
@@ -25,11 +26,14 @@ defaults:
       path: "" # an empty string here means all files in the project
     values:
       layout: "post"
-      starred: "false"
-      music: "false"
+      starred: false
+      music: false
+      geo: false
+      hidden: false
   -
     scope:
       path: "_projects"
       type: "projects"
     values:
-      layout: "project"            
+      layout: "project"
+      hidden: false            

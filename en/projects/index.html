@@ -8,8 +8,7 @@ summary: A portfolio page
 ---
 {% include language-utils.html %}
 
-<head>
-  <script>
+<script>
     // Cache the collapsible elements with accordion behavior and URL hash support
     document.addEventListener('DOMContentLoaded', function() {
       const coll = document.getElementsByClassName("collapsible");
@@ -92,9 +91,8 @@ summary: A portfolio page
       // Handle initial hash on page load
       handleHashChange();
     });
-  </script>
-</head>
-<body>
+</script>
+
 <style>
   .table { font-size: 15px; line-height: 25px; display: grid; grid-template-columns: max-content 1fr; grid-gap: 5px 10px; }
   .table > div:nth-child(2n+1) { font-weight: 300; } 
@@ -215,16 +213,17 @@ summary: A portfolio page
   }
 </style>
 
-<ul class=menu>
+<ul class="menu">
   <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
   <li><span class="menu__item menu__item_selected" href="/en/projects/">{{ t.nav.projects }}</span></li>
   <li><a class="menu__item" href="/en/resume/">{{ t.nav.resume }}</a></li>
   <div class="spacer"></div>
 </ul>
 
+<div class="post">
 {% if site.projects.size > 0 %}
   {% comment %} Filter and deduplicate projects {% endcomment %}
-  {% assign all_projects = site.projects | sort: "date" | reverse %}
+  {% assign all_projects = site.projects | where_exp: "project", "project.hidden != true" | sort: "date" | reverse %}
   {% assign unique_projects = "" | split: "" %}
   {% assign processed_groups = "" | split: "" %}
   
@@ -390,4 +389,4 @@ summary: A portfolio page
 {% else %}
   <p>No projects added yet.</p>
 {% endif %}
-</body> 
+</div> 

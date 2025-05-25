@@ -2,7 +2,6 @@
 category: blog
 title: "markdown showdown"
 published: false
-hidden: true
 starred: false
 ---
 
@@ -51,11 +50,47 @@ function test() {
 }
 ```
 
-First Header | Second Header
------------- | -------------
-Content cell 1 | Content cell 2
-Content column 1 | Content column 2
+First Header | Second Header | Third Header
+------------ | ------------- | ------------
+Content cell 1 | Content cell 2 | Content cell 3
+Content column 1 | Content column 2 | Content column 3
+**Bold content** | *Italic content* | `Code content`
+Long content that might wrap to multiple lines | Short | Medium length content
+
+```python
+def fibonacci(n):
+    """Generate fibonacci sequence up to n"""
+    a, b = 0, 1
+    while a < n:
+        print(a, end=' ')
+        a, b = b, a + b
+    print()
+
+# Call the function
+fibonacci(100)
+```
+
+```css
+.highlight {
+  background: var(--code-bg);
+  border-radius: 8px;
+  margin: 1em -30px;
+  padding: 16px 30px 14px;
+  overflow-x: auto;
+}
+```
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
 
 GitHub supports emoji!
 :+1: :sparkles: :camel: :tada:
-:rocket: :metal: :octocat: 
+:rocket: :metal: :octocat:

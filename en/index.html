@@ -6,7 +6,7 @@ permalink: /en/
 ---
 {% include language-utils.html %}
 
-<ul class=menu>
+<ul class="menu">
   <li><span class="menu__item menu__item_selected" href="/en/">{{ t.nav.blog }}</span></li>
   <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
   <li><a class="menu__item" href="/en/resume/">{{ t.nav.resume }}</a></li>
@@ -22,7 +22,7 @@ permalink: /en/
     </div>
   </div>
 
-  {% assign published_posts = site.posts | where_exp: "post", "post.draft != true" %}
+  {% assign published_posts = site.posts | where_exp: "post", "post.draft != true" | where_exp: "post", "post.hidden != true" %}
   
   {% comment %} Group posts to avoid duplicates from translations {% endcomment %}
   {% assign unique_posts = "" | split: "" %}
@@ -122,11 +122,11 @@ permalink: /en/
         {% endif %}
       {% endif %}
       
-      <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %}<a href="{{ display_url }}"> {{ display_post.title }}</a> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date">{% include short-date.html date=display_post.date %}</span>
+      <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %}<a href="{{ display_url }}"> {{ display_post.title }}</a> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date">{% include short-date.html date=display_post.date %}</span>
     {% endfor %}
   {% endfor %}
 
-<p class=comments>
+<p class="comments">
   
 </p>
 

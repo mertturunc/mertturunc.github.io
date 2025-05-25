@@ -4,447 +4,377 @@ title: Resume
 summary: Mert Turunç | Geomatics Engineering | GIS Specialist
 lang: en
 ---
+{% include language-utils.html %}
 
-<!DOCTYPE html>
-<!-- saved from url=(0036)https://mertturunc.github.io/resume/ -->
-<html lang="en" prefix="og: http://ogp.me/ns#" xmlns:og="http://opengraphprotocol.org/schema/">
+<style>
+  figure {
+    margin: 96px -124px 24px;
+    padding: 48px 96px;
+    border-radius: 8px;
+    background: #FFF;
+    width: 792px;
+  }
 
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  figure>img {
+    width: 100%;
+    margin: 0 auto;
+  }
 
+  figure.nobg {
+    background: transparent;
+  }
 
-  <meta name="viewport" content="width=640">
+  figure.icon {
+    background: transparent;
+  }
 
-  <meta name="theme-color" content="hsl(199, 39%, 39%)">
-  <link href="https://mertturunc.github.io/i/vesikalık_32.png" rel="icon" sizes="32x32">
-  <meta property="og:image" content="/i/vesikalık.jpg">
+  figure.icon>img {
+    background: #FFF;
+    width: 228px;
+    border-radius: 36px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.1);
+  }
 
-  <title>Resume @ while around here</title>
+  figure.full {
+    padding: 0;
+  }
 
-  <link href="https://mertturunc.github.io/blog/atom.xml" rel="alternate" title="atr0p's blog"
-    type="application/atom+xml">
+  .table {
+    font-size: 12px;
+    line-height: 25px;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    grid-gap: 1px 10px;
+  }
 
-  <meta name="author" content="Mert Turunç">
+  .table>div:nth-child(2n+1) {
+    font-weight: 300;
+  }
 
-  <meta property="og:title" content="Resume @ while around here">
-  <meta property="og:url" content="https://mertturunc.github.io/en/resume/">
+  .ikili {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 
+  .summary,
+  .summary1 {
+    font-size: 12px;
+    width: 275px;
+    height: fit-content;
+    line-height: 1.25em;
+    padding-bottom: 10px;
+    min-height: 6em;
+  }
 
+  br {
+    content: "";
+    margin: 3.935em;
+    display: block;
+    font-size: 69%;
+  }
 
-  <meta property="og:description" content="Mert Turunç | Geomatics Engineering | Student">
-  <meta name="twitter:description" content="Mert Turunç | Geomatics Engineering | Student">
+  p {
+    margin: 0;
+  }
 
+  img {
+    margin-bottom: 1.5em;
+  }
 
-  <meta property="og:site_name" content="mertturunc.github.io">
-  <meta property="article:author" content="https://www.facebook.com/mtrnc">
-  <meta property="profile:first_name" content="Mert">
-  <meta property="profile:last_name" content="Turunç">
-  <meta property="profile:username" content="atr0p">
-  <meta property="profile:gender" content="male">
+  @media print {
+    .svglogo,
+    .gh-stars {
+      color: black;
+    }
+  }
 
-  <meta name="twitter:creator" content="@therealatropos">
-  </style>
-</head>
+  /* Added Style Rules */
+  h1,
+  h2 {
+    margin: 1em 0 0.5em;
+  }
 
-<body class="vsc-initialized" data-new-gr-c-s-check-loaded="14.1032.0" data-gr-ext-installed="">
-  <div class="page ">
+  h4 {
+    padding-bottom: 0.5em;
+    padding-top: 1.25em;
+    color: #2a748c;
+  }
 
-    <style>
-      figure {
-        margin: 96px -124px 24px;
-        padding: 48px 96px;
-        border-radius: 8px;
-        background: #FFF;
-        width: 792px;
-      }
+  ul>li,
+  ol>li {
+    margin: 0em 0em 1em;
+  }
 
-      figure>img {
-        width: 100%;
-        margin: 0 auto;
-      }
+  @media (max-width: 600px) {
+    .ikili {
+      grid-template-columns: 1fr;
+    }
+  }
 
-      figure.nobg {
-        background: transparent;
-      }
+  .deneyim {
+    display: flex;
+    flex-direction: column;
+  }
+  .deneyim .table {
+    margin-top: auto;
+  }
+</style>
 
-      figure.icon {
-        background: transparent;
-      }
+<ul class="menu">
+  <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
+  <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
+  <li><span class="menu__item menu__item_selected">{{ t.nav.resume }}</span></li>
+  <div class="spacer"></div>
+</ul>
 
-      figure.icon>img {
-        background: #FFF;
-        width: 228px;
-        border-radius: 36px;
-        box-shadow: 0 0 40px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.1);
-      }
+<h1 style="margin: 1em 0 0 0;">Mert Turunç</h1>
+<h6>GIS</h6>
 
-      figure.full {
-        padding: 0;
-      }
+<img src="/i/vesikalık.jpg" style="height: 175px">
+<p></p>
+<a href="mailto:mertturunc@gmail.com">mertturunc {at} gmail {dot} com</a> | +90 (530) - 922-5429 | Istanbul
+<p><a href="/resume/cv.pdf">💾</a></p>
 
-      .table {
-        font-size: 12px;
-        line-height: 25px;
-        display: grid;
-        grid-template-columns: max-content 1fr;
-        grid-gap: 1px 10px;
-      }
-
-      .table>div:nth-child(2n+1) {
-        font-weight: 300;
-      }
-
-      .ikili {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .summary,
-      .summary1 {
-        font-size: 12px;
-        width: 275px;
-        height: fit-content;
-        line-height: 1.25em;
-        padding-bottom: 10px;
-        min-height: 6em;
-      }
-
-      br {
-        content: "";
-        margin: 3.935em;
-        display: block;
-        font-size: 69%;
-      }
-
-      p {
-        margin: 0;
-      }
-
-      img {
-        margin-bottom: 1.5em;
-      }
-
-      @media print {
-
-        .svglogo,
-        .gh-stars {
-          color: black;
-        }
-      }
-
-      /* Added Style Rules */
-
-      h1,
-      h2 {
-        margin: 1em 0 0.5em;
-      }
-
-      h4 {
-        padding-bottom: 0.5em;
-        padding-top: 1.25em;
-        color: #2a748c;
-
-      }
-
-      ul>li,
-      ol>li {
-        margin: 0em 0em 1em;
-      }
-
-      @media (max-width: 600px) {
-        .ikili {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .deneyim {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .deneyim .table {
-        margin-top: auto;
-      }
-    </style>
-
-    {% include language-utils.html %}
-
-    <ul class="menu">
-      <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
-      <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
-      <li><span class="menu__item menu__item_selected">{{ t.nav.resume }}</span></li>
-      <div class="spacer"></div>
-    </ul>
-
-    <h1 style="margin: 1em 0 0 0;">Mert Turunç</h1>
-    <h6>GIS</h6>
-
-    <img src="/i/vesikalık.jpg" "="" style=" height: 175px">
-    <p></p>
-    <a href="mailto:mertturunc@gmail.com">mertturunc {at} gmail {dot} com</a> | +90 (530) - 922-5429 | Istanbul
-    <p><a href="/resume/cv.pdf">💾</a></p>
-    <h1>Education</h1>
-    <div class="ikili">
-      <div class="egitim">
-
-        <h4>Master's Degree</h4>
-
-        <div class="table">
-          <div>School</div>
-          <div>Istanbul Technical University</div>
-          <div>Location</div>
-          <div>Istanbul</div>
-          <div>Program</div>
-          <div>Geographical Information Technologies</div>
-          <div>GPA</div>
-          <div>3.6</div>
-          <div>Year</div>
-          <div>2023 - </div>
-        </div>
-      </div>
-
+<h1>Education</h1>
+<div class="ikili">
+  <div class="egitim">
+    <h4>Master's Degree</h4>
+    <div class="table">
+      <div>School</div>
+      <div>Istanbul Technical University</div>
+      <div>Location</div>
+      <div>Istanbul</div>
+      <div>Program</div>
+      <div>Geographical Information Technologies</div>
+      <div>GPA</div>
+      <div>3.6</div>
+      <div>Year</div>
+      <div>2023 - </div>
     </div>
   </div>
-  <h4>University</h4>
-  <div class="ikili">
-    <div class="egitim">
+</div>
 
-      <div class="table">
-        <div>School</div>
-        <div>Necmettin Erbakan University</div>
-        <div>Location</div>
-        <div>Konya</div>
-        <div>Department</div>
-        <div>Geomatics Engineering</div>
-        <div>GPA</div>
-        <div>2.65</div>
-        <div>Year</div>
-        <div>2015 - 2023</div>
-      </div>
-    </div>
-
-    <div class="egitim">
-
-      <div class="table">
-        <div>School</div>
-        <div>Anadolu University</div>
-        <div>Location</div>
-        <div>Distance Learning</div>
-        <div>Department</div>
-        <div>Sociology</div>
-        <div>GPA</div>
-        <div> - </div>
-        <div>Year</div>
-        <div>2021 - </div>
-      </div>
-    </div>
-
-    <div class="egitim">
-
-      <h4>High School</h4>
-
-      <div class="table">
-        <div>School</div>
-        <div>Namık Kemal High School</div>
-        <div>Location</div>
-        <div>Süleymanpaşa, Tekirdağ</div>
-        <div>Department</div>
-        <div>Mathematics - Science</div>
-        <div>GPA</div>
-        <div>85</div>
-        <div>Year</div>
-        <div>2011 - 2015</div>
-      </div>
-    </div>
-
-  </div>
-  <h1>Experience</h1>
-  <div class="ikili">
-    <div class="deneyim">
-      <h4>Parametre Araştırma Bilişim</h4>
-      <div class="summary">
-        <ul>
-          <li>Led PoC development and solution validation processes in municipal digital transformation projects with
-            ArcGIS Enterprise.</li>
-          <li>Managed ArcGIS Enterprise installation, configuration, and troubleshooting in customer environments.</li>
-          <li>Conducted business analysis to transform stakeholder requirements into integrated GIS solutions.</li>
-          <li>Implemented end-to-end projects including training and documentation.</li>
-        </ul>
-      </div>
-      <div class="table">
-        <div>Title</div>
-        <div>GIS Specialist</div>
-        <div>Location</div>
-        <div>Şişli, Istanbul</div>
-        <div>Department</div>
-        <div>Business Development</div>
-        <div>Year</div>
-        <div>May '24 - Present</div>
-      </div>
-    </div>
-
-    <div class="deneyim">
-      <h4>Mavi Harita</h4>
-      <div class="summary">
-
-        <ul>
-          <li>Performed field surveys with equipment like GNSS, total station, and UAV; conducted application and
-            as-built control work in natural gas infrastructure projects.</li>
-          <li>Prepared survey reports and drawings using Netcad and AutoCAD; worked coordinately with field and office
-            teams.</li>
-          <li>Managed the process by analyzing customer needs, regularly archived survey data, and ensured equipment
-            calibrations.</li>
-        </ul>
-      </div>
-      <div class="table">
-        <div>Title</div>
-        <div>Surveyor</div>
-        <div>Location</div>
-        <div>Süleymanpaşa, Tekirdağ</div>
-        <div>Department</div>
-        <div>-</div>
-        <div>Year</div>
-        <div>June '21 - August '23</div>
-      </div>
-    </div>
-
-    <div class="deneyim">
-      <h4>Süleymanpaşa Municipality</h4>
-      <div class="summary">
-        <ul>
-          <li>Participated in field work with the Study Project Directorate in addition to the Zoning and Urban Planning
-            Directorate.</li>
-          <li>Produced orthophoto maps with Global Mapper for use within the institution.</li>
-          <li>Assisted by preparing official correspondence to reduce personnel workload.</li>
-        </ul>
-      </div>
-      <div class="table">
-        <div>Title</div>
-        <div>Intern</div>
-        <div>Location</div>
-        <div>Süleymanpaşa, Tekirdağ</div>
-        <div>Department</div>
-        <div>Zoning and Urban Planning Directorate</div>
-        <div>Year</div>
-        <div>July '19 - September '19</div>
-      </div>
-    </div>
-
-    <div class="deneyim">
-      <h4>TESKİ</h4>
-      <div class="summary">
-        <ul>
-          <li>Performed data integration for the institution's web service using NetCAD's GIS module.</li>
-        </ul>
-      </div>
-      <div class="table">
-        <div>Title</div>
-        <div>Intern</div>
-        <div>Location</div>
-        <div>Süleymanpaşa, Tekirdağ</div>
-        <div>Department</div>
-        <div>GIS</div>
-        <div>Year</div>
-        <div>June '18 - July '18</div>
-      </div>
-    </div>
-
-    <div class="deneyim">
-      <h4>CK Enerji Boğaziçi Elektrik</h4>
-      <div class="summary">
-        Started working as contract personnel after a one-month internship. Continued the integration work that was done
-        during the internship.
-      </div>
-      <div class="table">
-        <div>Title</div>
-        <div>GIS Integration Operator</div>
-        <div>Location</div>
-        <div>Beyoğlu, Istanbul</div>
-        <div>Department</div>
-        <div>GIS Integration</div>
-        <div>Year</div>
-        <div>August '17 - September '17</div>
-      </div>
-    </div>
-
-    <div class="deneyim">
-      <h4>EMİ Group Information Technologies Inc.</h4>
-      <div class="summary">
-        Worked as an intern in the GIS department. Used ArcGIS and Oracle SQL Developer programs.
-      </div>
-      <div class="table">
-        <div>Title</div>
-        <div>Intern</div>
-        <div>Location</div>
-        <div>Beyoğlu, Istanbul</div>
-        <div>Department</div>
-        <div>GIS Integration</div>
-        <div>Year</div>
-        <div>June '17 - June '17</div>
-      </div>
+<h4>University</h4>
+<div class="ikili">
+  <div class="egitim">
+    <div class="table">
+      <div>School</div>
+      <div>Necmettin Erbakan University</div>
+      <div>Location</div>
+      <div>Konya</div>
+      <div>Department</div>
+      <div>Geomatics Engineering</div>
+      <div>GPA</div>
+      <div>2.65</div>
+      <div>Year</div>
+      <div>2015 - 2023</div>
     </div>
   </div>
 
+  <div class="egitim">
+    <div class="table">
+      <div>School</div>
+      <div>Anadolu University</div>
+      <div>Location</div>
+      <div>Distance Learning</div>
+      <div>Department</div>
+      <div>Sociology</div>
+      <div>GPA</div>
+      <div> - </div>
+      <div>Year</div>
+      <div>2021 - </div>
+    </div>
+  </div>
 
-  <h1>Activities</h1>
+  <div class="egitim">
+    <h4>High School</h4>
+    <div class="table">
+      <div>School</div>
+      <div>Namık Kemal High School</div>
+      <div>Location</div>
+      <div>Süleymanpaşa, Tekirdağ</div>
+      <div>Department</div>
+      <div>Mathematics - Science</div>
+      <div>GPA</div>
+      <div>85</div>
+      <div>Year</div>
+      <div>2011 - 2015</div>
+    </div>
+  </div>
+</div>
+
+<h1>Experience</h1>
+<div class="ikili">
+  <div class="deneyim">
+    <h4>Parametre Araştırma Bilişim</h4>
+    <div class="summary">
+      <ul>
+        <li>Led PoC development and solution validation processes in municipal digital transformation projects with ArcGIS Enterprise.</li>
+        <li>Managed ArcGIS Enterprise installation, configuration, and troubleshooting in customer environments.</li>
+        <li>Conducted business analysis to transform stakeholder requirements into integrated GIS solutions.</li>
+        <li>Implemented end-to-end projects including training and documentation.</li>
+      </ul>
+    </div>
+    <div class="table">
+      <div>Title</div>
+      <div>GIS Specialist</div>
+      <div>Location</div>
+      <div>Şişli, Istanbul</div>
+      <div>Department</div>
+      <div>Business Development</div>
+      <div>Year</div>
+      <div>May '24 - Present</div>
+    </div>
+  </div>
+
+  <div class="deneyim">
+    <h4>Mavi Harita</h4>
+    <div class="summary">
+      <ul>
+        <li>Performed field surveys with equipment like GNSS, total station, and UAV; conducted application and as-built control work in natural gas infrastructure projects.</li>
+        <li>Prepared survey reports and drawings using Netcad and AutoCAD; worked coordinately with field and office teams.</li>
+        <li>Managed the process by analyzing customer needs, regularly archived survey data, and ensured equipment calibrations.</li>
+      </ul>
+    </div>
+    <div class="table">
+      <div>Title</div>
+      <div>Surveyor</div>
+      <div>Location</div>
+      <div>Süleymanpaşa, Tekirdağ</div>
+      <div>Department</div>
+      <div>-</div>
+      <div>Year</div>
+      <div>June '21 - August '23</div>
+    </div>
+  </div>
+
+  <div class="deneyim">
+    <h4>Süleymanpaşa Municipality</h4>
+    <div class="summary">
+      <ul>
+        <li>Participated in field work with the Study Project Directorate in addition to the Zoning and Urban Planning Directorate.</li>
+        <li>Produced orthophoto maps with Global Mapper for use within the institution.</li>
+        <li>Assisted by preparing official correspondence to reduce personnel workload.</li>
+      </ul>
+    </div>
+    <div class="table">
+      <div>Title</div>
+      <div>Intern</div>
+      <div>Location</div>
+      <div>Süleymanpaşa, Tekirdağ</div>
+      <div>Department</div>
+      <div>Zoning and Urban Planning Directorate</div>
+      <div>Year</div>
+      <div>July '19 - September '19</div>
+    </div>
+  </div>
+
+  <div class="deneyim">
+    <h4>TESKİ</h4>
+    <div class="summary">
+      <ul>
+        <li>Performed data integration for the institution's web service using NetCAD's GIS module.</li>
+      </ul>
+    </div>
+    <div class="table">
+      <div>Title</div>
+      <div>Intern</div>
+      <div>Location</div>
+      <div>Süleymanpaşa, Tekirdağ</div>
+      <div>Department</div>
+      <div>GIS</div>
+      <div>Year</div>
+      <div>June '18 - July '18</div>
+    </div>
+  </div>
+
+  <div class="deneyim">
+    <h4>CK Enerji Boğaziçi Elektrik</h4>
+    <div class="summary">
+      Started working as contract personnel after a one-month internship. Continued the integration work that was done during the internship.
+    </div>
+    <div class="table">
+      <div>Title</div>
+      <div>GIS Integration Operator</div>
+      <div>Location</div>
+      <div>Beyoğlu, Istanbul</div>
+      <div>Department</div>
+      <div>GIS Integration</div>
+      <div>Year</div>
+      <div>August '17 - September '17</div>
+    </div>
+  </div>
+
+  <div class="deneyim">
+    <h4>EMİ Group Information Technologies Inc.</h4>
+    <div class="summary">
+      Worked as an intern in the GIS department. Used ArcGIS and Oracle SQL Developer programs.
+    </div>
+    <div class="table">
+      <div>Title</div>
+      <div>Intern</div>
+      <div>Location</div>
+      <div>Beyoğlu, Istanbul</div>
+      <div>Department</div>
+      <div>GIS Integration</div>
+      <div>Year</div>
+      <div>June '17 - June '17</div>
+    </div>
+  </div>
+</div>
+
+<h1>Activities</h1>
+<div class="table">
+  <b>2021</b>
+  <div>18th Turkey Map Scientific and Technical Congress</div>
+  <b>2020</b>
+  <div>Mustafa Akgül Free Software Winter Camp - PostgreSQL Training</div>
+  <b>2019</b>
+  <div>TUJK National Geodesy Workshop</div>
+  <b>2019</b>
+  <div>TMMOB 6th Geographic Information Systems Congress</div>
+  <b>2018</b>
+  <div>Süleymanpaşa Municipality GIS Workshop</div>
+</div>
+
+<h1>Skills</h1>
+<div class="ikili">
   <div class="table">
-    <b>2021</b>
-    <div>18th Turkey Map Scientific and Technical Congress</div>
-    <b>2020</b>
-    <div>Mustafa Akgül Free Software Winter Camp - PostgreSQL Training</div>
-    <b>2019</b>
-    <div>TUJK National Geodesy Workshop</div>
-    <b>2019</b>
-    <div>TMMOB 6th Geographic Information Systems Congress</div>
-    <b>2018</b>
-    <div>Süleymanpaşa Municipality GIS Workshop</div>
+    <div>★★★☆☆</div>
+    <div>Microsoft Office Suite</div>
+    <div>★★★☆☆</div>
+    <div>PostgreSQL</div>
+    <div>★★★★☆</div>
+    <div>Adobe Creative Suite</div>
+    <div>★★★★☆</div>
+    <div>NetCAD</div>
   </div>
-
-  <h1>Skills</h1>
-  <div class="ikili">
-    <div class="table">
-      <div>★★★☆☆</div>
-      <div>Microsoft Office Suite</div>
-      <div>★★★☆☆</div>
-      <div>PostgreSQL</div>
-      <div>★★★★☆</div>
-      <div>Adobe Creative Suite</div>
-      <div>★★★★☆</div>
-      <div>NetCAD</div>
-    </div>
-    <div class="table">
-      <div>★★★☆☆</div>
-      <div>ArcGIS</div>
-      <div>★★★★☆</div>
-      <div>Agisoft Metashape</div>
-      <div>★★★☆☆</div>
-      <div>Pix4D</div>
-      <div>★★★☆☆</div>
-      <div>AutoCAD</div>
-    </div>
+  <div class="table">
+    <div>★★★☆☆</div>
+    <div>ArcGIS</div>
+    <div>★★★★☆</div>
+    <div>Agisoft Metashape</div>
+    <div>★★★☆☆</div>
+    <div>Pix4D</div>
+    <div>★★★☆☆</div>
+    <div>AutoCAD</div>
   </div>
-  <h1>Hobbies and Interests</h1>
-  <div class="ikili">
-    <div class="summary">
-      <ul>
-        <li>Watching Formula 1 races</li>
-        <li>Amateur photography</li>
-        <li>Listening to music</li>
-      </ul>
-    </div>
-    <div class="summary">
-      <ul>
-        <li>Geographic Information Systems</li>
-        <li>Cartography</li>
-        <li>Graphic Design</li>
-      </ul>
-    </div>
+</div>
+
+<h1>Hobbies and Interests</h1>
+<div class="ikili">
+  <div class="summary">
+    <ul>
+      <li>Watching Formula 1 races</li>
+      <li>Amateur photography</li>
+      <li>Listening to music</li>
+    </ul>
   </div>
-
-
-
-
+  <div class="summary">
+    <ul>
+      <li>Geographic Information Systems</li>
+      <li>Cartography</li>
+      <li>Graphic Design</li>
+    </ul>
   </div>
-</body>
-
-</html>
+</div>
