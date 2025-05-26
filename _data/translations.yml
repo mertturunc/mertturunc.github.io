@@ -19,6 +19,7 @@ tr:
     related: "İlgili"
   project:
     view_project: "Projeyi Görüntüle"
+    visit_site: "Siteyi Ziyaret Et"
     read_in: "Bu projeyi şu dilde oku:"
     available_in: "Bu proje şu dillerde mevcut:"
     original_lang: "Orijinal dil:"
@@ -63,6 +64,7 @@ en:
     related: "Related"
   project:
     view_project: "View Project"
+    visit_site: "Visit Site"
     read_in: "Read this project in:"
     available_in: "This project is available in:"
     original_lang: "Original language:"

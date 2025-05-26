@@ -160,30 +160,40 @@ summary: A portfolio page
   }
 
   .project-link {
-    color: #777;
+    color: var(--primary-text);
+    background: transparent;
     text-decoration: none;
-    font-size: 0.9em;
-    margin-left: 10px;
+    font-size: 0.85em;
+    font-weight: 400;
+    margin: 5px 8px 5px 0;
     display: inline-block;
-    padding: 5px 10px;
-    border: 1px solid #777;
+    padding: 6px 12px;
+    border: 1px solid var(--accent-color);
     border-radius: 3px;
     transition: all 0.2s ease;
   }
 
   .project-link:hover {
-    color: #555;
-    border-color: #555;
-    background-color: #f5f5f5;
-    transform: translateY(-1px);
+    color: var(--accent-color);
+    background: transparent;
+    border-color: var(--accent-color);
   }
 
   .project-description {
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    margin: 15px 0 10px 0;
     animation: fadeInUp 0.5s ease-out 0.2s both;
+  }
+
+  .project-description p {
+    margin-bottom: 12px;
+  }
+
+  .project-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+    margin-top: 8px;
   }
 
   @keyframes fadeInUp {
@@ -378,9 +388,14 @@ summary: A portfolio page
         {% if display_description %}
         <p>{{ display_description }}</p>
         {% endif %}
-        {% if project.has_full_page %}
-        <a href="/en{{ project.url }}" class="project-link">{{ t.project.view_project }}</a>
-        {% endif %}
+        <div class="project-buttons">
+          {% if project.has_full_page %}
+          <a href="/en{{ project.url }}" class="project-link">{{ t.project.view_project }}</a>
+          {% endif %}
+          {% if project.site_url %}
+          <a href="{{ project.site_url }}" class="project-link" target="_blank" rel="noopener noreferrer">{{ t.project.visit_site }}</a>
+          {% endif %}
+        </div>
       </div>
     </div>
     {% endfor %}
