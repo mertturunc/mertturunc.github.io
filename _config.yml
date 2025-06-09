@@ -5,6 +5,9 @@ plugins:
   - jekyll-redirect-from
   - jekyll-sitemap
 
+# Plugin directories
+plugins_dir: _plugins
+
 # Sitemap configuration
 sitemap:
   exclude:
