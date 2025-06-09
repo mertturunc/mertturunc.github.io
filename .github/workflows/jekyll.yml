@@ -62,11 +62,14 @@ jobs:
             parts = content.split("---")
             next if parts.length < 3
             
-            begin
-              front_matter = YAML.load(parts[1])
-              next unless front_matter
-              
-              # Extract date from filename if not in front matter
+                          begin
+                front_matter = YAML.load(parts[1])
+                next unless front_matter
+                
+                # Skip drafts and hidden posts
+                next if front_matter["published"] == false || front_matter["hidden"] == true
+                
+                # Extract date from filename if not in front matter
               post_date = front_matter["date"]
               if post_date.nil?
                 # Try to extract date from filename (YYYY-MM-DD-title.md format)
