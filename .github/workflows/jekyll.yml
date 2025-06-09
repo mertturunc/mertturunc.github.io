@@ -49,62 +49,103 @@ jobs:
           JEKYLL_ENV: production
       - name: Generate llms.txt
         run: |
-          ruby -e '
-            require "yaml"
-            require "fileutils"
+          cat > generate_llms.rb << 'RUBY_SCRIPT'
+          require "yaml"
+          require "fileutils"
+          require "date"
+          
+          config = YAML.load_file("_config.yml")
+          site_url = config["url"]
+          
+          posts = Dir.glob("_posts/**/*.md").map do |post_file|
+            content = File.read(post_file)
+            parts = content.split("---")
+            next if parts.length < 3
             
-            config = YAML.load_file("_config.yml")
-            site_url = config["url"]
-            
-            posts = Dir.glob("_posts/**/*.md").map do |post_file|
-              content = File.read(post_file)
-              front_matter = YAML.load(content.split("---")[1])
+            begin
+              front_matter = YAML.load(parts[1])
+              next unless front_matter
+              
+              # Extract date from filename if not in front matter
+              post_date = front_matter["date"]
+              if post_date.nil?
+                # Try to extract date from filename (YYYY-MM-DD-title.md format)
+                filename = File.basename(post_file)
+                date_match = filename.match(/^(\d{4}-\d{2}-\d{2})/)
+                post_date = Date.parse(date_match[1]) if date_match
+              end
+              
+              next if post_date.nil?
+              
+              # Extract clean, concise excerpt
+              excerpt = front_matter["summary"] || front_matter["excerpt"] || front_matter["description"]
+              
+              # If no front matter excerpt, extract clean text from content
+              if excerpt.nil? && parts[2]
+                content_text = parts[2].strip
+                # Remove all markdown/HTML formatting
+                content_text = content_text.gsub(/<figure>.*?<\/figure>/m, '')
+                content_text = content_text.gsub(/<img[^>]*>/i, '')
+                content_text = content_text.gsub(/!\[.*?\]\(.*?\)/, '')
+                content_text = content_text.gsub(/<[^>]+>/, '')
+                content_text = content_text.gsub(/\[.*?\]\(.*?\)/, '')  # Remove links
+                content_text = content_text.gsub(/\#{1,6}\s+/, '')  # Remove headers
+                content_text = content_text.gsub(/\*\*(.*?)\*\*/, '\1')  # Remove bold
+                content_text = content_text.gsub(/\*(.*?)\*/, '\1')  # Remove italic
+                content_text = content_text.gsub(/\n+/, ' ').strip
+                excerpt = content_text[0..80] + "..." if content_text.length > 0
+              end
+              
+              # Clean up the excerpt if it exists
+              if excerpt
+                excerpt = excerpt.gsub(/\n+/, ' ').strip[0..80] + "..."
+              end
+              
               {
-                title: front_matter["title"],
-                date: front_matter["date"],
+                title: front_matter["title"] || "Untitled",
+                date: post_date,
                 url: "/#{post_file.gsub("_posts/", "").gsub(".md", "")}",
-                excerpt: front_matter["excerpt"] || front_matter["description"] || content.split("---")[2].strip[0..200] + "..."
+                excerpt: excerpt || ""
               }
-            end.sort_by { |post| post[:date] }.reverse
-            
-            content = <<~MARKDOWN
-              # Mert Turunç\'s Blog
-              
-              ## About
-              This is a personal blog and portfolio website showcasing projects, blog posts, and professional information about Mert Turunç.
-              
-              ## Main Content
-              The site contains the following main sections:
-              - Blog posts about technology, programming, and personal experiences
-              - Project showcases and descriptions
-              - Professional information and resume
-              - Technical articles and tutorials
-              
-              ## Important Pages
-              - Homepage: #{site_url}
-              - Blog: #{site_url}/blog/
-              - Projects: #{site_url}/projects/
-              
-              ## Blog Posts
-              #{posts.map { |post| 
-                "- [#{post[:title]}](#{site_url}#{post[:url]}) - #{post[:date].strftime("%Y-%m-%d")}\n  #{post[:excerpt]}"
-              }.join("\n\n")}
-              
-              ## Content Guidelines
-              - All blog posts are written in either Turkish or English
-              - Technical content focuses on programming, web development, and technology
-              - Project descriptions include implementation details and technologies used
-              
-              ## Last Updated
-              Generated at: #{Time.now.strftime("%Y-%m-%d %H:%M:%S UTC")}
-              
-              ## Additional Information
-              This file is automatically generated during the build process to help AI models better understand and process the website\'s content.
-            MARKDOWN
-            
-            File.write(File.join("_site", "llms.txt"), content)
-            puts "Generated llms.txt in _site directory"
-          '
+            rescue => e
+              puts "Error processing #{post_file}: #{e.message}"
+              next
+            end
+          end.compact.sort_by { |post| post[:date] }.reverse
+          
+          content = "# Mert Turunc's Blog\n\n"
+          content += "## About\n"
+          content += "This is a personal blog and portfolio website showcasing projects, blog posts, and professional information about Mert Turunc.\n\n"
+          content += "## Main Content\n"
+          content += "The site contains the following main sections:\n"
+          content += "- Blog posts about technology, programming, and personal experiences\n"
+          content += "- Project showcases and descriptions\n"
+          content += "- Technical articles and tutorials\n\n"
+          content += "## Important Pages\n"
+          content += "- Homepage: #{site_url}\n"
+          content += "- Blog: #{site_url}/blog/\n"
+          content += "- Projects: #{site_url}/projects/\n\n"
+          content += "## Blog Posts\n"
+          content += posts.map { |post| 
+            "- #{post[:title]} (#{post[:date].strftime("%Y-%m-%d")}): #{post[:excerpt]}"
+          }.join("\n") + "\n\n"
+          content += "## Content Guidelines\n"
+          content += "- All blog posts are written in either Turkish or English\n"
+          content += "- Technical content focuses on programming, web development, and technology\n"
+          content += "- Project descriptions include implementation details and technologies used\n\n"
+          content += "## Last Updated\n"
+          content += "Generated at: #{Time.now.strftime("%Y-%m-%d %H:%M:%S UTC")}\n\n"
+          content += "## Additional Information\n"
+          content += "This file is automatically generated during the build process to help AI models better understand and process the website's content."
+          
+          output_path = File.join("_site", "llms.txt")
+          File.write(output_path, content)
+          puts "Generated llms.txt at #{output_path}"
+          puts "File will be accessible at: #{site_url}/llms.txt"
+          RUBY_SCRIPT
+          
+          ruby generate_llms.rb
+          rm generate_llms.rb
       - name: Upload artifact
         # Automatically uploads an artifact from the './_site' directory by default
         uses: actions/upload-pages-artifact@v3
