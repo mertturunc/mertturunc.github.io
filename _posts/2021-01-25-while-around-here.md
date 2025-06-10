@@ -5,6 +5,7 @@ summary: "This article will be a continuation of the article series I started on
 starred: true
 music: true
 lang: en
+header: "https://miro.medium.com/max/2400/1*tMecGHqHvqGTtpHcTTvt6g.jpeg"
 translations:
   - lang: tr
     url: /blog/buralarda-iken/

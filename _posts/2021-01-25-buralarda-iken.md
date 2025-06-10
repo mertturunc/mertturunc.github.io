@@ -4,6 +4,7 @@ title: "buralarda iken"
 summary: "Karışık Kaset'te başladığım yazı serisinin devamı niteliğinde olacak bu yazıda yine albüm önerilerinde bulunacağım. Bunun yanında birazcık da bir şeyler anlatmayı umuyorum."
 starred: true
 music: true
+header: "https://miro.medium.com/max/2400/1*tMecGHqHvqGTtpHcTTvt6g.jpeg"
 lang: tr
 translations:
   - lang: tr

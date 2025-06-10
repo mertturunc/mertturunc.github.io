@@ -4,6 +4,7 @@ title: "buralarda yok iken"
 summary: "Karışık Kaset’ten kalan bu yazıyı serileştirmek istediğim için buraya da aktarıyorum. Pek sohbet içermese de bulundurduğu albüm önerilerinin dinlenmeye değer olduğunu düşünüyorum."
 starred: false
 music: true
+header: "https://is4-ssl.mzstatic.com/image/thumb/Music4/v4/13/55/59/13555946-6346-9fc6-b65d-6065eec3433a/081227690069.jpg/600x600bb.jpg"
 ---
 
 Herkese Merhabalar, Mayıs ayından beri burayı boş bıraktığımın farkındayım. Vaktim var iken ne yazsam dediğim yok iken de sürekli fikirler biriktirdiğim 7 aylık bir süreçten sonra ilk yazımı yazıyorum.

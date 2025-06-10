@@ -3,6 +3,7 @@ category: blog
 title: "neden playlist dinlemeyi bıraktım"
 summary: "{% include read_time.html %}"
 starred: true
+header: "https://miro.medium.com/max/10232/1*awoNoUTZiY4LXBE8b9gpvA.jpeg"
 music: true
 ---
 

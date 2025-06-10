@@ -2,6 +2,7 @@
 category: blog
 title: "oyun müzikleri"
 summary: "Bu müziklerin kendisine ait bir türü olmasına rağmen her birinin farklı türde yazılmış olmaları ve oyuncuya/dinleyiciye sunduğu çeşitlilik dinleyici için bir nimet."
+header: "https://i.ytimg.com/vi/NFpX-1VXvF0/maxresdefault.jpg"
 music: true
 starred: false
 ---
