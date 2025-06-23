@@ -344,7 +344,7 @@ h3,
 h4,
 h5,
 h6 {
-  margin: 2.5em 0 0.5em;
+  margin: 1.5em 0 0.5em;
   transition: all 0.2s ease;
   cursor: pointer;
 }
@@ -1360,4 +1360,28 @@ hr {
   border: 0;
   border-top: 1px dashed var(--border-color);
   margin: 2em 0;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  color: var(--muted-text);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 2px;
+}
+.github-link:hover {
+  color: var(--accent-color);
+  border-bottom-color: var(--accent-hover);
+}
+.github-link svg {
+  fill: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+  margin-bottom: 2px;
+  height: 1em;
+  width: 1em;
 }

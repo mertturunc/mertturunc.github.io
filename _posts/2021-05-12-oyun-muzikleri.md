@@ -39,7 +39,7 @@ Resident Evil, Pokemon ve Legend of Zelda gibi efsaneleşmiş oyun serilerinde k
 
 Bu yazıyı yazmayı planlarken bu kadar uzun bir giriş yapmayı planlamıyordum ancak hazırlarken bilgisayar oyunlardaki müziklerinin miladının neredeyse bilgisayarın tarihi ile aynı olduğunu fark ettim. Esas olarak benim değinmek istediğim konu bu müziklerin kendisine ait bir türü olmasına rağmen her birinin farklı türde yazılmış olmaları ve oyuncuya/dinleyiciye sunduğu çeşitlilik.
 
-<figure><img src="https://talkinginfluence.com/wp-content/uploads/2020/06/How-Twitchs-DMCA-Emergency-Could-Benefit-the-Platform%E2%80%99s-Creators.jpg" height="300"/></figure>
+<figure><img src="https://media.eventhubs.com/images/2020/06/9-twitch-streamers-face-massive-wave-dmca-claims-against-old-video.jpg" height="300"/></figure>
 
 Geçtiğimiz günlerde livestream platformu olan Twitch'in DMCA ve telif kılavuzu güncellendi. Yeni yayın kuralları Spotify, Tidal ve YouTube Music gibi müzik yayını yapan platformlarda bulunan parçaların son kullanıcı tarafından tekrardan izleyicilere stream edilmesini engelliyor. 
 
