@@ -1,8 +1,9 @@
 ---
 layout: project
-title: Konya'daki Eski Mezar
-title_en: Ancient Tomb in Konya
-category: Fotogrametri
+title: konya'daki eski mezar
+title_en: ancient tomb in konya
+category: fotogrametri
+category_en: photogrammetry
 date: 2024-03-10
 embed_url: https://sketchfab.com/models/f5b4afb75f844c7394870344c74a7b53/embed
 description: Eserin etrafında bilgilendirici bir tabela olmadığı için bilgi sahibi değilim.

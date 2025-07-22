@@ -1,9 +1,10 @@
 ---
 layout: default
-title: Özgeçmiş
+title: özgeçmiş
 summary: Mert Turunç | Harita Mühendisliği | CBS Uzmanı
 sitemap: false
 ---
+{% include language-utils.html %}
 
 <style>
   figure {
@@ -124,9 +125,9 @@ sitemap: false
 </style>
 
 <ul class="menu">
-  <li><a class="menu__item" href="/">Blog</a></li>
-  <li><a class="menu__item" href="/projects/">Yaptıklarım</a></li>
-  <li><span class="menu__item menu__item_selected">Özgeçmiş</span></li>
+  <li><a class="menu__item" href="/">{{ t.nav.blog }}</a></li>
+  <li><a class="menu__item" href="/projects/">{{ t.nav.projects }}</a></li>
+  <li><span class="menu__item menu__item_selected">{{ t.nav.resume }}</span></li>
   <div class="spacer"></div>
 </ul>
 

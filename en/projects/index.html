@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Projects
+title: projects
 lang: en
 language_reference: projects
 permalink: /en/projects/
@@ -313,7 +313,9 @@ summary: A portfolio page
   {% for category in categories %}
   <div class="kategori">
     <div class="baslik">
-      <h4>{{ category.name }}</h4>
+      {% comment %} Use English category name if available {% endcomment %}
+      {% assign category_en = category.items.first.category_en | default: category.name %}
+      <h4>{{ category_en }}</h4>
     </div>
     {% for project in category.items %}
     {% comment %} Determine language indicators {% endcomment %}

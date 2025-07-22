@@ -1,8 +1,9 @@
 ---
 layout: project
-title: Tekirdağ'daki Friz - 1
-title_en: Frieze in Tekirdağ - 1
-category: Fotogrametri
+title: tekirdağ'daki friz - 1
+title_en: frieze in tekirdağ - 1
+category: fotogrametri
+category_en: photogrammetry
 date: 2024-03-15
 embed_url: https://sketchfab.com/models/3b77df8407034ffc97994a96a6169512/embed
 description: Tekirdağ Arkeoloji ve Etnografya Müzesi
