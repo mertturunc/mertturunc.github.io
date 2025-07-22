@@ -4,7 +4,7 @@ title: "mapping istanbul’s booziest routes with tsp"
 summary: "how can we visit as many great pubs as possible without walking all over the place?"
 lang: en
 geo: true
-hidden: true
+wip: true
 sitemap: false
 ---
 

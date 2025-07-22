@@ -1188,6 +1188,35 @@ html[data-theme="dark"] .translation-links {
   opacity: 0.9;
 }
 
+/* WIP Post Styles */
+.wip-post {
+  color: #888;
+  font-style: italic;
+}
+
+.wip-badge {
+  color: #ff6b35;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 12px;
+  opacity: 0.8;
+}
+
+.wip-simple {
+  color: #999;
+  font-style: italic;
+  margin: 40px 0;
+}
+
+.wip-simple p {
+  margin: 0;
+}
+
+.wip-date {
+  color: #ff6b35;
+  font-weight: 500;
+}
+
 /* Language Switcher Dropdown Styles */
 .language-switcher {
   position: relative;

@@ -4,7 +4,7 @@ title: "vibe coding a chrome extension"
 summary: "after taking a huge break in blogging scene i finally managed to start writing again."
 lang: en
 geo: true
-hidden: true
+wip: true
 sitemap: false
 ---
 

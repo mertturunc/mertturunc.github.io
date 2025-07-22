@@ -18,9 +18,13 @@ layout: default
 
 <div class="post">
   <h1 class="r-title news__title">
-    <a href="#0" class="r-link animated-underline animated-underline_type1">
-      {{ page.title }}
-    </a>
+    {% if page.wip %}
+      {{ page.title }} <span class="wip-badge">{{ t.post.wip }}</span>
+    {% else %}
+      <a href="#0" class="r-link animated-underline animated-underline_type1">
+        {{ page.title }}
+      </a>
+    {% endif %}
   </h1>
 
   {% comment %} Show translation links if available {% endcomment %}
@@ -41,11 +45,17 @@ layout: default
     </div>
   {% endif %}
 
-  <div class="reading-time">
-    {% include read_time.html %}
-  </div>
+  {% if page.wip %}
+    <div class="wip-simple">
+      <p>{{ t.post.wip_content }}</p>
+    </div>
+  {% else %}
+    <div class="reading-time">
+      {% include read_time.html %}
+    </div>
 
-  {{ content }}
+    {{ content }}
+  {% endif %}
 
   {% include share-buttons.html %}
 
