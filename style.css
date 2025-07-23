@@ -1467,3 +1467,28 @@ hr {
   height: 1em;
   width: 1em;
 }
+
+.linkedin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  color: var(--muted-text);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 2px;
+  margin-left: 10px;
+}
+.linkedin-link:hover {
+  color: var(--accent-color);
+  border-bottom-color: var(--accent-hover);
+}
+.linkedin-link svg {
+  fill: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+  margin-bottom: 2px;
+  height: 1em;
+  width: 1em;
+}
