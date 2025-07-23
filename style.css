@@ -941,6 +941,59 @@ sub {
   content: '';
 }
 
+/* Post filters styles */
+.post-filters {
+  margin: 25px 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.post-filters .tooltip {
+  display: inline-flex;
+  width: 80px; /* Increased width to accommodate "tümü" */
+}
+
+.filter-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--muted-text);
+  background: var(--primary-bg);
+  color: var(--muted-text);
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  width: 100%;
+  text-align: center;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.filter-btn.active {
+  background: var(--accent-color);
+  color: var(--primary-bg);
+  border-color: var(--accent-color);
+}
+
+.post-filters .tooltiptext {
+  right: 50%;
+  transform: translateX(50%);
+  bottom: 130%;
+  top: auto;
+  white-space: nowrap;
+}
+
+.post-item {
+  display: block;
+}
 
 .popup {
   color: var(--muted-text);
