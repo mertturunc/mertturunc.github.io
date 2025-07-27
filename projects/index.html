@@ -159,6 +159,322 @@ summary: Portfolyo sayılabilecek bir sayfa
         };
         document.body.appendChild(overlay);
         document.body.classList.add('modal-open');
+        
+        // REINITIALIZE CAROUSELS IN MODAL
+        setTimeout(() => {
+          console.log('🎠 Reinitializing carousels in modal...');
+          
+          // Fix IDs to avoid conflicts and reinitialize carousels
+          const carousels = modalContent.querySelectorAll('.image-carousel');
+          console.log('🎠 Found', carousels.length, 'main carousels');
+          
+          carousels.forEach(function(carousel, index) {
+            // Generate unique ID for modal carousel
+            const originalId = carousel.id;
+            const modalId = originalId + '-modal-' + Date.now() + '-' + index;
+            carousel.id = modalId;
+            
+            console.log('🎠 Reinitializing carousel', originalId, '→', modalId);
+            
+            // Clear the initialization flag completely
+            delete carousel.carouselInitialized;
+            carousel.removeAttribute('data-carousel-initialized');
+            
+            // Verify carousel elements exist
+            const track = carousel.querySelector('.carousel-track');
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const prevBtn = carousel.querySelector('.carousel-prev');
+            const nextBtn = carousel.querySelector('.carousel-next');
+            
+            console.log('🎠 Carousel elements:', {
+              track: !!track,
+              slides: slides.length,
+              prevBtn: !!prevBtn,
+              nextBtn: !!nextBtn,
+              id: carousel.id
+            });
+            
+            // Call the full initialization function
+            if (window.initializeCarousel) {
+              console.log('🎠 Calling initializeCarousel for', carousel.id);
+              try {
+                window.initializeCarousel(carousel);
+                console.log('🎠 ✅ Successfully initialized', carousel.id);
+              } catch (error) {
+                console.error('🎠 ❌ Error initializing', carousel.id, error);
+              }
+            } else {
+              console.error('🎠 ❌ initializeCarousel function not found');
+            }
+          });
+          
+          // Also handle compact carousels
+          const compactCarousels = modalContent.querySelectorAll('.image-carousel-compact');
+          console.log('🎠 Found', compactCarousels.length, 'compact carousels');
+          
+          compactCarousels.forEach(function(carousel, index) {
+            // Generate unique ID
+            const originalId = carousel.id;
+            const modalId = originalId + '-modal-' + Date.now() + '-' + index;
+            carousel.id = modalId;
+            
+            console.log('🎠 Reinitializing compact carousel', originalId, '→', modalId);
+            
+            // Manually reinitialize compact carousel since it doesn't use the global function
+            const track = carousel.querySelector('.carousel-track-compact');
+            const slides = carousel.querySelectorAll('.carousel-slide-compact');
+            const prevBtn = carousel.querySelector('.carousel-prev-compact');
+            const nextBtn = carousel.querySelector('.carousel-next-compact');
+            const dots = carousel.querySelectorAll('.carousel-dot-compact');
+            const zoomInBtn = carousel.querySelector('.zoom-in-btn-compact');
+            const zoomOutBtn = carousel.querySelector('.zoom-out-btn-compact');
+            const zoomResetBtn = carousel.querySelector('.zoom-reset-btn-compact');
+            const fullscreenBtn = carousel.querySelector('.fullscreen-btn-compact');
+            const zoomIndicator = carousel.querySelector('.zoom-indicator-compact');
+            
+            if (slides.length > 0) {
+              let currentIndex = 0;
+              let currentZoom = 1;
+              let translateX = 0;
+              let translateY = 0;
+              
+              function updateCarousel() {
+                const slideTranslateX = -currentIndex * 100;
+                if (track) track.style.transform = `translateX(${slideTranslateX}%)`;
+                
+                dots.forEach((dot, idx) => {
+                  dot.classList.toggle('active', idx === currentIndex);
+                });
+                
+                if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
+                if (nextBtn) nextBtn.style.opacity = currentIndex === slides.length - 1 ? '0.5' : '1';
+              }
+              
+              function updateZoom() {
+                if (zoomIndicator) zoomIndicator.textContent = Math.round(currentZoom * 100) + '%';
+                const currentImage = slides[currentIndex]?.querySelector('.carousel-image-compact');
+                if (currentImage) {
+                  currentImage.style.transform = `scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
+                  currentImage.classList.toggle('zoomed', currentZoom > 1);
+                }
+                if (zoomResetBtn) zoomResetBtn.style.display = currentZoom > 1 ? 'flex' : 'none';
+              }
+              
+              // Navigation
+              if (nextBtn) nextBtn.onclick = () => {
+                currentIndex = (currentIndex + 1) % slides.length;
+                currentZoom = 1; translateX = 0; translateY = 0;
+                updateCarousel(); updateZoom();
+              };
+              if (prevBtn) prevBtn.onclick = () => {
+                currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+                currentZoom = 1; translateX = 0; translateY = 0;
+                updateCarousel(); updateZoom();
+              };
+              
+              // Zoom
+              if (zoomInBtn) zoomInBtn.onclick = () => {
+                if (currentZoom < 3) { currentZoom = Math.min(3, currentZoom + 0.25); updateZoom(); }
+              };
+              if (zoomOutBtn) zoomOutBtn.onclick = () => {
+                if (currentZoom > 1) {
+                  currentZoom = Math.max(1, currentZoom - 0.25);
+                  if (currentZoom === 1) { translateX = 0; translateY = 0; }
+                  updateZoom();
+                }
+              };
+              if (zoomResetBtn) zoomResetBtn.onclick = () => {
+                currentZoom = 1; translateX = 0; translateY = 0; updateZoom();
+              };
+              
+              // Fullscreen
+              if (fullscreenBtn) fullscreenBtn.onclick = () => {
+                const currentImage = slides[currentIndex]?.querySelector('.carousel-image-compact');
+                if (!currentImage) return;
+                
+                const lightbox = document.createElement('div');
+                lightbox.className = 'carousel-lightbox';
+                
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'lightbox-image-container';
+                
+                const img = document.createElement('img');
+                img.src = currentImage.src;
+                img.alt = currentImage.alt;
+                img.className = 'carousel-image lightbox-image';
+                
+                const lightboxControls = document.createElement('div');
+                lightboxControls.className = 'lightbox-controls';
+                lightboxControls.innerHTML = `
+                  <button class="carousel-control-btn lightbox-zoom-out" aria-label="Zoom out">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                      <path d="M8 11h6" stroke="currentColor" stroke-width="2"/>
+                      <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </button>
+                  <button class="carousel-control-btn lightbox-zoom-in" aria-label="Zoom in">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                      <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="2"/>
+                      <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </button>
+                  <button class="carousel-control-btn lightbox-zoom-reset" aria-label="Reset zoom" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2"/>
+                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </button>
+                  <span class="zoom-indicator lightbox-zoom-indicator">100%</span>
+                `;
+                
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'lightbox-close';
+                closeBtn.innerHTML = '×';
+                closeBtn.onclick = () => {
+                  document.body.removeChild(lightbox);
+                  document.body.classList.remove('modal-open');
+                };
+                
+                imageContainer.appendChild(img);
+                imageContainer.appendChild(lightboxControls);
+                lightbox.appendChild(imageContainer);
+                lightbox.appendChild(closeBtn);
+                
+                lightbox.onclick = (e) => {
+                  if (e.target === lightbox) {
+                    document.body.removeChild(lightbox);
+                    document.body.classList.remove('modal-open');
+                  }
+                };
+                
+                document.body.appendChild(lightbox);
+                
+                // Initialize lightbox zoom
+                let lightboxZoom = 1;
+                let lightboxTranslateX = 0;
+                let lightboxTranslateY = 0;
+                
+                function updateLightboxZoom() {
+                  img.style.transform = `scale(${lightboxZoom}) translate(${lightboxTranslateX}px, ${lightboxTranslateY}px)`;
+                  lightboxControls.querySelector('.lightbox-zoom-indicator').textContent = Math.round(lightboxZoom * 100) + '%';
+                  lightboxControls.querySelector('.lightbox-zoom-reset').style.display = lightboxZoom > 1 ? 'flex' : 'none';
+                }
+                
+                lightboxControls.querySelector('.lightbox-zoom-in').onclick = () => {
+                  if (lightboxZoom < 3) { lightboxZoom = Math.min(3, lightboxZoom + 0.25); updateLightboxZoom(); }
+                };
+                lightboxControls.querySelector('.lightbox-zoom-out').onclick = () => {
+                  if (lightboxZoom > 1) {
+                    lightboxZoom = Math.max(1, lightboxZoom - 0.25);
+                    if (lightboxZoom === 1) { lightboxTranslateX = 0; lightboxTranslateY = 0; }
+                    updateLightboxZoom();
+                  }
+                };
+                lightboxControls.querySelector('.lightbox-zoom-reset').onclick = () => {
+                  lightboxZoom = 1; lightboxTranslateX = 0; lightboxTranslateY = 0; updateLightboxZoom();
+                };
+                
+                updateLightboxZoom();
+                
+                // ESC to close
+                const escHandler = (e) => {
+                  if (e.key === 'Escape') {
+                    document.body.removeChild(lightbox);
+                    document.body.classList.remove('modal-open');
+                    document.removeEventListener('keydown', escHandler);
+                  }
+                };
+                document.addEventListener('keydown', escHandler);
+              };
+              
+              // Dots
+              dots.forEach((dot, idx) => {
+                dot.onclick = () => {
+                  currentIndex = idx; currentZoom = 1; translateX = 0; translateY = 0;
+                  updateCarousel(); updateZoom();
+                };
+              });
+              
+              // Initialize
+              updateCarousel();
+              updateZoom();
+              
+              console.log('🎠 ✅ Compact carousel initialized:', carousel.id);
+              
+              // Test that buttons work
+              console.log('🎠 Testing compact carousel buttons for', carousel.id);
+              if (nextBtn) {
+                console.log('🎠 Next button found and clickable');
+              } else {
+                console.log('🎠 ❌ Next button not found');
+              }
+            }
+          });
+          
+          console.log('🎠 ✅ Modal carousel reinitialization complete');
+          
+          // Fallback verification - ensure at least basic click handlers work
+          setTimeout(() => {
+            const modalCarousels = overlay.querySelectorAll('.image-carousel, .image-carousel-compact');
+            modalCarousels.forEach(carousel => {
+              const nextBtns = carousel.querySelectorAll('.carousel-next, .carousel-next-compact');
+              const prevBtns = carousel.querySelectorAll('.carousel-prev, .carousel-prev-compact');
+              
+              console.log('🎠 Fallback check for', carousel.id, {
+                nextBtns: nextBtns.length,
+                prevBtns: prevBtns.length
+              });
+              
+              // Double-check event listeners are attached
+              nextBtns.forEach(btn => {
+                if (!btn.onclick && !btn._hasClickListener) {
+                  console.log('🎠 🔧 Adding fallback click handler to next button');
+                  btn.onclick = () => {
+                    console.log('🎠 Fallback next button clicked!');
+                    // Trigger click on original functionality
+                    const track = carousel.querySelector('.carousel-track, .carousel-track-compact');
+                    if (track) {
+                      // Simple fallback navigation
+                      const slides = carousel.querySelectorAll('.carousel-slide, .carousel-slide-compact');
+                      let currentTransform = track.style.transform || 'translateX(0%)';
+                      let currentX = parseInt(currentTransform.match(/-?\d+/) || [0])[0];
+                      let nextX = currentX - 100;
+                      if (Math.abs(nextX) >= slides.length * 100) {
+                        nextX = 0; // Loop back
+                      }
+                      track.style.transform = `translateX(${nextX}%)`;
+                    }
+                  };
+                  btn._hasClickListener = true;
+                }
+              });
+              
+              prevBtns.forEach(btn => {
+                if (!btn.onclick && !btn._hasClickListener) {
+                  console.log('🎠 🔧 Adding fallback click handler to prev button');
+                  btn.onclick = () => {
+                    console.log('🎠 Fallback prev button clicked!');
+                    const track = carousel.querySelector('.carousel-track, .carousel-track-compact');
+                    if (track) {
+                      const slides = carousel.querySelectorAll('.carousel-slide, .carousel-slide-compact');
+                      let currentTransform = track.style.transform || 'translateX(0%)';
+                      let currentX = parseInt(currentTransform.match(/-?\d+/) || [0])[0];
+                      let prevX = currentX + 100;
+                      if (prevX > 0) {
+                        prevX = -(slides.length - 1) * 100; // Loop to end
+                      }
+                      track.style.transform = `translateX(${prevX}%)`;
+                    }
+                  };
+                  btn._hasClickListener = true;
+                }
+              });
+            });
+          }, 100);
+        }, 300);
+        
         // ESC key support
         escListener = function(e) {
           if (e.key === 'Escape') closeModal();
@@ -617,7 +933,12 @@ summary: Portfolyo sayılabilecek bir sayfa
       <span class="maximize-btn" style="display:none;">⛶</span>
     </button>
     <div class="content">
-      {% if project.embed_url %}
+      {% if project.show_carousel and project.carousel_images %}
+        {% comment %} Split the project URL to get the folder name {% endcomment %}
+        {% assign url_parts = project.url | split: '/' %}
+        {% assign project_folder = url_parts | last %}
+        {% include image-carousel-compact.html folder=project_folder images=project.carousel_images %}
+      {% elsif project.embed_url %}
       <div class="sketchfab-embed-wrapper">
         <iframe title="{{ iframe_title }}" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ project.embed_url }}"></iframe>
       </div>

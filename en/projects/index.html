@@ -381,7 +381,12 @@ summary: A portfolio page
     
     <button type="button" class="collapsible">{{ display_title }}{% if project.has_full_page %} <span class="language-indicator">{{ lang_indicators }}</span>{% endif %}</button>
     <div class="content">
-      {% if project.embed_url %}
+      {% if project.show_carousel and project.carousel_images %}
+        {% comment %} Split the project URL to get the folder name {% endcomment %}
+        {% assign url_parts = project.url | split: '/' %}
+        {% assign project_folder = url_parts | last %}
+        {% include image-carousel-compact.html folder=project_folder images=project.carousel_images %}
+      {% elsif project.embed_url %}
       <div class="sketchfab-embed-wrapper">
         <iframe title="{{ iframe_title }}" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ project.embed_url }}"></iframe>
       </div>

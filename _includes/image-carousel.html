@@ -1,0 +1,755 @@
+{% comment %}
+Image Carousel Component
+Usage: {% include image-carousel.html folder="cin-ali" images="image1.jpg,image2.jpg,image3.jpg" %}
+Or for auto-discovery: {% include image-carousel.html folder="cin-ali" %}
+{% endcomment %}
+
+{% assign carousel_id = include.folder | slugify %}
+{% assign image_folder = include.folder %}
+{% assign images_list = include.images | split: ',' %}
+
+<div class="image-carousel" id="carousel-{{ carousel_id }}">
+  <div class="carousel-container">
+    <div class="carousel-track">
+      {% if include.images %}
+        {% for image in images_list %}
+          {% assign image_name = image | strip %}
+          <div class="carousel-slide">
+            {% assign file_extension = image_name | split: '.' | last | downcase %}
+            {% if file_extension == 'mp4' or file_extension == 'webm' or file_extension == 'mov' %}
+              <video src="/projects/{{ image_folder }}/{{ image_name }}" 
+                     controls
+                     preload="metadata"
+                     class="carousel-video"
+                     data-aspect-ratio="">
+                Your browser does not support the video tag.
+              </video>
+            {% else %}
+              <img src="/projects/{{ image_folder }}/{{ image_name }}" 
+                   alt="{{ page.title }} - Image {{ forloop.index }}"
+                   loading="lazy"
+                   class="carousel-image"
+                   data-aspect-ratio="">
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        {% comment %} Auto-discovery mode - you'll need to manually list images for now {% endcomment %}
+        <div class="carousel-slide">
+          <img src="/projects/{{ image_folder }}/image1.jpg" 
+               alt="{{ page.title }} - Image 1"
+               loading="lazy"
+               class="carousel-image"
+               data-aspect-ratio="">
+        </div>
+      {% endif %}
+    </div>
+    
+    {% if images_list.size > 1 or include.images == nil %}
+    <!-- Navigation arrows -->
+    <button class="carousel-nav carousel-prev" aria-label="Previous image">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button class="carousel-nav carousel-next" aria-label="Next image">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    {% endif %}
+    
+    <!-- Zoom and Fullscreen Controls (always show) -->
+    <div class="carousel-controls">
+      <button class="carousel-control-btn zoom-reset-btn" aria-label="Reset zoom" style="display: none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2"/>
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="carousel-control-btn zoom-out-btn" aria-label="Zoom out">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 11h6" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="carousel-control-btn zoom-in-btn" aria-label="Zoom in">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="carousel-control-btn fullscreen-btn" aria-label="View fullscreen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <span class="zoom-indicator">100%</span>
+    </div>
+    
+    {% if images_list.size > 1 or include.images == nil %}
+    <!-- Dots Navigation -->
+    <div class="carousel-dots">
+      {% assign total_images = images_list.size | default: 1 %}
+      {% for i in (1..total_images) %}
+        <button class="carousel-dot {% if forloop.first %}active{% endif %}" 
+                data-slide="{{ forloop.index0 }}"
+                aria-label="Go to image {{ forloop.index }}"></button>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// Global carousel initialization function
+window.initializeCarousel = window.initializeCarousel || function(carouselElement) {
+  if (!carouselElement) return;
+  
+  const track = carouselElement.querySelector('.carousel-track');
+  const slides = carouselElement.querySelectorAll('.carousel-slide');
+  const prevBtn = carouselElement.querySelector('.carousel-prev');
+  const nextBtn = carouselElement.querySelector('.carousel-next');
+  const dots = carouselElement.querySelectorAll('.carousel-dot');
+  const zoomInBtn = carouselElement.querySelector('.zoom-in-btn');
+  const zoomOutBtn = carouselElement.querySelector('.zoom-out-btn');
+  const zoomResetBtn = carouselElement.querySelector('.zoom-reset-btn');
+  const fullscreenBtn = carouselElement.querySelector('.fullscreen-btn');
+  const zoomIndicator = carouselElement.querySelector('.zoom-indicator');
+  
+  let currentIndex = 0;
+  let currentZoom = 1;
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+  let translateX = 0;
+  let translateY = 0;
+  const totalSlides = slides.length;
+  
+  // Always show zoom controls, even for single images
+  
+  // Clear any existing listeners to prevent duplicates
+  // Allow reinitialization for modal carousels
+  if (carouselElement.carouselInitialized && !carouselElement.id.includes('-modal-')) return;
+  carouselElement.carouselInitialized = true;
+  
+  function updateCarousel() {
+    const translateX = -currentIndex * 100;
+    track.style.transform = `translateX(${translateX}%)`;
+    
+    // Update dots
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentIndex);
+    });
+    
+    // Update button states
+    if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
+    if (nextBtn) nextBtn.style.opacity = currentIndex === totalSlides - 1 ? '0.5' : '1';
+  }
+  
+  function nextSlide() {
+    currentIndex = (currentIndex + 1) % totalSlides;
+    updateCarousel();
+  }
+  
+  function prevSlide() {
+    currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+    updateCarousel();
+  }
+  
+  function goToSlide(index) {
+    currentIndex = index;
+    resetZoom(); // Reset zoom when changing slides
+    updateCarousel();
+  }
+  
+  // Zoom functions
+  function updateZoomDisplay() {
+    if (zoomIndicator) {
+      zoomIndicator.textContent = Math.round(currentZoom * 100) + '%';
+    }
+    const currentMedia = slides[currentIndex]?.querySelector('.carousel-image, .carousel-video');
+    if (currentMedia) {
+      currentMedia.style.transform = `scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
+      currentMedia.classList.toggle('zoomed', currentZoom > 1);
+    }
+    
+    // Show/hide reset button based on zoom level
+    if (zoomResetBtn) {
+      zoomResetBtn.style.display = currentZoom > 1 ? 'flex' : 'none';
+    }
+  }
+  
+  // Aspect ratio detection and optimization
+  function detectAndOptimizeAspectRatio() {
+    const mediaElements = carouselElement.querySelectorAll('.carousel-image, .carousel-video');
+    if (mediaElements.length === 0) return;
+    
+    console.log('🎨 Detecting aspect ratios for', mediaElements.length, 'media elements...');
+    
+    let loadedCount = 0;
+    const aspectRatios = [];
+    
+    function checkOptimization() {
+      loadedCount++;
+      if (loadedCount === mediaElements.length) {
+        optimizeCarouselAspectRatio(aspectRatios);
+      }
+    }
+    
+    mediaElements.forEach((media, index) => {
+      if (media.tagName === 'IMG') {
+        if (media.complete && media.naturalWidth !== 0) {
+          const aspectRatio = media.naturalWidth / media.naturalHeight;
+          aspectRatios[index] = aspectRatio;
+          media.setAttribute('data-aspect-ratio', aspectRatio.toFixed(3));
+          checkOptimization();
+        } else {
+          media.onload = () => {
+            const aspectRatio = media.naturalWidth / media.naturalHeight;
+            aspectRatios[index] = aspectRatio;
+            media.setAttribute('data-aspect-ratio', aspectRatio.toFixed(3));
+            checkOptimization();
+          };
+          media.onerror = () => {
+            aspectRatios[index] = 16/9; // fallback
+            checkOptimization();
+          };
+        }
+      } else if (media.tagName === 'VIDEO') {
+        media.onloadedmetadata = () => {
+          const aspectRatio = media.videoWidth / media.videoHeight;
+          aspectRatios[index] = aspectRatio;
+          media.setAttribute('data-aspect-ratio', aspectRatio.toFixed(3));
+          checkOptimization();
+        };
+        media.onerror = () => {
+          aspectRatios[index] = 16/9; // fallback
+          checkOptimization();
+        };
+        // Force load metadata
+        if (media.readyState >= 1) {
+          const aspectRatio = media.videoWidth / media.videoHeight;
+          aspectRatios[index] = aspectRatio;
+          media.setAttribute('data-aspect-ratio', aspectRatio.toFixed(3));
+          checkOptimization();
+        }
+      }
+    });
+  }
+  
+  function optimizeCarouselAspectRatio(aspectRatios) {
+    if (aspectRatios.length === 0) return;
+    
+    // Check if all aspect ratios are similar (within 5% tolerance)
+    const validRatios = aspectRatios.filter(ratio => ratio > 0);
+    if (validRatios.length === 0) return;
+    
+    const firstRatio = validRatios[0];
+    const tolerance = 0.05;
+    const isConsistent = validRatios.every(ratio => 
+      Math.abs(ratio - firstRatio) / firstRatio < tolerance
+    );
+    
+    console.log('🎨 Aspect ratio analysis:', {
+      ratios: aspectRatios.map(r => r ? r.toFixed(3) : 'undefined'),
+      firstRatio: firstRatio ? firstRatio.toFixed(3) : 'undefined',
+      isConsistent,
+      tolerance: (tolerance * 100) + '%',
+      containerWidth: carouselElement.querySelector('.carousel-container')?.offsetWidth + 'px'
+    });
+    
+    if (isConsistent && validRatios.length >= 1) {
+      // Apply consistent aspect ratio
+      const avgRatio = validRatios.reduce((a, b) => a + b) / validRatios.length;
+      const carouselContainer = carouselElement.querySelector('.carousel-container');
+      
+      if (carouselContainer) {
+        // Calculate optimal height based on container width
+        const containerWidth = carouselContainer.offsetWidth;
+        const optimalHeight = containerWidth / avgRatio;
+        
+        // Don't make it too tall or too short - be more flexible for portrait content
+        const minHeight = 200;
+        const maxHeight = Math.min(window.innerHeight * 0.8, containerWidth * 2); // Allow taller for portrait
+        const finalHeight = Math.max(minHeight, Math.min(maxHeight, optimalHeight));
+        
+        carouselContainer.style.height = finalHeight + 'px';
+        carouselContainer.style.overflow = 'hidden';
+        
+        // Update media elements to fit perfectly
+        const mediaElements = carouselElement.querySelectorAll('.carousel-image, .carousel-video');
+        mediaElements.forEach(media => {
+          media.style.height = finalHeight + 'px';
+          media.style.maxHeight = finalHeight + 'px';
+          media.style.objectFit = 'contain';
+        });
+        
+        console.log('🎨 ✅ Optimized carousel for aspect ratio', avgRatio.toFixed(3), 
+                   '→ height:', finalHeight + 'px');
+        
+        // Mark as optimized
+        carouselElement.setAttribute('data-aspect-optimized', 'true');
+      }
+    } else {
+      console.log('🎨 Mixed aspect ratios detected, keeping flexible layout');
+    }
+  }
+  
+  function zoomIn() {
+    if (currentZoom < 3) {
+      currentZoom = Math.min(3, currentZoom + 0.25);
+      updateZoomDisplay();
+    }
+  }
+  
+  function zoomOut() {
+    if (currentZoom > 1) {
+      currentZoom = Math.max(1, currentZoom - 0.25);
+      if (currentZoom === 1) {
+        translateX = 0;
+        translateY = 0;
+      }
+      updateZoomDisplay();
+    }
+  }
+  
+  function resetZoom() {
+    currentZoom = 1;
+    translateX = 0;
+    translateY = 0;
+    updateZoomDisplay();
+  }
+  
+  function createLightbox() {
+    const currentMedia = slides[currentIndex]?.querySelector('.carousel-image, .carousel-video');
+    if (!currentMedia) return;
+    
+    const lightbox = document.createElement('div');
+    lightbox.className = 'carousel-lightbox';
+    
+    // Create image container with zoom controls
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'lightbox-image-container';
+    
+    let mediaElement;
+    if (currentMedia.tagName === 'VIDEO') {
+      mediaElement = document.createElement('video');
+      mediaElement.src = currentMedia.src;
+      mediaElement.controls = true;
+      mediaElement.preload = 'metadata';
+      mediaElement.className = 'carousel-video lightbox-image';
+    } else {
+      mediaElement = document.createElement('img');
+      mediaElement.src = currentMedia.src;
+      mediaElement.alt = currentMedia.alt;
+      mediaElement.className = 'carousel-image lightbox-image';
+    }
+    
+    // Add zoom controls for lightbox
+    const lightboxControls = document.createElement('div');
+    lightboxControls.className = 'lightbox-controls';
+    lightboxControls.innerHTML = `
+      <button class="carousel-control-btn lightbox-zoom-out" aria-label="Zoom out">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 11h6" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="carousel-control-btn lightbox-zoom-in" aria-label="Zoom in">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="carousel-control-btn lightbox-zoom-reset" aria-label="Reset zoom" style="display: none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2"/>
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <span class="zoom-indicator lightbox-zoom-indicator">100%</span>
+    `;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'lightbox-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.onclick = () => {
+      document.body.removeChild(lightbox);
+      document.body.classList.remove('modal-open');
+    };
+    
+    imageContainer.appendChild(mediaElement);
+    imageContainer.appendChild(lightboxControls);
+    lightbox.appendChild(imageContainer);
+    lightbox.appendChild(closeBtn);
+    
+    // Add navigation arrows to lightbox if there are multiple slides
+    if (totalSlides > 1) {
+      const lightboxPrev = document.createElement('button');
+      lightboxPrev.className = 'lightbox-nav lightbox-prev';
+      lightboxPrev.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+      lightboxPrev.setAttribute('aria-label', 'Previous image');
+      
+      const lightboxNext = document.createElement('button');
+      lightboxNext.className = 'lightbox-nav lightbox-next';
+      lightboxNext.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+      lightboxNext.setAttribute('aria-label', 'Next image');
+      
+      lightbox.appendChild(lightboxPrev);
+      lightbox.appendChild(lightboxNext);
+      
+      // Navigation functionality
+      lightboxPrev.addEventListener('click', () => {
+        prevSlide();
+        // Update lightbox content
+        document.body.removeChild(lightbox);
+        setTimeout(() => createLightbox(), 100);
+      });
+      
+      lightboxNext.addEventListener('click', () => {
+        nextSlide();
+        // Update lightbox content
+        document.body.removeChild(lightbox);
+        setTimeout(() => createLightbox(), 100);
+      });
+      
+      // Keyboard navigation
+      const keyHandler = (e) => {
+        if (e.key === 'ArrowLeft') {
+          lightboxPrev.click();
+        } else if (e.key === 'ArrowRight') {
+          lightboxNext.click();
+        }
+      };
+      document.addEventListener('keydown', keyHandler);
+      
+      // Clean up keyboard listener when lightbox closes
+      const originalEscHandler = document.querySelector('[data-lightbox-esc]');
+      if (!originalEscHandler) {
+        const escHandler = (e) => {
+          if (e.key === 'Escape') {
+            document.removeEventListener('keydown', keyHandler);
+            document.removeEventListener('keydown', escHandler);
+            if (document.body.contains(lightbox)) {
+              document.body.removeChild(lightbox);
+              document.body.classList.remove('modal-open');
+            }
+          }
+        };
+        escHandler.setAttribute = () => {}; // Prevent duplicate attribute
+        document.addEventListener('keydown', escHandler);
+        escHandler.setAttribute('data-lightbox-esc', 'true');
+      }
+    }
+    
+    lightbox.onclick = (e) => {
+      if (e.target === lightbox) {
+        document.body.removeChild(lightbox);
+        document.body.classList.remove('modal-open');
+      }
+    };
+    
+    document.body.appendChild(lightbox);
+    document.body.classList.add('modal-open');
+    
+    // Initialize lightbox zoom functionality
+    let lightboxZoom = 1;
+    let lightboxTranslateX = 0;
+    let lightboxTranslateY = 0;
+    let lightboxDragging = false;
+    
+    function updateLightboxZoom() {
+      mediaElement.style.transform = `scale(${lightboxZoom}) translate(${lightboxTranslateX}px, ${lightboxTranslateY}px)`;
+      lightboxControls.querySelector('.lightbox-zoom-indicator').textContent = Math.round(lightboxZoom * 100) + '%';
+      lightboxControls.querySelector('.lightbox-zoom-reset').style.display = lightboxZoom > 1 ? 'flex' : 'none';
+      mediaElement.style.cursor = lightboxZoom > 1 ? 'move' : 'grab';
+    }
+    
+    // Lightbox zoom controls
+    lightboxControls.querySelector('.lightbox-zoom-in').onclick = () => {
+      if (lightboxZoom < 3) {
+        lightboxZoom = Math.min(3, lightboxZoom + 0.25);
+        updateLightboxZoom();
+      }
+    };
+    
+    lightboxControls.querySelector('.lightbox-zoom-out').onclick = () => {
+      if (lightboxZoom > 1) {
+        lightboxZoom = Math.max(1, lightboxZoom - 0.25);
+        if (lightboxZoom === 1) {
+          lightboxTranslateX = 0;
+          lightboxTranslateY = 0;
+        }
+        updateLightboxZoom();
+      }
+    };
+    
+    lightboxControls.querySelector('.lightbox-zoom-reset').onclick = () => {
+      lightboxZoom = 1;
+      lightboxTranslateX = 0;
+      lightboxTranslateY = 0;
+      updateLightboxZoom();
+    };
+    
+    // Lightbox pan functionality
+    mediaElement.addEventListener('mousedown', (e) => {
+      if (lightboxZoom > 1) {
+        lightboxDragging = true;
+        const startX = e.clientX - lightboxTranslateX;
+        const startY = e.clientY - lightboxTranslateY;
+        
+        const handleMouseMove = (e) => {
+          if (lightboxDragging) {
+            lightboxTranslateX = e.clientX - startX;
+            lightboxTranslateY = e.clientY - startY;
+            updateLightboxZoom();
+          }
+        };
+        
+        const handleMouseUp = () => {
+          lightboxDragging = false;
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+        };
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        e.preventDefault();
+      }
+    });
+    
+    // Lightbox wheel zoom
+    lightbox.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        if (e.deltaY < 0 && lightboxZoom < 3) {
+          lightboxZoom = Math.min(3, lightboxZoom + 0.25);
+        } else if (e.deltaY > 0 && lightboxZoom > 1) {
+          lightboxZoom = Math.max(1, lightboxZoom - 0.25);
+          if (lightboxZoom === 1) {
+            lightboxTranslateX = 0;
+            lightboxTranslateY = 0;
+          }
+        }
+        updateLightboxZoom();
+      }
+    });
+    
+    updateLightboxZoom();
+    
+    // ESC key to close
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        document.body.removeChild(lightbox);
+        document.body.classList.remove('modal-open');
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+  }
+  
+  // Event listeners
+  if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+  if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+  if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
+  if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
+  if (zoomResetBtn) zoomResetBtn.addEventListener('click', resetZoom);
+  if (fullscreenBtn) fullscreenBtn.addEventListener('click', createLightbox);
+  
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => goToSlide(index));
+  });
+  
+  // Mouse wheel zoom
+  carouselElement.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        zoomIn();
+      } else {
+        zoomOut();
+      }
+    }
+  });
+  
+  // Media dragging for panning when zoomed
+  slides.forEach((slide, index) => {
+    const media = slide.querySelector('.carousel-image, .carousel-video');
+    if (!media) return;
+    
+    media.addEventListener('mousedown', (e) => {
+      // Don't interfere with video controls
+      if (media.tagName === 'VIDEO' && e.target.closest('video')) {
+        return; // Let video controls handle this
+      }
+      
+      if (currentZoom > 1 && index === currentIndex) {
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        media.style.cursor = 'grabbing';
+        e.preventDefault();
+      }
+    });
+    
+    media.addEventListener('mousemove', (e) => {
+      if (isDragging && currentZoom > 1 && index === currentIndex) {
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateZoomDisplay();
+      }
+    });
+    
+    media.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        const currentMedia = slides[currentIndex]?.querySelector('.carousel-image, .carousel-video');
+        if (currentMedia) currentMedia.style.cursor = currentZoom > 1 ? 'move' : 'grab';
+      }
+    });
+    
+    media.addEventListener('mouseleave', () => {
+      if (isDragging) {
+        isDragging = false;
+        const currentMedia = slides[currentIndex]?.querySelector('.carousel-image, .carousel-video');
+        if (currentMedia) currentMedia.style.cursor = currentZoom > 1 ? 'move' : 'grab';
+      }
+    });
+    
+    // Touch events for mobile panning
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    media.addEventListener('touchstart', (e) => {
+      // Don't interfere with video controls
+      if (media.tagName === 'VIDEO') {
+        return; // Let video controls handle this
+      }
+      
+      if (currentZoom > 1 && index === currentIndex && e.touches.length === 1) {
+        isDragging = true;
+        const touch = e.touches[0];
+        touchStartX = touch.clientX - translateX;
+        touchStartY = touch.clientY - translateY;
+        e.preventDefault();
+      }
+    });
+    
+    media.addEventListener('touchmove', (e) => {
+      if (isDragging && currentZoom > 1 && index === currentIndex && e.touches.length === 1) {
+        const touch = e.touches[0];
+        translateX = touch.clientX - touchStartX;
+        translateY = touch.clientY - touchStartY;
+        updateZoomDisplay();
+        e.preventDefault();
+      }
+    });
+    
+    media.addEventListener('touchend', () => {
+      if (isDragging) {
+        isDragging = false;
+      }
+    });
+    
+    // Double-tap to zoom on mobile (but not for videos)
+    let lastTap = 0;
+    media.addEventListener('touchend', (e) => {
+      // Don't interfere with video controls
+      if (media.tagName === 'VIDEO') {
+        return; // Let video controls handle this
+      }
+      
+      if (index === currentIndex) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 500 && tapLength > 0) {
+          if (currentZoom === 1) {
+            currentZoom = 2;
+            updateZoomDisplay();
+          } else {
+            resetZoom();
+          }
+          e.preventDefault();
+        }
+        lastTap = currentTime;
+      }
+    });
+  });
+  
+  // Keyboard navigation
+  carouselElement.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') prevSlide();
+    if (e.key === 'ArrowRight') nextSlide();
+  });
+  
+  // Touch/swipe support
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  carouselElement.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  });
+  
+  carouselElement.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  });
+  
+  function handleSwipe() {
+    if (touchEndX < touchStartX - 50) nextSlide(); // Swipe left
+    if (touchEndX > touchStartX + 50) prevSlide(); // Swipe right
+  }
+  
+  // Auto-play (optional) - only for non-modal carousels
+  let autoplayInterval;
+  const autoplayDelay = 5000; // 5 seconds
+  const isInModal = carouselElement.closest('.modal-overlay') !== null;
+  
+  if (!isInModal) {
+    function startAutoplay() {
+      autoplayInterval = setInterval(nextSlide, autoplayDelay);
+    }
+    
+    function stopAutoplay() {
+      clearInterval(autoplayInterval);
+    }
+    
+    // Start autoplay, pause on hover
+    carouselElement.addEventListener('mouseenter', stopAutoplay);
+    carouselElement.addEventListener('mouseleave', startAutoplay);
+    
+    // Initialize autoplay
+    startAutoplay();
+  }
+  
+  // Initialize
+  updateCarousel();
+  updateZoomDisplay();
+  
+  // Aspect ratio detection and carousel optimization (with slight delay for DOM readiness)
+  setTimeout(() => detectAndOptimizeAspectRatio(), 100);
+};
+
+// Initialize this specific carousel
+(function() {
+  const carousel = document.getElementById('carousel-{{ carousel_id }}');
+  if (carousel) {
+    window.initializeCarousel(carousel);
+  }
+})();
+
+// Modal carousel fix is now handled directly in projects/index.html createModal function
+</script> 
