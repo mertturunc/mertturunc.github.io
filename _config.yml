@@ -40,7 +40,6 @@ exclude:
   - "vendor"
   - "maptest"
   - "script"
-  - "resume/cv.pdf"
 defaults:
   -
     scope:

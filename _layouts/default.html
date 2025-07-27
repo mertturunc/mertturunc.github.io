@@ -35,7 +35,11 @@
   <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
   <meta property="og:site_name" content="{{ t.site_title }}" />
   {% if page.header %}
-    <meta property="og:image" content="{{ site.url }}{{ page.header }}" />
+    {% if page.header contains '://' %}
+      <meta property="og:image" content="{{ page.header }}" />
+    {% else %}
+      <meta property="og:image" content="{{ site.url }}{{ page.header }}" />
+    {% endif %}
   {% else %}
     <meta property="og:image" content="{{ site.url }}/i/favicon_normal.jpg" />
   {% endif %}
@@ -55,7 +59,11 @@
   <meta name="twitter:title" content="{{ page.title }}" />
   <meta name="twitter:description" content="{% if page.summary %}{{ page.summary }}{% elsif page.description %}{{ page.description }}{% else %}{{ t.site_description }}{% endif %}" />
   {% if page.header %}
-    <meta name="twitter:image" content="{{ site.url }}{{ page.header }}" />
+    {% if page.header contains '://' %}
+      <meta name="twitter:image" content="{{ page.header }}" />
+    {% else %}
+      <meta name="twitter:image" content="{{ site.url }}{{ page.header }}" />
+    {% endif %}
   {% else %}
     <meta name="twitter:image" content="{{ site.url }}/i/favicon_normal.jpg" />
   {% endif %}

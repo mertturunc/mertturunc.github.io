@@ -31,7 +31,30 @@ permalink: /en/
           <svg height="16" width="16" viewBox="0 0 16 16" style="vertical-align:middle"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
+        <a class="linkedin-link" href="https://www.linkedin.com/in/mertturunc/" target="_blank" rel="noopener">
+          <svg height="16" width="16" viewBox="0 0 16 16" style="vertical-align:middle"><path fill="currentColor" d="M14.5 0h-13C.7 0 0 .7 0 1.5v13C0 15.3.7 16 1.5 16h13c.8 0 1.5-.7 1.5-1.5v-13C16 .7 15.3 0 14.5 0zM4.8 13H2.7V6.2h2.1V13zm-1-7.7c-.7 0-1.2-.6-1.2-1.2 0-.7.6-1.2 1.2-1.2.7 0 1.2.6 1.2 1.2 0 .7-.5 1.2-1.2 1.2zm9.2 7.7h-2.1V9.5c0-.8-.3-1.3-1-1.3-.5 0-.8.3-1 .7-.1.2-.1.5-.1.8V13H6.7s.1-7.1 0-7.8h2.1v1.1c.3-.5.9-1.2 2.1-1.2 1.5 0 2.6 1 2.6 3.1V13z"/></svg>
+          LinkedIn
+        </a>
       </p>
+    </div>
+  </div>
+
+  <div class="post-filters">
+    <div class="tooltip">
+      <button class="filter-btn active" data-filter="all">{{ t.post.filter_all }}</button>
+      <span class="tooltiptext">{{ t.post.filter_all }}</span>
+    </div>
+    <div class="tooltip">
+      <button class="filter-btn" data-filter="starred">★</button>
+      <span class="tooltiptext">{{ t.post.starred_tooltip }}</span>
+    </div>
+    <div class="tooltip">
+      <button class="filter-btn" data-filter="music">♫</button>
+      <span class="tooltiptext">{{ t.post.music_tooltip }}</span>
+    </div>
+    <div class="tooltip">
+      <button class="filter-btn" data-filter="geo">☉</button>
+      <span class="tooltiptext">{{ t.post.geo_tooltip }}</span>
     </div>
   </div>
 
@@ -73,80 +96,134 @@ permalink: /en/
 
   {% assign posts_by_year = unique_posts | group_by_exp: "post", "post.date | date: '%Y'"  %}
   {% for year in posts_by_year %}
-    <h1>{{ year.name }}</h1>
-    {% for post in year.items %}
-      {% comment %} Find the English version of this post for display {% endcomment %}
-      {% assign display_post = post %}
-      {% assign display_url = post.url %}
-      
-      {% if post.translations %}
-        {% comment %} Look for English version {% endcomment %}
-        {% for translation in post.translations %}
-          {% if translation.lang == 'en' %}
-            {% comment %} Find the actual English post {% endcomment %}
-            {% for site_post in site.posts %}
-              {% if site_post.url == translation.url %}
-                {% assign display_post = site_post %}
-                {% assign display_url = site_post.url %}
-                {% break %}
-              {% endif %}
-            {% endfor %}
-            {% break %}
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-      
-      {% comment %} Determine language indicators {% endcomment %}
-      {% assign lang_indicators = "" %}
-      {% if post.lang == 'en' %}
-        {% assign lang_indicators = "[EN]" %}
-      {% elsif post.lang == 'tr' %}
-        {% assign lang_indicators = "[TR]" %}
-      {% else %}
-        {% assign lang_indicators = "[TR]" %}
-      {% endif %}
-      
-      {% comment %} Check if translations exist {% endcomment %}
-      {% if post.translations %}
-        {% assign has_en = false %}
-        {% assign has_tr = false %}
-        {% if post.lang == 'en' %}
-          {% assign has_en = true %}
-        {% elsif post.lang == 'tr' %}
-          {% assign has_tr = true %}
-        {% else %}
-          {% assign has_tr = true %}
+    <div class="year-group">
+      <h1>{{ year.name }}</h1>
+      {% for post in year.items %}
+        {% comment %} Find the English version of this post for display {% endcomment %}
+        {% assign display_post = post %}
+        {% assign display_url = post.url %}
+        
+        {% if post.translations %}
+          {% comment %} Look for English version {% endcomment %}
+          {% for translation in post.translations %}
+            {% if translation.lang == 'en' %}
+              {% comment %} Find the actual English post {% endcomment %}
+              {% for site_post in site.posts %}
+                {% if site_post.url == translation.url %}
+                  {% assign display_post = site_post %}
+                  {% assign display_url = site_post.url %}
+                  {% break %}
+                {% endif %}
+              {% endfor %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
         {% endif %}
         
-        {% for translation in post.translations %}
-          {% if translation.lang == 'en' %}
-            {% assign has_en = true %}
-          {% elsif translation.lang == 'tr' %}
-            {% assign has_tr = true %}
-          {% endif %}
-        {% endfor %}
-        
-        {% if has_tr and has_en %}
-          {% assign lang_indicators = "[TR/EN]" %}
-        {% elsif has_en %}
+        {% comment %} Determine language indicators {% endcomment %}
+        {% assign lang_indicators = "" %}
+        {% if post.lang == 'en' %}
           {% assign lang_indicators = "[EN]" %}
+        {% elsif post.lang == 'tr' %}
+          {% assign lang_indicators = "[TR]" %}
         {% else %}
           {% assign lang_indicators = "[TR]" %}
         {% endif %}
-      {% endif %}
-      
-      {% if display_post.wip %}
-        {% comment %} WIP post - show title but no link, with TBD instead of date {% endcomment %}
-        <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %} {% if display_post.wip %}<div class="tooltip">🚧 <span class="tooltiptext">{{ t.post.wip_tooltip }}</span></div>{% endif %}<span class="wip-post">{{ display_post.title }}</span> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date wip-date">{{ t.post.tbd }}</span></p>
-      {% else %}
-        {% comment %} Regular post - show with link {% endcomment %}
-        <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %}<a href="{{ display_url }}"> {{ display_post.title }}</a> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date">{% include short-date.html date=display_post.date %}</span></p>
-      {% endif %}
-    {% endfor %}
+        
+        {% comment %} Check if translations exist {% endcomment %}
+        {% if post.translations %}
+          {% assign has_en = false %}
+          {% assign has_tr = false %}
+          {% if post.lang == 'en' %}
+            {% assign has_en = true %}
+          {% elsif post.lang == 'tr' %}
+            {% assign has_tr = true %}
+          {% else %}
+            {% assign has_tr = true %}
+          {% endif %}
+          
+          {% for translation in post.translations %}
+            {% if translation.lang == 'en' %}
+              {% assign has_en = true %}
+            {% elsif translation.lang == 'tr' %}
+              {% assign has_tr = true %}
+            {% endif %}
+          {% endfor %}
+          
+          {% if has_tr and has_en %}
+            {% assign lang_indicators = "[TR/EN]" %}
+          {% elsif has_en %}
+            {% assign lang_indicators = "[EN]" %}
+          {% else %}
+            {% assign lang_indicators = "[TR]" %}
+          {% endif %}
+        {% endif %}
+
+        {% comment %} Add data attributes for filtering {% endcomment %}
+        {% assign post_classes = "post-item" %}
+        {% if display_post.starred %}{% assign post_classes = post_classes | append: " starred" %}{% endif %}
+        {% if display_post.music %}{% assign post_classes = post_classes | append: " music" %}{% endif %}
+        {% if display_post.geo %}{% assign post_classes = post_classes | append: " geo" %}{% endif %}
+        
+        <div class="{{ post_classes }}">
+          {% if display_post.wip %}
+            {% comment %} WIP post - show title but no link, with TBD instead of date {% endcomment %}
+            <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %} {% if display_post.wip %}<div class="tooltip">🚧 <span class="tooltiptext">{{ t.post.wip_tooltip }}</span></div>{% endif %}<span class="wip-post">{{ display_post.title }}</span> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date wip-date">{{ t.post.tbd }}</span></p>
+          {% else %}
+            {% comment %} Regular post - show with link {% endcomment %}
+            <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %}<a href="{{ display_url }}"> {{ display_post.title }}</a> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date">{% include short-date.html date=display_post.date %}</span></p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
   {% endfor %}
 
-<p class="comments">
-  
-</p>
+  <p class="comments"></p>
+</div>
 
-</div> 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const posts = document.querySelectorAll('.post-item');
+  const yearGroups = document.querySelectorAll('.year-group');
+
+  function updateFilter(filter) {
+    // Update active button state
+    filterButtons.forEach(btn => btn.classList.remove('active'));
+    filterButtons.forEach(btn => {
+      if (btn.dataset.filter === filter) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // Show/hide posts based on filter
+    posts.forEach(post => {
+      if (filter === 'all') {
+        post.style.cssText = '';
+      } else {
+        if (post.classList.contains(filter)) {
+          post.style.cssText = '';
+        } else {
+          post.style.cssText = 'display: none !important;';
+        }
+      }
+    });
+
+    // Hide year groups with no visible posts
+    yearGroups.forEach(yearGroup => {
+      const visiblePosts = yearGroup.querySelectorAll('.post-item[style=""]').length;
+      yearGroup.style.display = visiblePosts > 0 ? '' : 'none';
+    });
+  }
+
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const filter = button.dataset.filter;
+      updateFilter(filter);
+    });
+  });
+
+  // Set initial state
+  updateFilter('all');
+});
+</script> 
