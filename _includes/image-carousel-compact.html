@@ -166,6 +166,9 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
       }
     }
     
+    // Add zoomed class to carousel for CSS targeting
+    carousel.classList.toggle('zoomed', currentZoom > 1);
+    
     // Toggle reset button visibility
     if (zoomResetBtn) {
       zoomResetBtn.style.display = currentZoom > 1 ? 'flex' : 'none';
@@ -637,7 +640,12 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
     const containerWidth = carouselContainer.offsetWidth;
     const defaultHeight = Math.min(containerWidth * 0.6, 300);
     
-    carouselContainer.style.height = defaultHeight + 'px';
+    // Check if mobile and adjust dots space accordingly
+    const isMobile = window.innerWidth <= 768;
+    const dotsSpace = isMobile ? 12 : 16; // Reduced dots space since dots are absolutely positioned
+    
+    // Set container height to include dots space
+    carouselContainer.style.height = (defaultHeight + dotsSpace) + 'px';
     
     // Apply height to images and videos
     const mediaElems = carousel.querySelectorAll('.carousel-image-compact, .carousel-video-compact');

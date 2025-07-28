@@ -1498,7 +1498,7 @@ hr {
   position: relative;
   width: 100%;
   max-width: 800px;
-  margin: 2rem auto;
+  margin: 0.75rem auto 0.5rem;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -1510,6 +1510,8 @@ hr {
   position: relative;
   width: 100%;
   overflow: hidden;
+  /* Add padding bottom to accommodate absolutely positioned dots */
+  padding-bottom: 32px;
 }
 
 .carousel-track {
@@ -1757,9 +1759,15 @@ html[data-theme="dark"] .zoom-indicator {
   display: flex;
   justify-content: center;
   gap: 8px;
-  padding: 16px;
+  padding: 8px 12px;
   background: var(--primary-bg);
   border-top: 1px solid var(--border-color);
+  min-height: 32px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
 }
 
 .carousel-dot {
@@ -1785,7 +1793,7 @@ html[data-theme="dark"] .zoom-indicator {
 /* Responsive Design */
 @media (max-width: 768px) {
   .image-carousel {
-    margin: 1rem auto;
+    margin: 0.25rem auto 0.25rem;
     border-radius: 0;
     max-width: 100%;
   }
@@ -1807,8 +1815,13 @@ html[data-theme="dark"] .zoom-indicator {
     max-height: 300px;
   }
   
+  .carousel-container {
+    padding-bottom: 24px;
+  }
+  
   .carousel-dots {
-    padding: 12px;
+    padding: 3px 6px;
+    min-height: 20px;
   }
   
   .carousel-dot {
@@ -1878,12 +1891,55 @@ html[data-theme="dark"] .zoom-indicator {
   
   .carousel-dots {
     gap: 6px;
-    padding: 10px;
+    padding: 3px 6px;
+    min-height: 20px;
   }
   
   .carousel-dot {
     width: 8px;
     height: 8px;
+  }
+  
+  /* Compact carousel mobile optimizations */
+  .image-carousel-compact {
+    margin: 0.25rem auto 0.5rem;
+  }
+  
+  .carousel-dots-compact {
+    padding: 4px 6px;
+    gap: 3px;
+    min-height: 28px;
+  }
+  
+  .carousel-dot-compact {
+    width: 5px;
+    height: 5px;
+  }
+  
+  .carousel-controls-compact {
+    top: 4px;
+    right: 4px;
+    gap: 3px;
+  }
+  
+  .carousel-control-btn-compact {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .carousel-control-btn-compact svg {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .zoom-indicator-compact {
+    font-size: 9px;
+    padding: 2px 4px;
+    min-width: 30px;
+  }
+  
+  .carousel-image-compact {
+    max-height: 180px;
   }
 }
 
@@ -1953,18 +2009,25 @@ html[data-theme="dark"] .zoom-indicator {
   position: relative;
   width: 100%;
   max-width: 600px;
-  margin: 1rem auto 1.5rem;
+  margin: 0.75rem auto 0.5rem !important;
   border-radius: 6px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   background: var(--primary-bg);
   border: 1px solid var(--border-color);
+  /* Ensure proper positioning for absolutely positioned dots */
+  min-height: 200px;
+  /* Better space utilization */
+  aspect-ratio: 16/10;
 }
 
 .carousel-container-compact {
   position: relative;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  /* Ensure proper stacking context */
+  transform: translateZ(0);
+  z-index: 1;
 }
 
 .carousel-track-compact {
@@ -1976,18 +2039,32 @@ html[data-theme="dark"] .zoom-indicator {
 .carousel-slide-compact {
   flex: 0 0 100%;
   position: relative;
+  /* Ensure slide fills available space */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .carousel-image-compact {
   width: 100%;
-  height: auto;
   display: block;
-  max-height: 250px;
+  max-height: none;
   object-fit: contain;
   object-position: center;
   background: var(--code-bg);
   transition: transform 0.3s ease;
   cursor: grab;
+  /* Ensure zoomed image doesn't interfere with dots */
+  transform-origin: center center;
+  contain: layout style paint;
+}
+
+.carousel-image-compact.zoomed {
+  cursor: move;
+  /* Ensure zoomed image doesn't affect dots positioning */
+  z-index: 1;
+  position: relative;
 }
 
 /* Video support for compact carousel */
@@ -2066,8 +2143,8 @@ html[data-theme="dark"] .zoom-indicator {
   background: rgba(0, 0, 0, 0.6);
   color: var(--primary-bg);
   border: none;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -2107,10 +2184,10 @@ html[data-theme="dark"] .carousel-nav-compact:hover {
 /* Compact Zoom and Fullscreen Controls */
 .carousel-controls-compact {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
   z-index: 20;
 }
@@ -2119,9 +2196,9 @@ html[data-theme="dark"] .carousel-nav-compact:hover {
   background: rgba(0, 0, 0, 0.7);
   color: var(--primary-bg);
   border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 5px;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2138,12 +2215,12 @@ html[data-theme="dark"] .carousel-nav-compact:hover {
 .zoom-indicator-compact {
   background: rgba(0, 0, 0, 0.7);
   color: var(--primary-bg);
-  padding: 4px 8px;
-  border-radius: 5px;
-  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: 500;
   backdrop-filter: blur(4px);
-  min-width: 40px;
+  min-width: 35px;
   text-align: center;
 }
 
@@ -2169,12 +2246,35 @@ html[data-theme="dark"] .zoom-indicator-compact {
   justify-content: center;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 8px 12px !important;
   background: var(--primary-bg);
   border-top: 1px solid var(--border-color);
-  min-height: 40px;
-  position: relative;
-  z-index: 5;
+  min-height: 32px !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  /* Ensure dots stay visible and properly positioned */
+  transform: translateZ(0);
+  will-change: transform;
+  /* Ensure background is solid */
+  isolation: isolate;
+  /* Force dots to stay on top when image is zoomed */
+  pointer-events: auto;
+  /* Ensure dots are fully visible */
+  overflow: visible;
+}
+
+/* Ensure dots remain visible when image is zoomed */
+.image-carousel-compact:has(.carousel-image-compact.zoomed) .carousel-dots-compact,
+.image-carousel-compact.zoomed .carousel-dots-compact {
+  z-index: 15;
+  background: var(--primary-bg) !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  /* Ensure dots stay at bottom even when zoomed */
+  bottom: 0 !important;
+  position: absolute !important;
 }
 
 .carousel-dot-compact {
@@ -2187,6 +2287,9 @@ html[data-theme="dark"] .zoom-indicator-compact {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   position: relative;
+  /* Ensure dots maintain proper rendering */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .carousel-dot-compact:hover {
@@ -2214,40 +2317,67 @@ html[data-theme="dark"] .carousel-dot-compact.active {
 /* Responsive Design for Compact Carousel */
 @media (max-width: 768px) {
   .image-carousel-compact {
-    margin: 0.5rem auto 1rem;
+    margin: 0.25rem auto 0.25rem !important;
     border-radius: 4px;
   }
   
   .carousel-nav-compact {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
   
   .carousel-nav-compact svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
   
   .carousel-prev-compact {
-    left: 8px;
+    left: 6px;
   }
   
   .carousel-next-compact {
-    right: 8px;
+    right: 6px;
   }
   
   .carousel-image-compact {
-    max-height: 200px;
+    max-height: none;
+  }
+  
+  .carousel-container-compact {
+    /* Let JavaScript handle height */
   }
   
   .carousel-dots-compact {
-    padding: 8px;
-    gap: 4px;
+    padding: 2px 4px !important;
+    gap: 2px;
+    min-height: 16px !important;
   }
   
   .carousel-dot-compact {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
+  }
+  
+  .carousel-controls-compact {
+    top: 4px;
+    right: 4px;
+    gap: 3px;
+  }
+  
+  .carousel-control-btn-compact {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .carousel-control-btn-compact svg {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .zoom-indicator-compact {
+    font-size: 9px;
+    padding: 2px 4px;
+    min-width: 30px;
   }
 }
 
