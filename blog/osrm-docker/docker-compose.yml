@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  osrm-data-prep:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: osrm-data-prep
+    volumes:
+      - osrm-data:/data
+    working_dir: /data
+    environment:
+      - PROFILE=car
+    entrypoint: |
+      sh -c "
+        echo '=== osrm data preparation started ==='
+        
+        # install required tools
+        apt-get update && apt-get install -y osmium-tool wget curl
+        
+        # create istanbul polygon if not exists
+        if [ ! -f istanbul.poly ]; then
+          echo 'creating istanbul polygon boundary...'
+          cat > istanbul.poly << 'EOF'
+      polygon
+      1
+         27.8419996589802 41.681380046807476
+         27.8419996589802 40.72975311315034
+         29.992113225541146 40.72975311315034
+         29.992113225541146 41.681380046807476
+         29.992113225541146 41.681380046807476
+      END
+      END
+      EOF
+        fi
+        
+        # download turkey data if not exists
+        if [ ! -f turkey-latest.osm.pbf ]; then
+          echo 'downloading turkey osm data...'
+          wget -q https://download.geofabrik.de/europe/turkey-latest.osm.pbf
+        fi
+        
+        # extract istanbul area if not exists
+        if [ ! -f istanbul.osm.pbf ]; then
+          echo 'extracting istanbul area...'
+          osmium extract -p istanbul.poly turkey-latest.osm.pbf -o istanbul.osm.pbf
+        fi
+        
+        # check if osrm data already processed
+        if [ -f istanbul.osrm ]; then
+          echo 'osrm data already processed. skipping...'
+          exit 0
+        fi
+        
+        # process with osrm
+        echo 'processing with osrm (extract)...'
+        osrm-extract -p /opt/$$PROFILE.lua istanbul.osm.pbf
+        
+        echo 'processing with osrm (partition)...'
+        osrm-partition istanbul.osrm
+        
+        echo 'processing with osrm (customize)...'
+        osrm-customize istanbul.osrm
+        
+        # cleanup large files to save space
+        rm -f turkey-latest.osm.pbf
+        
+        echo '=== osrm data preparation completed ==='
+      "
+    profiles:
+      - tools
+
+  # osrm routing server
+  osrm-backend:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: osrm-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - osrm-data:/data
+    working_dir: /data
+    environment:
+      - ALGORITHM=mld
+    command: |
+      sh -c "
+        # wait for data preparation if needed
+        while [ ! -f /data/istanbul.osrm ]; do
+          echo 'waiting for data preparation to complete...'
+          sleep 10
+        done
+        
+        echo 'starting osrm routing server...'
+        osrm-routed --algorithm $$ALGORITHM --ip 0.0.0.0 --port 5000 /data/istanbul.osrm
+      "
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+volumes:
+  osrm-data:
+    driver: local
