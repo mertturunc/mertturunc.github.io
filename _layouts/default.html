@@ -43,16 +43,17 @@
       <meta property="og:image" content="{{ site.url }}{{ page.header }}" />
     {% endif %}
   {% else %}
-    {% comment %} Generate dynamic placeholder image URL {% endcomment %}
-    {% assign placeholder_params = "title=" | append: page.title | url_encode %}
-    {% assign placeholder_params = placeholder_params | append: "&site=" | append: t.site_title | url_encode %}
-    {% if page.categories contains 'blog' %}
-      {% assign placeholder_params = placeholder_params | append: "&type=blog" %}
-      {% if page.date %}
-        {% assign placeholder_params = placeholder_params | append: "&date=" | append: page.date | date: "%Y-%m-%d" | url_encode %}
-      {% endif %}
+    {% comment %} Check for generated placeholder {% endcomment %}
+    {% assign safe_title = page.title | replace: ' ', '-' | replace: ':', '' | replace: '"', '' | replace: "'", '' | downcase %}
+    {% assign date_str = page.date | date: "%Y-%m-%d" %}
+    {% assign placeholder_filename = date_str | append: '-' | append: safe_title | append: '-placeholder.jpg' %}
+    {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
+    {% assign placeholder_file = 'placeholders/' | append: placeholder_filename %}
+    {% if site.static_files contains placeholder_file %}
+      <meta property="og:image" content="{{ site.url }}{{ placeholder_path }}" />
+    {% else %}
+      <meta property="og:image" content="{{ site.url }}/i/favicon_normal.jpg" />
     {% endif %}
-    <meta property="og:image" content="{{ site.url }}/placeholder-image.html?{{ placeholder_params }}" />
   {% endif %}
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -76,16 +77,17 @@
       <meta name="twitter:image" content="{{ site.url }}{{ page.header }}" />
     {% endif %}
   {% else %}
-    {% comment %} Use the same dynamic placeholder for Twitter {% endcomment %}
-    {% assign placeholder_params = "title=" | append: page.title | url_encode %}
-    {% assign placeholder_params = placeholder_params | append: "&site=" | append: t.site_title | url_encode %}
-    {% if page.categories contains 'blog' %}
-      {% assign placeholder_params = placeholder_params | append: "&type=blog" %}
-      {% if page.date %}
-        {% assign placeholder_params = placeholder_params | append: "&date=" | append: page.date | date: "%Y-%m-%d" | url_encode %}
-      {% endif %}
+    {% comment %} Use the same placeholder logic for Twitter {% endcomment %}
+    {% assign safe_title = page.title | replace: ' ', '-' | replace: ':', '' | replace: '"', '' | replace: "'", '' | downcase %}
+    {% assign date_str = page.date | date: "%Y-%m-%d" %}
+    {% assign placeholder_filename = date_str | append: '-' | append: safe_title | append: '-placeholder.jpg' %}
+    {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
+    {% assign placeholder_file = 'placeholders/' | append: placeholder_filename %}
+    {% if site.static_files contains placeholder_file %}
+      <meta name="twitter:image" content="{{ site.url }}{{ placeholder_path }}" />
+    {% else %}
+      <meta name="twitter:image" content="{{ site.url }}/i/favicon_normal.jpg" />
     {% endif %}
-    <meta name="twitter:image" content="{{ site.url }}/placeholder-image.html?{{ placeholder_params }}" />
   {% endif %}
 
   {% comment %} Add alternate language links {% endcomment %}

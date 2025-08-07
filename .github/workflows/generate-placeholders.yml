@@ -1,0 +1,38 @@
+name: Generate Placeholder Images
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '_posts/**'
+      - '_layouts/**'
+      - '.github/workflows/generate-placeholders.yml'
+
+jobs:
+  generate-placeholders:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        npm install
+        
+    - name: Generate placeholder images
+      run: |
+        node .github/scripts/generate-placeholders.js
+        
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add placeholders/
+        git diff --quiet && git diff --staged --quiet || git commit -m "Generate placeholder images"
+        git push

@@ -1,0 +1,12 @@
+{
+  "name": "blog-placeholder-generator",
+  "version": "1.0.0",
+  "description": "Generate placeholder images for blog posts",
+  "scripts": {
+    "generate-placeholders": "node .github/scripts/generate-placeholders.js"
+  },
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "gray-matter": "^4.0.3"
+  }
+}
