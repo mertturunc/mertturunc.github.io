@@ -7,7 +7,7 @@ if (!fs.existsSync(placeholdersDir)) {
   fs.mkdirSync(placeholdersDir, { recursive: true });
 }
 
-// Function to generate procedural abstract SVG
+// Function to generate procedural topographic SVG
 function generatePlaceholderSVG(post, outputPath) {
   const title = post.title || 'Blog Post';
   
@@ -18,97 +18,131 @@ function generatePlaceholderSVG(post, outputPath) {
   }, 0);
   
   // Generate colors based on title hash
-  const hue1 = Math.abs(hash) % 360;
-  const hue2 = (hue1 + 180) % 360;
-  const hue3 = (hue1 + 90) % 360;
+  const baseHue = Math.abs(hash) % 360;
+  const bgColor = `hsl(${baseHue}, 15%, 85%)`; // Light background
+  const gridColor = `hsl(${baseHue}, 20%, 75%)`; // Slightly darker grid
+  const contourColor = `hsl(${(baseHue + 180) % 360}, 40%, 35%)`; // Dark brown contours
+  const indexContourColor = `hsl(${(baseHue + 180) % 360}, 50%, 25%)`; // Darker index contours
+  const featureColor1 = `hsl(${(baseHue + 60) % 360}, 70%, 45%)`; // Red-like feature
+  const featureColor2 = `hsl(${(baseHue + 240) % 360}, 30%, 20%)`; // Black-like feature
   
-  // Create abstract geometric patterns
-  const patterns = [];
-  const numShapes = 15 + (Math.abs(hash) % 10);
+  // Generate contour lines
+  const contours = [];
+  const numContours = 25 + (Math.abs(hash) % 15);
   
-  for (let i = 0; i < numShapes; i++) {
-    const x = (hash + i * 73) % 1200;
-    const y = (hash + i * 137) % 630;
-    const size = 20 + (hash + i * 47) % 80;
-    const rotation = (hash + i * 23) % 360;
-    const opacity = 0.1 + (hash + i * 17) % 40 / 100;
+  for (let i = 0; i < numContours; i++) {
+    const seed = hash + i * 73;
+    const amplitude = 50 + (seed % 100);
+    const frequency = 0.005 + (seed % 20) / 2000;
+    const phase = seed % 628; // 2*PI
+    const isIndex = i % 5 === 0; // Every 5th contour is an index contour
     
-    // Alternate between circles, rectangles, and triangles
-    const shapeType = i % 3;
-    
-    if (shapeType === 0) {
-      // Circle
-      patterns.push(`<circle cx="${x}" cy="${y}" r="${size/2}" fill="hsl(${hue1}, 70%, 60%)" opacity="${opacity}"/>`);
-    } else if (shapeType === 1) {
-      // Rectangle
-      patterns.push(`<rect x="${x-size/2}" y="${y-size/2}" width="${size}" height="${size}" fill="hsl(${hue2}, 70%, 60%)" opacity="${opacity}" transform="rotate(${rotation} ${x} ${y})"/>`);
-    } else {
-      // Triangle
-      const points = `${x},${y-size/2} ${x-size/2},${y+size/2} ${x+size/2},${y+size/2}`;
-      patterns.push(`<polygon points="${points}" fill="hsl(${hue3}, 70%, 60%)" opacity="${opacity}" transform="rotate(${rotation} ${x} ${y})"/>`);
-    }
-  }
-  
-  // Create wave patterns
-  const waves = [];
-  for (let i = 0; i < 3; i++) {
-    const waveY = 200 + i * 150;
-    const amplitude = 30 + (hash + i * 53) % 50;
-    const frequency = 0.01 + (hash + i * 37) % 20 / 1000;
-    const waveColor = `hsl(${(hue1 + i * 60) % 360}, 70%, 60%)`;
-    
-    let pathData = `M 0 ${waveY}`;
-    for (let x = 0; x <= 1200; x += 10) {
-      const y = waveY + Math.sin(x * frequency + hash) * amplitude;
+    let pathData = `M 0 ${200 + i * 15}`;
+    for (let x = 0; x <= 1200; x += 5) {
+      const y = 200 + i * 15 + Math.sin(x * frequency + phase) * amplitude + 
+                Math.sin(x * frequency * 0.3 + phase * 0.7) * amplitude * 0.5;
       pathData += ` L ${x} ${y}`;
     }
-    pathData += ' L 1200 630 L 0 630 Z';
     
-    waves.push(`<path d="${pathData}" fill="${waveColor}" opacity="0.3"/>`);
+    const strokeWidth = isIndex ? 2 : 1;
+    const color = isIndex ? indexContourColor : contourColor;
+    contours.push(`<path d="${pathData}" stroke="${color}" stroke-width="${strokeWidth}" fill="none"/>`);
+  }
+  
+  // Generate grid
+  const gridLines = [];
+  const gridSpacing = 50;
+  
+  // Vertical grid lines
+  for (let x = 0; x <= 1200; x += gridSpacing) {
+    gridLines.push(`<line x1="${x}" y1="0" x2="${x}" y2="630" stroke="${gridColor}" stroke-width="0.5" opacity="0.6"/>`);
+  }
+  
+  // Horizontal grid lines
+  for (let y = 0; y <= 630; y += gridSpacing) {
+    gridLines.push(`<line x1="0" y1="${y}" x2="1200" y2="${y}" stroke="${gridColor}" stroke-width="0.5" opacity="0.6"/>`);
+  }
+  
+  // Generate feature lines (like rivers, roads, boundaries)
+  const features = [];
+  
+  // Dashed-dot feature line (like the red line in example)
+  const feature1Seed = hash + 137;
+  let feature1Path = `M 0 ${150 + (feature1Seed % 100)}`;
+  for (let x = 0; x <= 1200; x += 10) {
+    const y = 150 + (feature1Seed % 100) + 
+              Math.sin(x * 0.003 + feature1Seed) * 80 +
+              Math.sin(x * 0.001 + feature1Seed * 0.5) * 40;
+    feature1Path += ` L ${x} ${y}`;
+  }
+  features.push(`<path d="${feature1Path}" stroke="${featureColor1}" stroke-width="3" fill="none" stroke-dasharray="15,5,3,5" opacity="0.8"/>`);
+  
+  // Solid feature line (like the black line in example)
+  const feature2Seed = hash + 257;
+  let feature2Path = `M 600 ${50 + (feature2Seed % 50)}`;
+  for (let x = 0; x <= 1200; x += 8) {
+    const y = 50 + (feature2Seed % 50) + 
+              Math.sin(x * 0.004 + feature2Seed) * 60 +
+              Math.sin(x * 0.002 + feature2Seed * 0.3) * 30;
+    feature2Path += ` L ${x} ${y}`;
+  }
+  features.push(`<path d="${feature2Path}" stroke="${featureColor2}" stroke-width="2" fill="none" opacity="0.9"/>`);
+  
+  // Dotted feature line
+  const feature3Seed = hash + 373;
+  let feature3Path = `M 200 ${100 + (feature3Seed % 80)}`;
+  for (let x = 0; x <= 1200; x += 12) {
+    const y = 100 + (feature3Seed % 80) + 
+              Math.sin(x * 0.005 + feature3Seed) * 50 +
+              Math.sin(x * 0.0015 + feature3Seed * 0.4) * 25;
+    feature3Path += ` L ${x} ${y}`;
+  }
+  features.push(`<path d="${feature3Path}" stroke="${featureColor2}" stroke-width="1" fill="none" stroke-dasharray="2,4" opacity="0.7"/>`);
+  
+  // Generate concentric contour patterns (hills/peaks)
+  const peaks = [];
+  const numPeaks = 3 + (Math.abs(hash) % 4);
+  
+  for (let p = 0; p < numPeaks; p++) {
+    const peakSeed = hash + p * 97;
+    const centerX = 200 + (peakSeed % 800);
+    const centerY = 150 + (peakSeed % 300);
+    const maxRadius = 80 + (peakSeed % 60);
+    
+    for (let r = 10; r <= maxRadius; r += 8) {
+      const points = [];
+      const numPoints = 20;
+      for (let i = 0; i < numPoints; i++) {
+        const angle = (i / numPoints) * 2 * Math.PI;
+        const radius = r + Math.sin(angle * 3 + peakSeed) * 5;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        points.push(`${x},${y}`);
+      }
+      const isIndexPeak = r % 24 === 0;
+      const strokeWidth = isIndexPeak ? 2 : 1;
+      const color = isIndexPeak ? indexContourColor : contourColor;
+      peaks.push(`<polygon points="${points.join(' ')}" stroke="${color}" stroke-width="${strokeWidth}" fill="none"/>`);
+    }
   }
   
   // Create SVG content
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:hsl(${hue1}, 20%, 15%);stop-opacity:1" />
-      <stop offset="100%" style="stop-color:hsl(${hue2}, 20%, 10%);stop-opacity:1" />
-    </linearGradient>
-    <radialGradient id="overlay" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:hsl(${hue3}, 30%, 20%);stop-opacity:0.8" />
-      <stop offset="100%" style="stop-color:hsl(${hue1}, 20%, 5%);stop-opacity:0.9" />
-    </radialGradient>
-  </defs>
-  
   <!-- Background -->
-  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="${bgColor}"/>
   
-  <!-- Abstract patterns -->
-  ${patterns.join('\n  ')}
+  <!-- Grid -->
+  ${gridLines.join('\n  ')}
   
-  <!-- Wave patterns -->
-  ${waves.join('\n  ')}
+  <!-- Contour lines -->
+  ${contours.join('\n  ')}
   
-  <!-- Overlay gradient -->
-  <rect width="1200" height="630" fill="url(#overlay)"/>
+  <!-- Peak patterns -->
+  ${peaks.join('\n  ')}
   
-  <!-- Content area with glass effect -->
-  <rect x="100" y="100" width="1000" height="430" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="20" filter="url(#glass)"/>
-  
-  <!-- Blog indicator -->
-  <rect x="1050" y="50" width="100" height="40" fill="hsl(${hue1}, 80%, 60%)" rx="8"/>
-  <text x="1100" y="70" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">BLOG</text>
-  
-  <!-- Subtle title hint -->
-  <text x="600" y="320" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="rgba(255,255,255,0.3)" text-anchor="middle">${title.substring(0, 40)}${title.length > 40 ? '...' : ''}</text>
-  
-  <defs>
-    <filter id="glass">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="10"/>
-      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.3 0"/>
-    </filter>
-  </defs>
+  <!-- Feature lines -->
+  ${features.join('\n  ')}
 </svg>`;
   
   fs.writeFileSync(outputPath, svg);
@@ -168,13 +202,9 @@ function processBlogPosts() {
       return;
     }
     
-    // Generate filename
-    const safeTitle = frontMatter.title
-      .replace(/[^a-zA-Z0-9\s]/g, '')
-      .replace(/\s+/g, '-')
-      .toLowerCase();
-    const dateStr = new Date(frontMatter.date || Date.now()).toISOString().split('T')[0];
-    const filename = `${dateStr}-${safeTitle}-placeholder.svg`;
+    // Generate filename using the post filename (without .md extension)
+    const postFilename = postFile.replace('.md', '');
+    const filename = `${postFilename}-placeholder.svg`;
     const outputPath = path.join(placeholdersDir, filename);
     
     console.log('Generating placeholder:', filename);
