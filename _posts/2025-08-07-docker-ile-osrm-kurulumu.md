@@ -6,7 +6,6 @@ guide: true
 wip: false
 sitemap: false
 lang: tr
-header: "https://example.com/example.jpeg"
 translations:
   - lang: tr
     url: /blog/docker-ile-osrm-kurulumu/
