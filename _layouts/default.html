@@ -187,6 +187,153 @@
     });
   });
 })();
+
+// Copy button functionality for code blocks
+(function() {
+  // Get translation strings (will be populated by Jekyll)
+  const translations = {
+    copy: '{{ t.copy_button.copy }}',
+    copied: '{{ t.copy_button.copied }}',
+    error: '{{ t.copy_button.error }}'
+  };
+
+  function createCopyButton() {
+    const button = document.createElement('button');
+    button.className = 'copy-button';
+    button.innerHTML = '📋 ' + translations.copy;
+    button.setAttribute('aria-label', 'Copy code to clipboard');
+    return button;
+  }
+
+  function copyToClipboard(text, button) {
+    if (navigator.clipboard && window.isSecureContext) {
+      // Use modern clipboard API
+      navigator.clipboard.writeText(text).then(function() {
+        showCopySuccess(button);
+      }).catch(function() {
+        fallbackCopyToClipboard(text, button);
+      });
+    } else {
+      // Fallback for older browsers or non-secure contexts
+      fallbackCopyToClipboard(text, button);
+    }
+  }
+
+  function fallbackCopyToClipboard(text, button) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      showCopySuccess(button);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      showCopyError(button);
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  }
+
+  function showCopySuccess(button) {
+    const originalText = button.innerHTML;
+    button.innerHTML = '✅ ' + translations.copied;
+    button.classList.add('copied');
+    
+    setTimeout(function() {
+      button.innerHTML = originalText;
+      button.classList.remove('copied');
+    }, 2000);
+  }
+
+  function showCopyError(button) {
+    const originalText = button.innerHTML;
+    button.innerHTML = '❌ ' + translations.error;
+    
+    setTimeout(function() {
+      button.innerHTML = originalText;
+    }, 2000);
+  }
+
+  function addCopyButtonToCodeBlock(codeBlock) {
+    // Skip if button already exists (more robust check)
+    if (codeBlock.querySelector('.copy-button') || codeBlock.hasAttribute('data-copy-button-added')) {
+      return;
+    }
+    
+    // Mark this element as processed to prevent duplicate processing
+    codeBlock.setAttribute('data-copy-button-added', 'true');
+
+    const button = createCopyButton();
+    
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Get the code content - look for code element in various structures
+      let codeElement = codeBlock.querySelector('code');
+      if (!codeElement) {
+        // If no code element, use the pre element or the container itself
+        codeElement = codeBlock.querySelector('pre') || codeBlock;
+      }
+      
+      let codeText = codeElement.textContent || codeElement.innerText;
+      
+      // Clean up the text (remove extra whitespace)
+      codeText = codeText.trim();
+      
+      copyToClipboard(codeText, button);
+    });
+
+    // Find the best container for the button (the one with the visual styling)
+    let buttonContainer = codeBlock;
+    
+    // For Rouge blocks, append to the inner .highlight div for proper positioning
+    const highlightDiv = codeBlock.querySelector('.highlight');
+    if (highlightDiv) {
+      buttonContainer = highlightDiv;
+    }
+    
+    buttonContainer.appendChild(button);
+  }
+
+  // Initialize copy buttons when DOM is ready
+  function initializeCopyButtons() {
+    // Strategy: Only target the outermost container for each code block
+    // This prevents duplicate buttons on nested elements
+    
+    // For Jekyll/Rouge: target .highlighter-rouge containers (the outermost wrapper)
+    const rougeBlocks = document.querySelectorAll('.highlighter-rouge');
+    
+    // For standalone pre elements (not inside any syntax highlighting wrapper)
+    const standalonePreBlocks = document.querySelectorAll('pre:not(.highlighter-rouge pre):not(.highlight)');
+    
+    // Add copy buttons to Rouge syntax-highlighted blocks
+    rougeBlocks.forEach(function(codeBlock) {
+      addCopyButtonToCodeBlock(codeBlock);
+    });
+    
+    // Add copy buttons to standalone pre blocks
+    standalonePreBlocks.forEach(function(codeBlock) {
+      addCopyButtonToCodeBlock(codeBlock);
+    });
+  }
+
+  // Run on DOM content loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCopyButtons);
+  } else {
+    initializeCopyButtons();
+  }
+
+  // Also run after a short delay to catch any dynamically added content
+  setTimeout(initializeCopyButtons, 100);
+})();
 </script>
 
 </body>

@@ -23,6 +23,10 @@ tr:
     wip_message: "bu yazı henüz tamamlanmadı ve üzerinde çalışmaya devam ediliyor."
     wip_content: "bu yazının içeriği henüz hazır değil. lütfen daha sonra tekrar kontrol edin."
     tbd: "tbd"
+  copy_button:
+    copy: "kopyala"
+    copied: "kopyalandı!"
+    error: "hata!"
   project:
     view_project: "projeyi görüntüle"
     visit_site: "siteyi ziyaret et"
@@ -74,6 +78,10 @@ en:
     wip_message: "this post is not yet complete and is still being worked on."
     wip_content: "the content of this post is not ready yet. please check back later."
     tbd: "tbd"
+  copy_button:
+    copy: "copy"
+    copied: "copied!"
+    error: "error!"
   project:
     view_project: "view project"
     visit_site: "visit site"
