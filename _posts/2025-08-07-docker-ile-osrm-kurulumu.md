@@ -2,7 +2,7 @@
 category: blog
 title: "spesifik bir alan için docker ile osrm kurulumu"
 summary: "bu rehber wsl 2'de docker kullanarak osrm kurulumunu anlatır."
-geo: true
+guide: true
 wip: false
 sitemap: false
 lang: tr
@@ -14,9 +14,9 @@ translations:
     url: /blog/installing-osrm-via-docker/
 ---
 
-# belirli bir çalışma alanı için docker ile osrm kurulumu
+# spesifik bir alan için docker ile osrm kurulumu
 
-bu rehber wsl 2'de docker kullanarak osrm (open source routing machine) kurulumunu anlatır. bu rehberde osrm'i istanbul alanı için yapılandıracağım. osmium-tools kullanarak openstreetmap verilerini istanbul bölgesine polygon sınır dosyası ile kırptıktan sonra bu alan için konfigüre edeceğiz.
+bu rehber wsl 2'de docker kullanarak osrm (open source routing machine) kurulumunu anlatır. bu rehberde osrm'i istanbul alanı için yapılandıracağız. osmium-tools kullanarak openstreetmap verilerini istanbul bölgesine polygon sınır dosyası ile kırptıktan sonra bu alan için konfigüre edeceğiz.
 
 ## ön gereksinimler
 
@@ -64,7 +64,7 @@ END
 
 ## adım 3: türkiye openstreetmap verilerini indir
 
-geofabrik'ten openstreetmap türkiye verilerini indirin:
+geofabrik'ten openstreetmap türkiye verilerini indiriyoruz:
 
 ```bash
 wget https://download.geofabrik.de/europe/turkey-latest.osm.pbf
@@ -72,7 +72,7 @@ wget https://download.geofabrik.de/europe/turkey-latest.osm.pbf
 
 ## adım 4: osmium kullanarak istanbul alanını çıkar
 
-osmium-tool kullanarak türkiye verilerini sadece istanbul alanına kırpın:
+osmium-tool kullanarak türkiye verilerini sadece istanbul alanına kırpıyoruz:
 
 ```bash
 osmium extract -p istanbul.poly turkey-latest.osm.pbf -o istanbul.osm.pbf
@@ -86,7 +86,7 @@ pbf dosyasını kırparak, sadece istanbul alanını içeren çok daha küçük 
 
 ### yol ağını çıkar
 
-istanbul verilerini araç profili ile ön işleme tabi tutun:
+istanbul verilerini araç profili ile ön işleme tabi tutalım:
 
 ```bash
 docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-extract -p /opt/car.lua /data/istanbul.osm.pbf || echo "çıkarma işlemi başarısız"
@@ -96,7 +96,7 @@ docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-extract -
 
 ### bölümleme ve özelleştirme
 
-bölümleme ve özelleştirme adımlarını çalıştırın:
+bölümleme ve özelleştirme adımlarını çalıştırıyoruz:
 
 ```bash
 docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-partition /data/istanbul.osrm || echo "bölümleme işlemi başarısız"
@@ -115,7 +115,7 @@ birden fazla bölümü kapsayan rotalama sorguları için osrm, grafikteki kısa
 
 ### routing sunucusunu başlat
 
-osrm http sunucusunu 5000 portunda başlatın:
+osrm http sunucusunu 5000 portunda başlatıyoruz:
 
 ```bash
 docker run -t -i -p 5000:5000 -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-routed --algorithm mld /data/istanbul.osrm
@@ -123,7 +123,7 @@ docker run -t -i -p 5000:5000 -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backen
 
 ## adım 6: kurulumu test et
 
-istanbul'da rotalama sorgusunu test etmek için http sunucusuna curl aracılığıyla farklı bir terminalden istek gönderin:
+istanbul'da rotalama sorgusunu test etmek için http sunucusuna curl aracılığıyla farklı bir terminalden istek gönderiyoruz:
 
 ```bash
 curl "http://localhost:5000/route/v1/driving/29.0136,41.0053;28.9784,41.0082?steps=false"
@@ -143,7 +143,7 @@ curl "http://localhost:5000/route/v1/driving/29.0136,41.0053;28.9784,41.0082?ste
 
 ## her başlangıçta yol ağını güncelleme
 
-osrm örneğinizi en son yol ağı ile güncel tutmak için, her osrm başlattığınızda güncelleme sürecini otomatikleştirebilirsiniz. bu, en yeni osm çıkarımını indirmeyi, işlemeyi ve ardından routing sunucusunu başlatmayı içerir.
+osrm örneğinizi en son yol ağı ile güncel tutmak için, her osrm başlattığınızda güncelleme sürecini otomatikleştirebilirsiniz. bu, en yeni osm verisini indirmeyi, işlemeyi ve ardından routing sunucusunu başlatmayı içerir.
 
 ### bash yaklaşımı
 
@@ -154,7 +154,7 @@ bu adımları gerçekleştiren basit bir bash scripti:
 set -e
 cd data
  
-# eski veri dosyalarını kaldır ve türkiye için en son osm çıkarımını indir
+# eski veri dosyalarını kaldır ve türkiye için günceli indir
 rm -f turkey-latest.osm.pbf istanbul.osm.pbf istanbul.osrm*
 wget -q https://download.geofabrik.de/europe/turkey-latest.osm.pbf
 osmium extract -p istanbul.poly turkey-latest.osm.pbf -o istanbul.osm.pbf

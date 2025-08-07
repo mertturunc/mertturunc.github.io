@@ -54,6 +54,10 @@ lang: tr
       <button class="filter-btn" data-filter="geo">☉</button>
       <span class="tooltiptext">{{ t.post.geo_tooltip }}</span>
     </div>
+    <div class="tooltip">
+      <button class="filter-btn" data-filter="guide">?</button>
+      <span class="tooltiptext">{{ t.post.guide_tooltip }}</span>
+    </div>
   </div>
 
   {% assign published_posts = site.posts | where_exp: "post", "post.draft != true" | where_exp: "post", "post.hidden != true" %}
@@ -162,14 +166,15 @@ lang: tr
         {% if display_post.starred %}{% assign post_classes = post_classes | append: " starred" %}{% endif %}
         {% if display_post.music %}{% assign post_classes = post_classes | append: " music" %}{% endif %}
         {% if display_post.geo %}{% assign post_classes = post_classes | append: " geo" %}{% endif %}
+        {% if display_post.guide %}{% assign post_classes = post_classes | append: " guide" %}{% endif %}
         
         <div class="{{ post_classes }}">
           {% if display_post.wip %}
             {% comment %} WIP post - show title but no link, with TBD instead of date {% endcomment %}
-            <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %} {% if display_post.wip %}<div class="tooltip">🚧 <span class="tooltiptext">{{ t.post.wip_tooltip }}</span></div>{% endif %}<span class="wip-post">{{ display_post.title }}</span> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date wip-date">{{ t.post.tbd }}</span></p>
+            <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %} {% if display_post.guide %}<div class="tooltip">? <span class="tooltiptext">{{ t.post.guide_tooltip }}</span></div>{% endif %} {% if display_post.wip %}<div class="tooltip">🚧 <span class="tooltiptext">{{ t.post.wip_tooltip }}</span></div>{% endif %}<span class="wip-post">{{ display_post.title }}</span> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date wip-date">{{ t.post.tbd }}</span></p>
           {% else %}
             {% comment %} Regular post - show with link {% endcomment %}
-            <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %}<a href="{{ display_url }}"> {{ display_post.title }}</a> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date">{% include short-date.html date=display_post.date %}</span></p>
+            <p>{% if display_post.starred %}<div class="tooltip">★ <span class="tooltiptext">{{ t.post.starred_tooltip }}</span></div>{% endif %} {% if display_post.music %}<div class="tooltip">♫ <span class="tooltiptext">{{ t.post.music_tooltip }}</span></div>{% endif %} {% if display_post.geo %}<div class="tooltip">☉ <span class="tooltiptext">{{ t.post.geo_tooltip }}</span></div>{% endif %} {% if display_post.guide %}<div class="tooltip">? <span class="tooltiptext">{{ t.post.guide_tooltip }}</span></div>{% endif %}<a href="{{ display_url }}"> {{ display_post.title }}</a> <span class="language-indicator">{{ lang_indicators }}</span> <span class="date">{% include short-date.html date=display_post.date %}</span></p>
           {% endif %}
         </div>
       {% endfor %}

@@ -196,6 +196,11 @@ span {
     padding: 0 0 0 2px;
 }
 
+/* Blog posts get wider page width */
+body.post-layout .page {
+    width: 800px;
+}
+
 .page_wide {
     width: 810px;
 }
@@ -250,6 +255,11 @@ a.menu__item_inside {
   width: 544px;
   margin: 15px auto;
   position: relative; /* Allow absolute positioning of child elements */
+}
+
+/* Blog posts get wider post width */
+body.post-layout .post {
+  width: 700px;
 }
 
 /* Post title specific spacing */
@@ -428,6 +438,7 @@ figure {
 
 img {
   max-width: 100%;
+  height: auto;
 }
 
 .fig,
@@ -438,8 +449,39 @@ figure {
   font-style: italic;
 }
 
-@media (min-width: 600px) {
+/* Blog post sayfalarında görseller için özel hizalama */
+body.post-layout .fig,
+body.post-layout figure {
+  width: 100%;
+  max-width: 700px; /* Post genişliğine uygun */
+  margin: 2em auto;
+  text-align: center;
+}
 
+body.post-layout .fig img,
+body.post-layout figure>img,
+body.post-layout figure>video,
+body.post-layout figure>a>img {
+  margin: 0 auto 1em;
+  display: block;
+  border-radius: 6px;
+  max-width: 100%;
+  height: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+}
+
+/* Filler görselleri için özel stil - çerçeve ve gölge yok */
+.filler-image img {
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  opacity: 0.6;
+  filter: grayscale(20%);
+}
+
+/* Normal sayfalar için mevcut hizalama */
+@media (min-width: 600px) {
   .fig,
   figure {
     width: 600px;
@@ -468,6 +510,16 @@ figure>video {
   margin: -1em 0 1em 0;
 }
 
+/* Blog post sayfalarında caption hizalama */
+body.post-layout .fig figcaption,
+body.post-layout figure figcaption {
+  text-align: center;
+  font-size: 12px;
+  font-style: italic;
+  margin: 0.5em 0 1em 0;
+  color: var(--muted-text);
+}
+
 code {
   font-style: normal;
   background: var(--code-bg);
@@ -479,7 +531,7 @@ code {
 pre {
   font-size: 14px;
   background: var(--code-bg);
-  padding: 16px 30px 14px;
+  padding: 16px 30px 14px 30px; /* Normal padding */
   margin: 1em 0;
   border-radius: 4px;
   white-space: pre;
@@ -489,6 +541,12 @@ pre {
   line-height: 1.4;
   overflow-x: auto;
   overflow-y: hidden;
+  transition: padding 0.2s ease; /* Smooth transition for hover effect */
+}
+
+/* Hover effect for standalone pre blocks */
+pre:hover {
+  padding: 50px 30px 14px 30px; /* Extended top padding for copy button space */
 }
 
 pre>code {
@@ -499,7 +557,11 @@ pre>code {
   line-height: inherit;
 }
 
-/* New Codeblock Design */
+/* ========================================
+   CODE BLOCKS - COMPLETE STYLING SYSTEM
+   ======================================== */
+
+/* Main Codeblock Container Structure */
 .section-codeblock {
     margin: 1em 0;
     display: block;
@@ -514,24 +576,31 @@ pre>code {
     margin: 0;
 }
 
+/* Language Chip (Left Side Indicator) */
 .codeblock-chip {
     border-radius: 4px 0 0 4px;
     font-style: normal;
     font-size: 12px;
     font-family: 'Roboto', sans-serif;
     font-weight: 600;
-    min-height: 60px;
+    min-height: 60px; /* Minimum yükseklik garantisi */
+    height: auto; /* Otomatik yükseklik */
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    min-width: 24px;
-    max-width: 24px;
+    min-width: 40px; /* Genişletildi */
+    max-width: 40px; /* Genişletildi */
+    width: 40px; /* Sabit genişlik */
     position: relative;
     overflow: hidden;
+    /* Garanti görünürlük */
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .codeblock-chip:after {
+    content: attr(data-lang);
     transform: rotate(-90deg);
     white-space: nowrap;
     position: absolute;
@@ -539,21 +608,42 @@ pre>code {
     top: 50%;
     transform-origin: center center;
     transform: translate(-50%, -50%) rotate(-90deg);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
+/* Chip hover effect to indicate it's clickable */
+.codeblock-chip:hover {
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.codeblock-chip:active {
+    opacity: 0.6;
+    transition: all 0.1s ease;
+}
+
+/* Chip success state - just color change, no icon */
+
+/* Code Content Area - All Variants */
 .content-codeblock pre {
     border-radius: 0 4px 4px 0;
     background-color: var(--code-bg);
     flex: 1;
     margin: 0;
-    padding: 16px 20px 14px;
+    padding: 16px 20px 14px 20px; /* Normal padding */
     overflow: auto;
-    max-width: calc(100% - 24px);
-    max-height: 500px;
+    max-width: calc(100% - 40px); /* Chip genişliğine uygun */
+    min-height: 60px; /* Minimum yükseklik garantisi */
     white-space: pre;
     word-wrap: normal;
     overflow-x: auto;
     overflow-y: auto;
+    /* Flex container için */
+    display: flex;
+    align-items: stretch;
 }
 
 .content-codeblock .highlight {
@@ -561,8 +651,8 @@ pre>code {
     margin: 0;
     border-radius: 0 4px 4px 0;
     overflow: auto;
-    max-width: calc(100% - 24px);
-    max-height: 500px;
+    max-width: calc(100% - 40px); /* Chip genişliğine uygun */
+    min-height: 60px; /* Minimum yükseklik garantisi */
 }
 
 .content-codeblock .highlight pre {
@@ -570,13 +660,14 @@ pre>code {
     word-wrap: normal;
     overflow-x: auto;
     overflow-y: auto;
+    padding: 16px 20px 14px 20px; /* Normal padding */
 }
 
 .content-codeblock .highlighter-rouge {
     flex: 1;
     overflow: auto;
-    max-width: calc(100% - 24px);
-    max-height: 500px;
+    max-width: calc(100% - 40px); /* Chip genişliğine uygun */
+    min-height: 60px; /* Minimum yükseklik garantisi */
 }
 
 .content-codeblock .highlighter-rouge pre {
@@ -584,9 +675,10 @@ pre>code {
     word-wrap: normal;
     overflow-x: auto;
     overflow-y: auto;
+    padding: 16px 20px 14px 20px; /* Normal padding */
 }
 
-/* Custom scrollbars for code blocks */
+/* Custom Scrollbars for Code Blocks */
 .content-codeblock pre::-webkit-scrollbar,
 .content-codeblock .highlight::-webkit-scrollbar,
 .content-codeblock .highlighter-rouge::-webkit-scrollbar {
@@ -622,7 +714,7 @@ pre>code {
     background: rgba(0, 0, 0, 0.1);
 }
 
-/* Firefox scrollbar support for code blocks */
+/* Firefox Scrollbar Support for Code Blocks */
 .content-codeblock pre,
 .content-codeblock .highlight,
 .content-codeblock .highlighter-rouge {
@@ -630,322 +722,13 @@ pre>code {
     scrollbar-color: var(--muted-text) rgba(0, 0, 0, 0.1);
 }
 
-/* Language-specific chip styles */
-.type-html {
-    background-color: #DE4B25;
-    color: #FFFFFF;
-}
+/* Hover effects removed - no longer needed */
 
-.type-html:after {
-    content: 'HTML';
-}
-
-
-
-.type-css {
-    background-color: #3B9ADB;
-    color: #FFFFFF;
-}
-
-.type-css:after {
-    content: 'CSS';
-}
-
-.type-sass {
-    background-color: #CD6799;
-    color: #FFFFFF;
-}
-
-.type-sass:after {
-    content: 'SASS';
-}
-
-.type-javascript {
-    background-color: #F1D63B;
-    color: #2D2D2B;
-}
-
-.type-javascript:after {
-    content: 'JavaScript';
-}
-
-.type-php {
-    background-color: #858FBC;
-    color: #21232F;
-}
-
-.type-php:after {
-    content: 'PHP';
-}
-
-.type-sql {
-    background-color: #597C90;
-    color: #FFFFFF;
-}
-
-.type-sql:after {
-    content: 'SQL';
-}
-
-.type-text {
-    background-color: #D6D6D6;
-    color: #2D2D2B;
-}
-
-.type-text:after {
-    content: 'Text';
-}
-
-.type-bash {
-    background-color: #2D2D2B;
-    color: #FFFFFF;
-}
-
-.type-bash:after {
-    content: 'Bash';
-}
-
-.type-json {
-    background-color: #FF6B35;
-    color: #FFFFFF;
-}
-
-.type-json:after {
-    content: 'JSON';
-}
-
-.type-python {
-    background-color: #3776AB;
-    color: #FFFFFF;
-}
-
-.type-python:after {
-    content: 'Python';
-}
-
-/* Syntax Highlighting Styles */
-.highlight {
-  background: var(--code-bg);
-  border-radius: 4px;
-  margin: 1em -30px;
-  padding: 0;
-  overflow-x: auto;
-  position: relative;
-}
-
-.highlight pre {
-  background: none;
-  margin: 0;
-  padding: 16px 30px 14px;
-  border-radius: 0;
-  border: none;
-  white-space: pre;
-  word-wrap: normal;
-  overflow-x: auto;
-  overflow-y: hidden;
-  min-width: 100%;
-}
-
-/* Language-specific horizontal scroll behavior */
-.highlight[data-lang="json"] pre,
-.highlight[data-lang="javascript"] pre,
-.highlight[data-lang="js"] pre,
-.highlight[data-lang="typescript"] pre,
-.highlight[data-lang="ts"] pre,
-.highlight[data-lang="xml"] pre,
-.highlight[data-lang="html"] pre,
-.highlight[data-lang="css"] pre,
-.highlight[data-lang="sql"] pre,
-.highlight[data-lang="yaml"] pre,
-.highlight[data-lang="yml"] pre,
-.highlight[data-lang="toml"] pre,
-.highlight[data-lang="ini"] pre,
-.highlight[data-lang="config"] pre,
-.highlight[data-lang="bash"] pre,
-.highlight[data-lang="shell"] pre,
-.highlight[data-lang="sh"] pre,
-.highlight[data-lang="zsh"] pre,
-.highlight[data-lang="powershell"] pre,
-.highlight[data-lang="cmd"] pre,
-.highlight[data-lang="terminal"] pre,
-.highlight[data-lang="console"] pre {
-  white-space: pre;
-  word-wrap: normal;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-/* For languages that should wrap (like markdown, text) */
-.highlight[data-lang="markdown"] pre,
-.highlight[data-lang="md"] pre,
-.highlight[data-lang="text"] pre,
-.highlight[data-lang="txt"] pre,
-.highlight[data-lang="plain"] pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-x: hidden;
-}
-
-
-/* Gruvbox light theme syntax highlighting */
-:root {
-  --syntax-bg: #f2e5bc;
-  --syntax-text: #3c3836;
-  --syntax-comment: #928374;
-  --syntax-keyword: #9d0006;
-  --syntax-string: #79740e;
-  --syntax-number: #b57614;
-  --syntax-function: #8f3f71;
-  --syntax-variable: #af3a03;
-  --syntax-operator: #3c3836;
-  --syntax-punctuation: #504945;
-}
-
-/* Gruvbox dark theme syntax highlighting */
-html[data-theme="dark"] {
-  --syntax-bg: #3c3836;
-  --syntax-text: #ebdbb2;
-  --syntax-comment: #928374;
-  --syntax-keyword: #fb4934;
-  --syntax-string: #b8bb26;
-  --syntax-number: #fabd2f;
-  --syntax-function: #d3869b;
-  --syntax-variable: #fe8019;
-  --syntax-operator: #ebdbb2;
-  --syntax-punctuation: #d5c4a1;
-}
-
-/* Rouge syntax highlighting classes */
-.highlight .c { color: var(--syntax-comment); font-style: italic; } /* Comment */
-.highlight .err { color: var(--syntax-variable); } /* Error */
-.highlight .k { color: var(--syntax-keyword); font-weight: bold; } /* Keyword */
-.highlight .o { color: var(--syntax-operator); } /* Operator */
-.highlight .cm { color: var(--syntax-comment); font-style: italic; } /* Comment.Multiline */
-.highlight .cp { color: var(--syntax-comment); font-weight: bold; } /* Comment.Preproc */
-.highlight .c1 { color: var(--syntax-comment); font-style: italic; } /* Comment.Single */
-.highlight .cs { color: var(--syntax-comment); font-weight: bold; font-style: italic; } /* Comment.Special */
-.highlight .gd { color: var(--syntax-variable); } /* Generic.Deleted */
-.highlight .ge { font-style: italic; } /* Generic.Emph */
-.highlight .gr { color: var(--syntax-variable); } /* Generic.Error */
-.highlight .gh { color: var(--syntax-text); font-weight: bold; } /* Generic.Heading */
-.highlight .gi { color: var(--syntax-string); } /* Generic.Inserted */
-.highlight .go { color: var(--syntax-comment); } /* Generic.Output */
-.highlight .gp { color: var(--syntax-comment); } /* Generic.Prompt */
-.highlight .gs { font-weight: bold; } /* Generic.Strong */
-.highlight .gu { color: var(--syntax-comment); font-weight: bold; } /* Generic.Subheading */
-.highlight .gt { color: var(--syntax-variable); } /* Generic.Traceback */
-.highlight .kc { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Constant */
-.highlight .kd { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Declaration */
-.highlight .kn { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Namespace */
-.highlight .kp { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Pseudo */
-.highlight .kr { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Reserved */
-.highlight .kt { color: var(--syntax-function); font-weight: bold; } /* Keyword.Type */
-.highlight .m { color: var(--syntax-number); } /* Literal.Number */
-.highlight .s { color: var(--syntax-string); } /* Literal.String */
-.highlight .na { color: var(--syntax-function); } /* Name.Attribute */
-.highlight .nb { color: var(--syntax-function); } /* Name.Builtin */
-.highlight .nc { color: var(--syntax-function); font-weight: bold; } /* Name.Class */
-.highlight .no { color: var(--syntax-variable); } /* Name.Constant */
-.highlight .nd { color: var(--syntax-function); } /* Name.Decorator */
-.highlight .ni { color: var(--syntax-variable); } /* Name.Entity */
-.highlight .ne { color: var(--syntax-variable); font-weight: bold; } /* Name.Exception */
-.highlight .nf { color: var(--syntax-function); font-weight: bold; } /* Name.Function */
-.highlight .nl { color: var(--syntax-function); } /* Name.Label */
-.highlight .nn { color: var(--syntax-function); } /* Name.Namespace */
-.highlight .nt { color: var(--syntax-keyword); } /* Name.Tag */
-.highlight .nv { color: var(--syntax-variable); } /* Name.Variable */
-.highlight .ow { color: var(--syntax-keyword); font-weight: bold; } /* Operator.Word */
-.highlight .w { color: var(--syntax-text); } /* Text.Whitespace */
-.highlight .mf { color: var(--syntax-number); } /* Literal.Number.Float */
-.highlight .mh { color: var(--syntax-number); } /* Literal.Number.Hex */
-.highlight .mi { color: var(--syntax-number); } /* Literal.Number.Integer */
-.highlight .mo { color: var(--syntax-number); } /* Literal.Number.Oct */
-.highlight .sb { color: var(--syntax-string); } /* Literal.String.Backtick */
-.highlight .sc { color: var(--syntax-string); } /* Literal.String.Char */
-.highlight .sd { color: var(--syntax-string); } /* Literal.String.Doc */
-.highlight .s2 { color: var(--syntax-string); } /* Literal.String.Double */
-.highlight .se { color: var(--syntax-string); } /* Literal.String.Escape */
-.highlight .sh { color: var(--syntax-string); } /* Literal.String.Heredoc */
-.highlight .si { color: var(--syntax-string); } /* Literal.String.Interpol */
-.highlight .sx { color: var(--syntax-string); } /* Literal.String.Other */
-.highlight .sr { color: var(--syntax-string); } /* Literal.String.Regex */
-.highlight .s1 { color: var(--syntax-string); } /* Literal.String.Single */
-.highlight .ss { color: var(--syntax-string); } /* Literal.String.Symbol */
-.highlight .bp { color: var(--syntax-function); } /* Name.Builtin.Pseudo */
-.highlight .vc { color: var(--syntax-variable); } /* Name.Variable.Class */
-.highlight .vg { color: var(--syntax-variable); } /* Name.Variable.Global */
-.highlight .vi { color: var(--syntax-variable); } /* Name.Variable.Instance */
-.highlight .il { color: var(--syntax-number); } /* Literal.Number.Integer.Long */
-
-/* Copy Button Styles */
-.copy-button {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: var(--accent-color);
-  color: var(--primary-bg);
-  border: none;
-  border-radius: 4px;
-  padding: 6px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  opacity: 0;
-  transition: all 0.2s ease;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: 'body', sans-serif;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.copy-button:hover {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-}
-
-.copy-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.copy-button.copied {
-  background: #28a745;
-  color: white;
-}
-
-.copy-button.copied:hover {
-  background: #218838;
-}
-
-pre:hover .copy-button,
-.highlight:hover .copy-button,
-.highlighter-rouge:hover .copy-button {
-  opacity: 1;
-}
-
-/* Dark theme adjustments for copy button */
-html[data-theme="dark"] .copy-button {
-  color: var(--primary-bg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-html[data-theme="dark"] .copy-button:hover {
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-}
-
-/* Mobile responsive copy button */
-@media (max-width: 768px) {
-  .copy-button {
-    opacity: 1;
-    top: 6px;
-    right: 6px;
-    padding: 4px 6px;
-    font-size: 11px;
-  }
-}
+/* ========================================
+   SYNTAX HIGHLIGHTING - MOVED TO DEDICATED FILE
+   ======================================== */
+/* All syntax highlighting styles have been moved to _includes/syntax-highlighting.html */
+/* This includes: language chip colors, Rouge syntax classes, copy button styles */
 
 /* Table Styles */
 table {
@@ -997,6 +780,35 @@ tbody tr:hover td {
   
   th, td {
     padding: 6px 8px;
+  }
+  
+  /* Responsive chip styling */
+  .content-codeblock {
+    flex-direction: column;
+  }
+  
+  .codeblock-chip {
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 32px;
+    border-radius: 4px 4px 0 0;
+  }
+  
+  .codeblock-chip:after {
+    transform: none;
+    position: static;
+    content: attr(data-lang);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .content-codeblock pre,
+  .content-codeblock .highlight,
+  .content-codeblock .highlighter-rouge {
+    border-radius: 0 0 4px 4px;
+    max-width: 100%;
   }
   
   /* Stack table on very small screens */
@@ -1184,6 +996,33 @@ sub {
     top: -50px;
     font-size: 13px;
     padding: 6px 10px;
+  }
+  
+  /* Blog post sayfalarında mobil görsel hizalama */
+  body.post-layout .fig,
+  body.post-layout figure {
+    width: 100%;
+    max-width: 100%;
+    margin: 1.5em 0;
+    padding: 0 15px;
+  }
+  
+  body.post-layout .fig img,
+  body.post-layout figure>img,
+  body.post-layout figure>video,
+  body.post-layout figure>a>img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Mobil cihazlarda filler görselleri için özel stil */
+  .filler-image img {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    opacity: 0.6;
+    filter: grayscale(20%);
   }
 }
 

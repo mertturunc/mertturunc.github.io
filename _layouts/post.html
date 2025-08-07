@@ -72,6 +72,9 @@ layout: default
     document.querySelectorAll(".hoverable").forEach(function (e) {
         e.onclick = function() { e.classList.toggle("clicked"); }
     });
+    
+    // Add post-layout class to body for wider page width
+    document.body.classList.add('post-layout');
   </script>
 
   {% if page.hide_about %}  

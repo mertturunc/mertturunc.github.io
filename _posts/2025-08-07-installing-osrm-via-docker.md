@@ -2,7 +2,7 @@
 category: blog
 title: "installing osrm with docker for a specific area"
 summary: "this guide will walk you through setting up osrm using docker on wsl 2."
-geo: true
+guide: true
 wip: false
 sitemap: false
 lang: en

@@ -9,4 +9,3 @@ vendor
 .jekyll-cache
 patrons/*.edn
 OPEN_GRAPH_IMAGE_REQUIREMENTS.md
-Gemfile.lock
