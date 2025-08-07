@@ -1,103 +1,97 @@
-version: '3.8'
-
 services:
-  osrm-data-prep:
-    image: ghcr.io/project-osrm/osrm-backend:latest
-    container_name: osrm-data-prep
+  data-prep:
+    image: ubuntu:22.04
+    container_name: data-prep
     volumes:
-      - osrm-data:/data
+      - ./data:/data
     working_dir: /data
-    environment:
-      - PROFILE=car
-    entrypoint: |
-      sh -c "
-        echo '=== osrm data preparation started ==='
-        
-        # install required tools
-        apt-get update && apt-get install -y osmium-tool wget curl
-        
-        # create istanbul polygon if not exists
-        if [ ! -f istanbul.poly ]; then
-          echo 'creating istanbul polygon boundary...'
-          cat > istanbul.poly << 'EOF'
-      polygon
-      1
-         27.8419996589802 41.681380046807476
-         27.8419996589802 40.72975311315034
-         29.992113225541146 40.72975311315034
-         29.992113225541146 41.681380046807476
-         29.992113225541146 41.681380046807476
-      END
-      END
-      EOF
-        fi
-        
-        # download turkey data if not exists
-        if [ ! -f turkey-latest.osm.pbf ]; then
-          echo 'downloading turkey osm data...'
-          wget -q https://download.geofabrik.de/europe/turkey-latest.osm.pbf
-        fi
-        
-        # extract istanbul area if not exists
-        if [ ! -f istanbul.osm.pbf ]; then
-          echo 'extracting istanbul area...'
-          osmium extract -p istanbul.poly turkey-latest.osm.pbf -o istanbul.osm.pbf
-        fi
-        
-        # check if osrm data already processed
-        if [ -f istanbul.osrm ]; then
-          echo 'osrm data already processed. skipping...'
-          exit 0
-        fi
-        
-        # process with osrm
-        echo 'processing with osrm (extract)...'
-        osrm-extract -p /opt/$$PROFILE.lua istanbul.osm.pbf
-        
-        echo 'processing with osrm (partition)...'
-        osrm-partition istanbul.osrm
-        
-        echo 'processing with osrm (customize)...'
-        osrm-customize istanbul.osrm
-        
-        # cleanup large files to save space
-        rm -f turkey-latest.osm.pbf
-        
-        echo '=== osrm data preparation completed ==='
-      "
-    profiles:
-      - tools
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+          set -e
 
-  # osrm routing server
-  osrm-backend:
+          echo '=== [data-prep] OSRM Istanbul Pipeline Starting ==='
+
+          echo '[data-prep] Installing osmium-tool and wget...'
+          apt-get update -qq
+          apt-get install -y -qq wget osmium-tool
+          echo '[data-prep] Installation complete.'
+
+          if [ ! -f istanbul.poly ]; then
+            echo '[data-prep] Creating istanbul.poly (polygon boundary for Istanbul)...'
+            echo 'polygon' > istanbul.poly
+            echo 'istanbul_bbox' >> istanbul.poly
+            echo '  27.8419996589802 41.681380046807476' >> istanbul.poly
+            echo '  27.8419996589802 40.72975311315034' >> istanbul.poly
+            echo '  29.992113225541146 40.72975311315034' >> istanbul.poly
+            echo '  29.992113225541146 41.681380046807476' >> istanbul.poly
+            echo '  27.8419996589802 41.681380046807476' >> istanbul.poly
+            echo 'END' >> istanbul.poly
+            echo 'END' >> istanbul.poly
+            echo '[data-prep] istanbul.poly created.'
+          else
+            echo '[data-prep] istanbul.poly already exists, skipping creation.'
+          fi
+
+          echo '[data-prep] Removing old OSM and OSRM data files if they exist...'
+          rm -f turkey-latest.osm.pbf istanbul.osm.pbf istanbul.osrm*
+
+          echo '[data-prep] Downloading latest OSM extract for Turkey...'
+          wget -q --show-progress https://download.geofabrik.de/europe/turkey-latest.osm.pbf
+          if [ -f turkey-latest.osm.pbf ]; then
+            echo '[data-prep] turkey-latest.osm.pbf downloaded successfully.'
+          else
+            echo '[data-prep] ERROR: turkey-latest.osm.pbf download failed!' >&2
+            exit 1
+          fi
+
+          echo '[data-prep] Cropping Istanbul area from turkey-latest.osm.pbf using istanbul.poly...'
+          osmium extract -p istanbul.poly turkey-latest.osm.pbf -o istanbul.osm.pbf
+          if [ -f istanbul.osm.pbf ]; then
+            echo '[data-prep] Extraction complete. Output: istanbul.osm.pbf'
+          else
+            echo '[data-prep] ERROR: Extraction failed, istanbul.osm.pbf not created!' >&2
+            exit 1
+          fi
+
+          echo '[data-prep] Data preparation complete!'
+
+  osrm:
     image: ghcr.io/project-osrm/osrm-backend:latest
-    container_name: osrm-backend
+    container_name: osrm
     ports:
       - "5000:5000"
     volumes:
-      - osrm-data:/data
+      - ./data:/data
     working_dir: /data
-    environment:
-      - ALGORITHM=mld
-    command: |
-      sh -c "
-        # wait for data preparation if needed
-        while [ ! -f /data/istanbul.osrm ]; do
-          echo 'waiting for data preparation to complete...'
-          sleep 10
-        done
-        
-        echo 'starting osrm routing server...'
-        osrm-routed --algorithm $$ALGORITHM --ip 0.0.0.0 --port 5000 /data/istanbul.osrm
-      "
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
+    depends_on:
+      - data-prep
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+          set -e
 
-volumes:
-  osrm-data:
-    driver: local
+          echo '=== [osrm] OSRM Processing Service Starting ==='
+          echo '[osrm] Waiting for data-prep to finish and for istanbul.osm.pbf to be available...'
+          while [ ! -f istanbul.osm.pbf ]; do
+            echo '[osrm] Waiting: istanbul.osm.pbf not found. This file is created by data-prep after extracting Istanbul from the Turkey OSM extract.'
+            sleep 10
+          done
+          echo '[osrm] istanbul.osm.pbf found! Proceeding with OSRM processing.'
+
+          echo '[osrm] Running osrm-extract (converts OSM PBF to OSRM format)...'
+          osrm-extract -p /opt/car.lua istanbul.osm.pbf
+
+          echo '[osrm] Running osrm-partition (prepares data for multi-level Dijkstra routing)...'
+          osrm-partition istanbul.osrm
+
+          echo '[osrm] Running osrm-customize (customizes the partitioned data for routing queries)...'
+          osrm-customize istanbul.osrm
+
+          echo '[osrm] Cleaning up large OSM PBF file to save space...'
+          rm -f turkey-latest.osm.pbf
+
+          echo '[osrm] Starting osrm-routed server on port 5000 (ready to accept routing requests)...'
+          osrm-routed --algorithm mld --ip 0.0.0.0 --port 5000 istanbul.osrm
