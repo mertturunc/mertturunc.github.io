@@ -477,44 +477,41 @@ async function processBlogPosts() {
           continue;
         }
         
-        // Generate filename using the post slug from translations URL
-        let postSlug = null;
-        
-        // Try to extract slug from translations
+        // Build a set of all expected slugs (all translations + title + filename without date)
+        const slugSet = new Set();
+        const addSlug = s => { if (s && typeof s === 'string') slugSet.add(s.toLowerCase()); };
+        const slugFromUrl = url => {
+          const parts = String(url || '').split('/').filter(Boolean);
+          return parts[parts.length - 1] || parts[parts.length - 2] || null;
+        };
+        const slugify = txt => String(txt || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim();
+
+        // From translations (all langs)
         if (frontMatter.translations) {
           try {
             const translations = Array.isArray(frontMatter.translations)
               ? frontMatter.translations
               : JSON.parse(frontMatter.translations);
-            
-            // Find the Turkish translation URL
-            const turkishTranslation = translations.find(t => t && t.lang === 'tr');
-            if (turkishTranslation && turkishTranslation.url) {
-              // Extract slug from URL like "/blog/docker-ile-osrm-kurulumu/"
-              const urlParts = turkishTranslation.url.split('/').filter(Boolean);
-              postSlug = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2]; // Get the last non-empty part
-            }
+            translations.forEach(t => addSlug(slugFromUrl(t && t.url)));
           } catch (parseError) {
             console.warn(`Error parsing translations for ${postFile}: ${parseError.message}`);
           }
         }
-        
-        // Fallback: generate slug from title if no translation found
-        if (!postSlug && frontMatter.title) {
-          postSlug = frontMatter.title
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
-        }
-        
-        // Final fallback: use filename without extension
-        if (!postSlug) {
-          postSlug = postFile.replace(/\.md$/, '');
-        }
-        
-        const baseName = `${postSlug}-placeholder`;
+
+        // From title
+        addSlug(slugify(frontMatter.title));
+
+        // From filename (strip date prefix if present)
+        const fileBase = postFile.replace(/\.md$/, '');
+        const parts = fileBase.split('-');
+        const noDate = parts.length > 3 ? parts.slice(3).join('-') : fileBase;
+        addSlug(noDate);
+
         const svgString = generatePlaceholderSVG({
           title: frontMatter.title || postFile,
           date: frontMatter.date ? new Date(frontMatter.date).toLocaleDateString() : null
@@ -524,29 +521,29 @@ async function processBlogPosts() {
           continue;
         }
 
-        // Decide output based on requested format
-        if (requestedFormat === 'svg') {
-          await writeOutputFiles(baseName, svgString, null, 'svg');
-          console.log(`Generated placeholder for ${postFile}: ${baseName}.svg`);
-        } else {
-          try {
-            // First rasterize SVG to PNG buffer with resvg for consistent rendering
-            const resvg = new Resvg(svgString, { fitTo: { mode: 'width', value: 1200 } });
-            const pngData = resvg.render();
-            const basePng = pngData.asPng();
-
-            // Then convert to the final format and size with sharp
-            let image = sharp(basePng).resize(1200, 630, { fit: 'cover' });
-            let buffer;
-            if (requestedFormat === 'png') {
-              buffer = await image.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
-            } else {
-              buffer = await image.flatten({ background: '#ffffff' }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+        // Generate for each slug
+        for (const slug of slugSet) {
+          const baseName = `${slug}-placeholder`;
+          if (requestedFormat === 'svg') {
+            await writeOutputFiles(baseName, svgString, null, 'svg');
+            console.log(`Generated placeholder for ${postFile}: ${baseName}.svg`);
+          } else {
+            try {
+              const resvg = new Resvg(svgString, { fitTo: { mode: 'width', value: 1200 } });
+              const pngData = resvg.render();
+              const basePng = pngData.asPng();
+              let image = sharp(basePng).resize(1200, 630, { fit: 'cover' });
+              let buffer;
+              if (requestedFormat === 'png') {
+                buffer = await image.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
+              } else {
+                buffer = await image.flatten({ background: '#ffffff' }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+              }
+              await writeOutputFiles(baseName, null, buffer, requestedFormat === 'jpeg' ? 'jpg' : requestedFormat);
+              console.log(`Generated placeholder for ${postFile}: ${baseName}.${requestedFormat === 'jpeg' ? 'jpg' : requestedFormat}`);
+            } catch (rasError) {
+              console.error(`Error rasterizing SVG for ${postFile} (${slug}): ${rasError.message}`);
             }
-            await writeOutputFiles(baseName, null, buffer, requestedFormat === 'jpeg' ? 'jpg' : requestedFormat);
-            console.log(`Generated placeholder for ${postFile}: ${baseName}.${requestedFormat === 'jpeg' ? 'jpg' : requestedFormat}`);
-          } catch (rasError) {
-            console.error(`Error rasterizing SVG for ${postFile}: ${rasError.message}`);
           }
         }
       } catch (postError) {
