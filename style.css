@@ -480,12 +480,15 @@ pre {
   font-size: 14px;
   background: var(--code-bg);
   padding: 16px 30px 14px;
-  margin: 1em -30px;
-  border-radius: 8px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  margin: 1em 0;
+  border-radius: 4px;
+  white-space: pre;
+  word-wrap: normal;
   font-style: normal;
   position: relative;
+  line-height: 1.4;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 pre>code {
@@ -493,15 +496,239 @@ pre>code {
   padding: 0;
   font-size: inherit;
   white-space: unset;
+  line-height: inherit;
+}
+
+/* New Codeblock Design */
+.section-codeblock {
+    margin: 1em 0;
+    display: block;
+    overflow: hidden;
+}
+
+.content-codeblock {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    align-items: stretch;
+    margin: 0;
+}
+
+.codeblock-chip {
+    border-radius: 4px 0 0 4px;
+    font-style: normal;
+    font-size: 12px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 600;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 24px;
+    max-width: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.codeblock-chip:after {
+    transform: rotate(-90deg);
+    white-space: nowrap;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.content-codeblock pre {
+    border-radius: 0 4px 4px 0;
+    background-color: var(--code-bg);
+    flex: 1;
+    margin: 0;
+    padding: 16px 20px 14px;
+    overflow: auto;
+    max-width: calc(100% - 24px);
+    max-height: 500px;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+.content-codeblock .highlight {
+    flex: 1;
+    margin: 0;
+    border-radius: 0 4px 4px 0;
+    overflow: auto;
+    max-width: calc(100% - 24px);
+    max-height: 500px;
+}
+
+.content-codeblock .highlight pre {
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+.content-codeblock .highlighter-rouge {
+    flex: 1;
+    overflow: auto;
+    max-width: calc(100% - 24px);
+    max-height: 500px;
+}
+
+.content-codeblock .highlighter-rouge pre {
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+/* Custom scrollbars for code blocks */
+.content-codeblock pre::-webkit-scrollbar,
+.content-codeblock .highlight::-webkit-scrollbar,
+.content-codeblock .highlighter-rouge::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.content-codeblock pre::-webkit-scrollbar-track,
+.content-codeblock .highlight::-webkit-scrollbar-track,
+.content-codeblock .highlighter-rouge::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.content-codeblock pre::-webkit-scrollbar-thumb,
+.content-codeblock .highlight::-webkit-scrollbar-thumb,
+.content-codeblock .highlighter-rouge::-webkit-scrollbar-thumb {
+    background: var(--muted-text);
+    border-radius: 4px;
+    opacity: 0.6;
+}
+
+.content-codeblock pre::-webkit-scrollbar-thumb:hover,
+.content-codeblock .highlight::-webkit-scrollbar-thumb:hover,
+.content-codeblock .highlighter-rouge::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+    opacity: 0.8;
+}
+
+.content-codeblock pre::-webkit-scrollbar-corner,
+.content-codeblock .highlight::-webkit-scrollbar-corner,
+.content-codeblock .highlighter-rouge::-webkit-scrollbar-corner {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Firefox scrollbar support for code blocks */
+.content-codeblock pre,
+.content-codeblock .highlight,
+.content-codeblock .highlighter-rouge {
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted-text) rgba(0, 0, 0, 0.1);
+}
+
+/* Language-specific chip styles */
+.type-html {
+    background-color: #DE4B25;
+    color: #FFFFFF;
+}
+
+.type-html:after {
+    content: 'HTML';
+}
+
+
+
+.type-css {
+    background-color: #3B9ADB;
+    color: #FFFFFF;
+}
+
+.type-css:after {
+    content: 'CSS';
+}
+
+.type-sass {
+    background-color: #CD6799;
+    color: #FFFFFF;
+}
+
+.type-sass:after {
+    content: 'SASS';
+}
+
+.type-javascript {
+    background-color: #F1D63B;
+    color: #2D2D2B;
+}
+
+.type-javascript:after {
+    content: 'JavaScript';
+}
+
+.type-php {
+    background-color: #858FBC;
+    color: #21232F;
+}
+
+.type-php:after {
+    content: 'PHP';
+}
+
+.type-sql {
+    background-color: #597C90;
+    color: #FFFFFF;
+}
+
+.type-sql:after {
+    content: 'SQL';
+}
+
+.type-text {
+    background-color: #D6D6D6;
+    color: #2D2D2B;
+}
+
+.type-text:after {
+    content: 'Text';
+}
+
+.type-bash {
+    background-color: #2D2D2B;
+    color: #FFFFFF;
+}
+
+.type-bash:after {
+    content: 'Bash';
+}
+
+.type-json {
+    background-color: #FF6B35;
+    color: #FFFFFF;
+}
+
+.type-json:after {
+    content: 'JSON';
+}
+
+.type-python {
+    background-color: #3776AB;
+    color: #FFFFFF;
+}
+
+.type-python:after {
+    content: 'Python';
 }
 
 /* Syntax Highlighting Styles */
 .highlight {
   background: var(--code-bg);
-  border-radius: 8px;
-  border-left: 5px solid var(--accent-color);
+  border-radius: 4px;
   margin: 1em -30px;
-  padding: 16px 30px 14px;
+  padding: 0;
   overflow-x: auto;
   position: relative;
 }
@@ -509,9 +736,54 @@ pre>code {
 .highlight pre {
   background: none;
   margin: 0;
-  padding: 0;
+  padding: 16px 30px 14px;
   border-radius: 0;
   border: none;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 100%;
+}
+
+/* Language-specific horizontal scroll behavior */
+.highlight[data-lang="json"] pre,
+.highlight[data-lang="javascript"] pre,
+.highlight[data-lang="js"] pre,
+.highlight[data-lang="typescript"] pre,
+.highlight[data-lang="ts"] pre,
+.highlight[data-lang="xml"] pre,
+.highlight[data-lang="html"] pre,
+.highlight[data-lang="css"] pre,
+.highlight[data-lang="sql"] pre,
+.highlight[data-lang="yaml"] pre,
+.highlight[data-lang="yml"] pre,
+.highlight[data-lang="toml"] pre,
+.highlight[data-lang="ini"] pre,
+.highlight[data-lang="config"] pre,
+.highlight[data-lang="bash"] pre,
+.highlight[data-lang="shell"] pre,
+.highlight[data-lang="sh"] pre,
+.highlight[data-lang="zsh"] pre,
+.highlight[data-lang="powershell"] pre,
+.highlight[data-lang="cmd"] pre,
+.highlight[data-lang="terminal"] pre,
+.highlight[data-lang="console"] pre {
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* For languages that should wrap (like markdown, text) */
+.highlight[data-lang="markdown"] pre,
+.highlight[data-lang="md"] pre,
+.highlight[data-lang="text"] pre,
+.highlight[data-lang="txt"] pre,
+.highlight[data-lang="plain"] pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-x: hidden;
 }
 
 

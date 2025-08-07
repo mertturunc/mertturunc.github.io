@@ -21,6 +21,7 @@
     })();
   </script>
 
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link href='/style.css?v=20201203' rel='stylesheet' type='text/css' />
   <title>{{ page.title }} @ {{ t.site_title }}</title>
 
@@ -360,6 +361,188 @@
 
   // Also run after a short delay to catch any dynamically added content
   setTimeout(initializeCopyButtons, 100);
+})();
+
+// Language chip functionality
+(function() {
+  function getLanguageFromClass(element) {
+    const classes = element.className.split(' ');
+    for (let className of classes) {
+      // Standard patterns
+      if (className.startsWith('language-')) {
+        return className.replace('language-', '');
+      }
+      if (className.startsWith('highlight-')) {
+        return className.replace('highlight-', '');
+      }
+      // Rouge patterns
+      if (className.startsWith('highlighter-rouge-')) {
+        return className.replace('highlighter-rouge-', '');
+      }
+      // Direct language names (for Rouge output)
+      const knownLanguages = [
+        'bash', 'shell', 'sh', 'zsh', 'powershell', 'cmd', 'terminal', 'console',
+        'javascript', 'js', 'typescript', 'ts', 'json',
+        'html', 'xml', 'css', 'scss', 'sass', 'less',
+        'php', 'python', 'ruby', 'java', 'c', 'cpp', 'csharp',
+        'sql', 'mysql', 'postgresql', 'sqlite',
+        'yaml', 'yml', 'toml', 'ini', 'config',
+        'markdown', 'md', 'text', 'txt', 'plain'
+      ];
+      if (knownLanguages.includes(className.toLowerCase())) {
+        return className.toLowerCase();
+      }
+    }
+    return null;
+  }
+
+  function mapLanguageToType(language) {
+    const langMap = {
+      'html': 'html',
+      'xml': 'html',
+      'css': 'css',
+      'scss': 'sass',
+      'sass': 'sass',
+      'javascript': 'javascript',
+      'js': 'javascript',
+      'typescript': 'javascript',
+      'ts': 'javascript',
+      'json': 'json',
+      'python': 'python',
+      'py': 'python',
+      'php': 'php',
+      'sql': 'sql',
+      'mysql': 'sql',
+      'postgresql': 'sql',
+      'bash': 'bash',
+      'shell': 'bash',
+      'sh': 'bash',
+      'zsh': 'bash',
+      'powershell': 'bash',
+      'cmd': 'bash',
+      'terminal': 'bash',
+      'console': 'bash',
+      'text': 'text',
+      'txt': 'text',
+      'plain': 'text'
+    };
+    return langMap[language.toLowerCase()] || 'text';
+  }
+
+  function createLanguageChip(language) {
+    const type = mapLanguageToType(language);
+    const chip = document.createElement('em');
+    chip.className = `codeblock-chip type-${type}`;
+    return chip;
+  }
+
+  function wrapCodeBlockWithNewStructure(codeBlock) {
+    // Skip if already wrapped
+    if (codeBlock.closest('.section-codeblock')) {
+      return;
+    }
+
+    // Get language from various possible sources
+    let language = null;
+    const codeElement = codeBlock.querySelector('code');
+    const preElement = codeBlock.querySelector('pre') || (codeBlock.tagName === 'PRE' ? codeBlock : null);
+    
+    // Try to detect language from highlight class or code class
+    if (codeElement) {
+      language = getLanguageFromClass(codeElement);
+    }
+    if (!language && preElement) {
+      language = getLanguageFromClass(preElement);
+    }
+    if (!language) {
+      language = getLanguageFromClass(codeBlock);
+    }
+    
+    // Check data attributes
+    if (!language && codeElement) {
+      language = codeElement.dataset.lang || codeElement.dataset.language;
+    }
+    if (!language && preElement) {
+      language = preElement.dataset.lang || preElement.dataset.language;
+    }
+    if (!language) {
+      language = codeBlock.dataset.lang || codeBlock.dataset.language;
+    }
+    
+    // Look for Rouge's data-lang pattern
+    const dataLangElement = codeBlock.querySelector('[data-lang]');
+    if (!language && dataLangElement) {
+      language = dataLangElement.dataset.lang;
+    }
+    
+    // Debug: Log what we find for troubleshooting
+    if (codeElement || preElement) {
+      console.log('Codeblock detection:', {
+        codeClasses: codeElement ? codeElement.className : 'none',
+        preClasses: preElement ? preElement.className : 'none',
+        containerClasses: codeBlock.className,
+        detectedLanguage: language || 'text'
+      });
+    }
+    
+    if (!language) {
+      language = 'text'; // fallback
+    }
+
+    const type = mapLanguageToType(language);
+
+    // Create the new structure
+    const sectionCodeblock = document.createElement('div');
+    sectionCodeblock.className = 'section-codeblock';
+
+    const contentCodeblock = document.createElement('div');
+    contentCodeblock.className = 'content-codeblock';
+    
+    const chip = createLanguageChip(language);
+
+    // Wrap the existing code block
+    const parent = codeBlock.parentNode;
+    parent.insertBefore(sectionCodeblock, codeBlock);
+    sectionCodeblock.appendChild(contentCodeblock);
+    
+    // Add chip and code block as direct children of content-codeblock
+    contentCodeblock.appendChild(chip);
+    contentCodeblock.appendChild(codeBlock);
+  }
+
+  function initializeLanguageChips() {
+    // Target .highlighter-rouge containers
+    const rougeBlocks = document.querySelectorAll('.highlighter-rouge');
+    rougeBlocks.forEach(function(block) {
+      if (block.querySelector('pre') || block.querySelector('.highlight')) {
+        wrapCodeBlockWithNewStructure(block);
+      }
+    });
+    
+    // Target standalone pre elements
+    const standalonePreBlocks = document.querySelectorAll('pre:not(.highlighter-rouge pre):not(.highlight)');
+    standalonePreBlocks.forEach(function(codeBlock) {
+      wrapCodeBlockWithNewStructure(codeBlock);
+    });
+    
+    // Target .highlight divs directly
+    const highlightBlocks = document.querySelectorAll('.highlight');
+    highlightBlocks.forEach(function(block) {
+      if (block.querySelector('pre') && !block.closest('.highlighter-rouge')) {
+        wrapCodeBlockWithNewStructure(block);
+      }
+    });
+  }
+
+  // Run on DOM content loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeLanguageChips);
+  } else {
+    initializeLanguageChips();
+  }
+
+  // Also run after a short delay to catch any dynamically added content
+  setTimeout(initializeLanguageChips, 100);
 })();
 </script>
 
