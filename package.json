@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "Generate placeholder images for blog posts",
   "scripts": {
-    "generate-placeholders": "node .github/scripts/generate-placeholders.js"
+    "generate-placeholders": "node .github/scripts/generate-placeholders.js",
+    "generate-placeholders:png": "node .github/scripts/generate-placeholders.js --format=png",
+    "generate-placeholders:jpg": "node .github/scripts/generate-placeholders.js --format=jpg",
+    "generate-placeholders:svg": "node .github/scripts/generate-placeholders.js --format=svg"
   },
   "dependencies": {
-    "canvas": "^2.11.2",
-    "gray-matter": "^4.0.3"
+    "@resvg/resvg-js": "^2.6.2",
+    "gray-matter": "^4.0.3",
+    "sharp": "^0.33.5"
   }
 }

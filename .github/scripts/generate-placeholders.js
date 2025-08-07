@@ -2,6 +2,20 @@
 
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
+const { Resvg } = require('@resvg/resvg-js');
+
+// CLI args
+function getArgValue(name) {
+  const pref = `--${name}=`;
+  const found = process.argv.find(arg => arg.startsWith(pref));
+  return found ? found.slice(pref.length) : null;
+}
+
+const requestedFormatRaw = (getArgValue('format') || 'png').toLowerCase();
+const requestedFormat = ['png', 'jpg', 'jpeg', 'svg'].includes(requestedFormatRaw)
+  ? requestedFormatRaw
+  : 'png';
 
 // Create placeholders directory if it doesn't exist
 const placeholdersDir = path.join(__dirname, '../../_site/placeholders');
@@ -14,8 +28,8 @@ try {
   process.exit(1);
 }
 
-// Function to generate procedural topographic SVG
-function generatePlaceholderSVG(post, outputPath) {
+// Function to generate procedural topographic SVG and return as string
+function generatePlaceholderSVG(post) {
   try {
     const title = post && post.title ? post.title : 'Blog Post';
     
@@ -335,14 +349,11 @@ function generatePlaceholderSVG(post, outputPath) {
   <line x1="250" y1="575" x2="250" y2="585" stroke="${indexContourColor}" stroke-width="2"/>
   <text x="150" y="570" text-anchor="middle" fill="${indexContourColor}" font-size="10" font-family="monospace">5 km</text>
 </svg>`;
-  
-      try {
-      fs.writeFileSync(outputPath, svg);
-    } catch (writeError) {
-      console.error(`Error writing SVG file to ${outputPath}: ${writeError.message}`);
-    }
+
+    return svg;
   } catch (error) {
     console.error(`Error generating SVG for ${post && post.title ? post.title : 'unknown post'}: ${error.message}`);
+    return null;
   }
 }
 
@@ -385,7 +396,7 @@ function parseFrontMatter(content) {
 }
 
 // Function to process blog posts
-function processBlogPosts() {
+async function processBlogPosts() {
   try {
     const postsDir = path.join(__dirname, '../../_posts');
     console.log('Posts directory:', postsDir);
@@ -398,7 +409,7 @@ function processBlogPosts() {
     const posts = fs.readdirSync(postsDir).filter(file => file.endsWith('.md'));
     console.log(`Found ${posts.length} posts`);
     
-    posts.forEach(postFile => {
+    for (const postFile of posts) {
       try {
         console.log(`Processing ${postFile}...`);
         const postPath = path.join(postsDir, postFile);
@@ -463,32 +474,63 @@ function processBlogPosts() {
           postSlug = postFile.replace(/\.md$/, '');
         }
         
-        const filename = `${postSlug}-placeholder.svg`;
-        const outputPath = path.join(placeholdersDir, filename);
-        
-        console.log('Generating placeholder:', filename);
-        
-        // Generate placeholder
-        generatePlaceholderSVG({
+        const baseName = `${postSlug}-placeholder`;
+        const svgString = generatePlaceholderSVG({
           title: frontMatter.title || postFile,
           date: frontMatter.date ? new Date(frontMatter.date).toLocaleDateString() : null
-        }, outputPath);
-        
-        console.log(`Generated placeholder for ${postFile}: ${filename}`);
+        });
+        if (!svgString) {
+          console.warn(`Skipping ${postFile} - failed to generate SVG string`);
+          continue;
+        }
+
+        // Decide output based on requested format
+        if (requestedFormat === 'svg') {
+          const svgPath = path.join(placeholdersDir, `${baseName}.svg`);
+          fs.writeFileSync(svgPath, svgString);
+          console.log(`Generated placeholder for ${postFile}: ${path.basename(svgPath)}`);
+        } else {
+          const rasterPath = path.join(
+            placeholdersDir,
+            `${baseName}.${requestedFormat === 'jpeg' ? 'jpg' : requestedFormat}`
+          );
+
+          try {
+            // First rasterize SVG to PNG buffer with resvg for consistent rendering
+            const resvg = new Resvg(svgString, {
+              fitTo: { mode: 'width', value: 1200 }
+            });
+            const pngData = resvg.render();
+            const pngBuffer = pngData.asPng();
+
+            // Then convert to the final format and size with sharp
+            let image = sharp(pngBuffer).resize(1200, 630, { fit: 'cover' });
+            if (requestedFormat === 'png') {
+              await image.png({ compressionLevel: 9, adaptiveFiltering: true }).toFile(rasterPath);
+            } else {
+              await image.flatten({ background: '#ffffff' }).jpeg({ quality: 85, mozjpeg: true }).toFile(rasterPath);
+            }
+            console.log(`Generated placeholder for ${postFile}: ${path.basename(rasterPath)}`);
+          } catch (rasError) {
+            console.error(`Error rasterizing SVG for ${postFile}: ${rasError.message}`);
+          }
+        }
       } catch (postError) {
         console.error(`Error processing post ${postFile}: ${postError.message}`);
       }
-    });
+    }
   } catch (error) {
     console.error(`Error in processBlogPosts: ${error.message}`);
   }
 }
 
 // Run the script
-try {
-  processBlogPosts();
-  console.log('Placeholder generation completed successfully!');
-} catch (error) {
-  console.error('Error generating placeholders:', error);
-  process.exit(1);
-}
+(async () => {
+  try {
+    await processBlogPosts();
+    console.log('Placeholder generation completed successfully!');
+  } catch (error) {
+    console.error('Error generating placeholders:', error);
+    process.exit(1);
+  }
+})();
