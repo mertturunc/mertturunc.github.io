@@ -27,6 +27,22 @@ layout: default
     {% endif %}
   </h1>
 
+  {% comment %} Show automatic placeholder header for all posts {% endcomment %}
+  <div class="post-header-placeholder">
+    <div class="post-header-placeholder__content">
+      <h2 class="post-header-placeholder__title">{{ page.title }}</h2>
+      {% if page.summary %}
+        <p class="post-header-placeholder__summary">{{ page.summary }}</p>
+      {% endif %}
+      <div class="post-header-placeholder__meta">
+        <span class="post-header-placeholder__date">{% include localized-date.html date=page.date %}</span>
+        {% if page.category %}
+          <span class="post-header-placeholder__category">{{ page.category }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
   {% comment %} Show translation links if available {% endcomment %}
   {% if page.translations %}
     <div class="translation-links">
