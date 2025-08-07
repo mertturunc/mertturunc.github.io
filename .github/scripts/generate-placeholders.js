@@ -1,10 +1,9 @@
 const { createCanvas, registerFont } = require('canvas');
 const fs = require('fs');
 const path = require('path');
-const matter = require('gray-matter');
 
 // Create placeholders directory if it doesn't exist
-const placeholdersDir = path.join(__dirname, '../../placeholders');
+const placeholdersDir = path.join(__dirname, '../../_site/placeholders');
 if (!fs.existsSync(placeholdersDir)) {
   fs.mkdirSync(placeholdersDir, { recursive: true });
 }
@@ -105,6 +104,33 @@ function generatePlaceholderImage(post, outputPath) {
   fs.writeFileSync(outputPath, buffer);
 }
 
+// Function to parse front matter
+function parseFrontMatter(content) {
+  const lines = content.split('\n');
+  const frontMatter = {};
+  let inFrontMatter = false;
+  let frontMatterEnd = 0;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    if (line === '---') {
+      if (!inFrontMatter) {
+        inFrontMatter = true;
+      } else {
+        frontMatterEnd = i;
+        break;
+      }
+    } else if (inFrontMatter && line.includes(':')) {
+      const [key, ...valueParts] = line.split(':');
+      const value = valueParts.join(':').trim().replace(/^["']|["']$/g, '');
+      frontMatter[key.trim()] = value;
+    }
+  }
+  
+  return frontMatter;
+}
+
 // Function to process blog posts
 function processBlogPosts() {
   const postsDir = path.join(__dirname, '../../_posts');
@@ -113,7 +139,7 @@ function processBlogPosts() {
   posts.forEach(postFile => {
     const postPath = path.join(postsDir, postFile);
     const postContent = fs.readFileSync(postPath, 'utf8');
-    const { data: frontMatter } = matter(postContent);
+    const frontMatter = parseFrontMatter(postContent);
     
     // Skip if post has a header image
     if (frontMatter.header) {

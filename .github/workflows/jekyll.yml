@@ -47,6 +47,19 @@ jobs:
         run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install Node.js dependencies
+        run: |
+          npm install
+          
+      - name: Generate placeholder images
+        run: |
+          node .github/scripts/generate-placeholders.js
+          
       - name: Generate llms.txt
         run: |
           cat > generate_llms.rb << 'RUBY_SCRIPT'
