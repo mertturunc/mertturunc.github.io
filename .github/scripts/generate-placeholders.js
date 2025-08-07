@@ -1,4 +1,3 @@
-const { createCanvas, registerFont } = require('canvas');
 const fs = require('fs');
 const path = require('path');
 
@@ -8,100 +7,46 @@ if (!fs.existsSync(placeholdersDir)) {
   fs.mkdirSync(placeholdersDir, { recursive: true });
 }
 
-// Function to generate placeholder image
-function generatePlaceholderImage(post, outputPath) {
-  const canvas = createCanvas(1200, 630);
-  const ctx = canvas.getContext('2d');
+// Function to generate placeholder SVG
+function generatePlaceholderSVG(post, outputPath) {
+  const title = post.title || 'Blog Post';
+  const date = post.date || '';
   
-  // Create gradient background
-  const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
-  gradient.addColorStop(0, '#2c3e50');
-  gradient.addColorStop(1, '#34495e');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 1200, 630);
+  // Create SVG content
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2c3e50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34495e;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="20" height="20" fill="rgba(255,255,255,0.05)"/>
+    </pattern>
+  </defs>
   
-  // Add subtle pattern overlay
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-  for (let i = 0; i < 1200; i += 40) {
-    for (let j = 0; j < 630; j += 40) {
-      if ((i + j) % 80 === 0) {
-        ctx.fillRect(i, j, 20, 20);
-      }
-    }
-  }
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#pattern)"/>
   
-  // Add main content area
-  const contentWidth = 1200 * 0.8;
-  const contentHeight = 630 * 0.6;
-  const contentX = (1200 - contentWidth) / 2;
-  const contentY = (630 - contentHeight) / 2;
+  <!-- Content area -->
+  <rect x="120" y="126" width="960" height="378" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="8"/>
   
-  // Content background
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-  ctx.fillRect(contentX, contentY, contentWidth, contentHeight);
+  <!-- Site name -->
+  <text x="600" y="186" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="rgba(255,255,255,0.7)" text-anchor="middle">Blog</text>
   
-  // Add border
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(contentX, contentY, contentWidth, contentHeight);
+  <!-- Title -->
+  <text x="600" y="315" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#ffffff" text-anchor="middle">${title}</text>
   
-  // Configure text
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  <!-- Date -->
+  ${date ? `<text x="600" y="504" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.6)" text-anchor="middle">${date}</text>` : ''}
   
-  // Add site name at top
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-  ctx.font = 'bold 32px Arial, sans-serif';
-  ctx.fillText('Blog', 1200 / 2, contentY + 60);
+  <!-- Blog indicator -->
+  <rect x="1080" y="30" width="90" height="30" fill="#3498db" rx="4"/>
+  <text x="1125" y="45" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">BLOG</text>
+</svg>`;
   
-  // Add title
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 48px Arial, sans-serif';
-  
-  // Word wrap for title
-  const words = post.title.split(' ');
-  const lines = [];
-  let currentLine = words[0];
-  
-  for (let i = 1; i < words.length; i++) {
-    const testLine = currentLine + ' ' + words[i];
-    const metrics = ctx.measureText(testLine);
-    if (metrics.width > contentWidth - 80) {
-      lines.push(currentLine);
-      currentLine = words[i];
-    } else {
-      currentLine = testLine;
-    }
-  }
-  lines.push(currentLine);
-  
-  // Draw title lines
-  const titleY = contentY + contentHeight / 2;
-  const lineHeight = 60;
-  const startY = titleY - (lines.length - 1) * lineHeight / 2;
-  
-  lines.forEach((line, index) => {
-    ctx.fillText(line, 1200 / 2, startY + index * lineHeight);
-  });
-  
-  // Add date if available
-  if (post.date) {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '24px Arial, sans-serif';
-    ctx.fillText(post.date, 1200 / 2, contentY + contentHeight - 60);
-  }
-  
-  // Add blog indicator
-  ctx.fillStyle = '#3498db';
-  ctx.fillRect(1200 - 120, 30, 90, 30);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 16px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('BLOG', 1200 - 75, 45);
-  
-  // Save the image
-  const buffer = canvas.toBuffer('image/jpeg', { quality: 0.9 });
-  fs.writeFileSync(outputPath, buffer);
+  fs.writeFileSync(outputPath, svg);
 }
 
 // Function to parse front matter
@@ -134,12 +79,23 @@ function parseFrontMatter(content) {
 // Function to process blog posts
 function processBlogPosts() {
   const postsDir = path.join(__dirname, '../../_posts');
+  console.log('Posts directory:', postsDir);
+  
+  if (!fs.existsSync(postsDir)) {
+    console.error('Posts directory does not exist:', postsDir);
+    return;
+  }
+  
   const posts = fs.readdirSync(postsDir).filter(file => file.endsWith('.md'));
+  console.log('Found posts:', posts);
   
   posts.forEach(postFile => {
+    console.log(`Processing ${postFile}...`);
     const postPath = path.join(postsDir, postFile);
     const postContent = fs.readFileSync(postPath, 'utf8');
     const frontMatter = parseFrontMatter(postContent);
+    
+    console.log('Front matter:', frontMatter);
     
     // Skip if post has a header image
     if (frontMatter.header) {
@@ -153,11 +109,14 @@ function processBlogPosts() {
       .replace(/\s+/g, '-')
       .toLowerCase();
     const dateStr = new Date(frontMatter.date || Date.now()).toISOString().split('T')[0];
-    const filename = `${dateStr}-${safeTitle}-placeholder.jpg`;
+    const filename = `${dateStr}-${safeTitle}-placeholder.svg`;
     const outputPath = path.join(placeholdersDir, filename);
     
+    console.log('Generating placeholder:', filename);
+    console.log('Output path:', outputPath);
+    
     // Generate placeholder
-    generatePlaceholderImage({
+    generatePlaceholderSVG({
       title: frontMatter.title,
       date: frontMatter.date ? new Date(frontMatter.date).toLocaleDateString() : null
     }, outputPath);

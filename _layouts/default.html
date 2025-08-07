@@ -46,7 +46,7 @@
     {% comment %} Check for generated placeholder {% endcomment %}
     {% assign safe_title = page.title | replace: ' ', '-' | replace: ':', '' | replace: '"', '' | replace: "'", '' | downcase %}
     {% assign date_str = page.date | date: "%Y-%m-%d" %}
-    {% assign placeholder_filename = date_str | append: '-' | append: safe_title | append: '-placeholder.jpg' %}
+    {% assign placeholder_filename = date_str | append: '-' | append: safe_title | append: '-placeholder.svg' %}
     {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
     <meta property="og:image" content="{{ site.url }}{{ placeholder_path }}" />
   {% endif %}
@@ -75,7 +75,7 @@
     {% comment %} Use the same placeholder logic for Twitter {% endcomment %}
     {% assign safe_title = page.title | replace: ' ', '-' | replace: ':', '' | replace: '"', '' | replace: "'", '' | downcase %}
     {% assign date_str = page.date | date: "%Y-%m-%d" %}
-    {% assign placeholder_filename = date_str | append: '-' | append: safe_title | append: '-placeholder.jpg' %}
+    {% assign placeholder_filename = date_str | append: '-' | append: safe_title | append: '-placeholder.svg' %}
     {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
     <meta name="twitter:image" content="{{ site.url }}{{ placeholder_path }}" />
   {% endif %}
