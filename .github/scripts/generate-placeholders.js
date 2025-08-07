@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const matter = require('gray-matter');
 const sharp = require('sharp');
 const { Resvg } = require('@resvg/resvg-js');
 
@@ -17,15 +18,46 @@ const requestedFormat = ['png', 'jpg', 'jpeg', 'svg'].includes(requestedFormatRa
   ? requestedFormatRaw
   : 'png';
 
-// Create placeholders directory if it doesn't exist
-const placeholdersDir = path.join(__dirname, '../../_site/placeholders');
-try {
-  if (!fs.existsSync(placeholdersDir)) {
-    fs.mkdirSync(placeholdersDir, { recursive: true });
+// Determine output directories
+const repoRoot = path.join(__dirname, '../../');
+const siteDir = path.join(repoRoot, '_site');
+const sitePlaceholdersDir = path.join(siteDir, 'placeholders');
+
+// Ensure source directory exists; also ensure _site/placeholders if _site exists (e.g., in CI workflows)
+function ensureDir(dirPath) {
+  try {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    return true;
+  } catch (error) {
+    console.error(`Error ensuring directory ${dirPath}: ${error.message}`);
+    return false;
   }
-} catch (error) {
-  console.error(`Error creating placeholders directory: ${error.message}`);
-  process.exit(1);
+}
+
+// Always target _site/placeholders only
+ensureDir(siteDir);
+ensureDir(sitePlaceholdersDir);
+
+// Helper to write output to all active destinations
+async function writeOutputFiles(baseName, svgString, rasterBuffer, extension) {
+  const outputs = [];
+  const fileName = `${baseName}.${extension}`;
+  const dests = [path.join(sitePlaceholdersDir, fileName)];
+  for (const dest of dests) {
+    try {
+      if (extension === 'svg') {
+        fs.writeFileSync(dest, svgString);
+      } else if (Buffer.isBuffer(rasterBuffer)) {
+        fs.writeFileSync(dest, rasterBuffer);
+      }
+      outputs.push(dest);
+    } catch (err) {
+      console.error(`Failed writing ${dest}: ${err.message}`);
+    }
+  }
+  return outputs;
 }
 
 // Function to generate procedural topographic SVG and return as string
@@ -420,21 +452,29 @@ async function processBlogPosts() {
           postContent = fs.readFileSync(postPath, 'utf8');
         } catch (readError) {
           console.error(`Error reading ${postFile}: ${readError.message}`);
-          return;
+          continue;
         }
-        
-        const frontMatter = parseFrontMatter(postContent);
+
+        // Prefer robust front matter parsing via gray-matter
+        let frontMatter = {};
+        try {
+          const parsed = matter(postContent);
+          frontMatter = Object.assign({}, parsed.data || {});
+        } catch (mmErr) {
+          console.warn(`gray-matter failed for ${postFile}, falling back to custom parser: ${mmErr.message}`);
+          frontMatter = parseFrontMatter(postContent);
+        }
         
         // Skip if post has a header image
         if (frontMatter.header) {
           console.log(`Skipping ${postFile} - has header image`);
-          return;
+          continue;
         }
         
         // Skip if post has no title
         if (!frontMatter.title) {
           console.warn(`Skipping ${postFile} - no title found in front matter`);
-          return;
+          continue;
         }
         
         // Generate filename using the post slug from translations URL
@@ -443,8 +483,8 @@ async function processBlogPosts() {
         // Try to extract slug from translations
         if (frontMatter.translations) {
           try {
-            const translations = Array.isArray(frontMatter.translations) 
-              ? frontMatter.translations 
+            const translations = Array.isArray(frontMatter.translations)
+              ? frontMatter.translations
               : JSON.parse(frontMatter.translations);
             
             // Find the Turkish translation URL
@@ -486,31 +526,25 @@ async function processBlogPosts() {
 
         // Decide output based on requested format
         if (requestedFormat === 'svg') {
-          const svgPath = path.join(placeholdersDir, `${baseName}.svg`);
-          fs.writeFileSync(svgPath, svgString);
-          console.log(`Generated placeholder for ${postFile}: ${path.basename(svgPath)}`);
+          await writeOutputFiles(baseName, svgString, null, 'svg');
+          console.log(`Generated placeholder for ${postFile}: ${baseName}.svg`);
         } else {
-          const rasterPath = path.join(
-            placeholdersDir,
-            `${baseName}.${requestedFormat === 'jpeg' ? 'jpg' : requestedFormat}`
-          );
-
           try {
             // First rasterize SVG to PNG buffer with resvg for consistent rendering
-            const resvg = new Resvg(svgString, {
-              fitTo: { mode: 'width', value: 1200 }
-            });
+            const resvg = new Resvg(svgString, { fitTo: { mode: 'width', value: 1200 } });
             const pngData = resvg.render();
-            const pngBuffer = pngData.asPng();
+            const basePng = pngData.asPng();
 
             // Then convert to the final format and size with sharp
-            let image = sharp(pngBuffer).resize(1200, 630, { fit: 'cover' });
+            let image = sharp(basePng).resize(1200, 630, { fit: 'cover' });
+            let buffer;
             if (requestedFormat === 'png') {
-              await image.png({ compressionLevel: 9, adaptiveFiltering: true }).toFile(rasterPath);
+              buffer = await image.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
             } else {
-              await image.flatten({ background: '#ffffff' }).jpeg({ quality: 85, mozjpeg: true }).toFile(rasterPath);
+              buffer = await image.flatten({ background: '#ffffff' }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
             }
-            console.log(`Generated placeholder for ${postFile}: ${path.basename(rasterPath)}`);
+            await writeOutputFiles(baseName, null, buffer, requestedFormat === 'jpeg' ? 'jpg' : requestedFormat);
+            console.log(`Generated placeholder for ${postFile}: ${baseName}.${requestedFormat === 'jpeg' ? 'jpg' : requestedFormat}`);
           } catch (rasError) {
             console.error(`Error rasterizing SVG for ${postFile}: ${rasError.message}`);
           }
