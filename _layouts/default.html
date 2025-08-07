@@ -44,10 +44,20 @@
     {% endif %}
   {% else %}
     {% comment %} Check for generated placeholder {% endcomment %}
-    {% assign post_filename = page.name | replace: '.html', '' %}
-    {% assign placeholder_filename = post_filename | append: '-placeholder.svg' %}
-    {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
-    <meta property="og:image" content="{{ site.url }}{{ placeholder_path }}" />
+    {% if page.categories contains 'blog' %}
+      {% comment %} For blog posts, use the URL slug to generate placeholder filename {% endcomment %}
+      {% assign url_parts = page.url | split: '/' %}
+      {% assign post_slug = url_parts | last | replace: '/', '' %}
+      {% assign placeholder_filename = post_slug | append: '-placeholder.svg' %}
+      {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
+      <meta property="og:image" content="{{ site.url }}{{ placeholder_path }}" />
+    {% else %}
+      {% comment %} For other pages, use page.name {% endcomment %}
+      {% assign post_filename = page.name | replace: '.html', '' %}
+      {% assign placeholder_filename = post_filename | append: '-placeholder.svg' %}
+      {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
+      <meta property="og:image" content="{{ site.url }}{{ placeholder_path }}" />
+    {% endif %}
   {% endif %}
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -72,10 +82,20 @@
     {% endif %}
   {% else %}
     {% comment %} Use the same placeholder logic for Twitter {% endcomment %}
-    {% assign post_filename = page.name | replace: '.html', '' %}
-    {% assign placeholder_filename = post_filename | append: '-placeholder.svg' %}
-    {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
-    <meta name="twitter:image" content="{{ site.url }}{{ placeholder_path }}" />
+    {% if page.categories contains 'blog' %}
+      {% comment %} For blog posts, use the URL slug to generate placeholder filename {% endcomment %}
+      {% assign url_parts = page.url | split: '/' %}
+      {% assign post_slug = url_parts | last | replace: '/', '' %}
+      {% assign placeholder_filename = post_slug | append: '-placeholder.svg' %}
+      {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
+      <meta name="twitter:image" content="{{ site.url }}{{ placeholder_path }}" />
+    {% else %}
+      {% comment %} For other pages, use page.name {% endcomment %}
+      {% assign post_filename = page.name | replace: '.html', '' %}
+      {% assign placeholder_filename = post_filename | append: '-placeholder.svg' %}
+      {% assign placeholder_path = '/placeholders/' | append: placeholder_filename %}
+      <meta name="twitter:image" content="{{ site.url }}{{ placeholder_path }}" />
+    {% endif %}
   {% endif %}
 
   {% comment %} Add alternate language links {% endcomment %}
