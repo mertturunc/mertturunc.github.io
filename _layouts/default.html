@@ -266,6 +266,11 @@
       return;
     }
     
+    // Skip inline code elements - only add copy buttons to block-level code
+    if (codeBlock.tagName === 'CODE' && !codeBlock.closest('pre') && !codeBlock.closest('.highlight')) {
+      return;
+    }
+    
     // Mark this element as processed to prevent duplicate processing
     codeBlock.setAttribute('data-copy-button-added', 'true');
 
@@ -302,25 +307,47 @@
     buttonContainer.appendChild(button);
   }
 
+  // Clean up any copy buttons that were incorrectly added to inline code
+  function cleanupInlineCopyButtons() {
+    const inlineCodeElements = document.querySelectorAll('code:not(pre code):not(.highlight code)');
+    inlineCodeElements.forEach(function(codeElement) {
+      const copyButton = codeElement.querySelector('.copy-button');
+      if (copyButton) {
+        copyButton.remove();
+      }
+      codeElement.removeAttribute('data-copy-button-added');
+    });
+  }
+
   // Initialize copy buttons when DOM is ready
   function initializeCopyButtons() {
-    // Strategy: Only target the outermost container for each code block
-    // This prevents duplicate buttons on nested elements
+    // First, clean up any incorrectly placed copy buttons
+    cleanupInlineCopyButtons();
     
-    // For Jekyll/Rouge: target .highlighter-rouge containers (the outermost wrapper)
+    // Strategy: Only target block-level code elements, not inline code
+    
+    // For Jekyll/Rouge: target .highlighter-rouge containers that contain pre or .highlight
     const rougeBlocks = document.querySelectorAll('.highlighter-rouge');
+    rougeBlocks.forEach(function(block) {
+      // Only add copy button if it contains a pre or .highlight element
+      if (block.querySelector('pre') || block.querySelector('.highlight')) {
+        addCopyButtonToCodeBlock(block);
+      }
+    });
     
     // For standalone pre elements (not inside any syntax highlighting wrapper)
     const standalonePreBlocks = document.querySelectorAll('pre:not(.highlighter-rouge pre):not(.highlight)');
-    
-    // Add copy buttons to Rouge syntax-highlighted blocks
-    rougeBlocks.forEach(function(codeBlock) {
+    standalonePreBlocks.forEach(function(codeBlock) {
       addCopyButtonToCodeBlock(codeBlock);
     });
     
-    // Add copy buttons to standalone pre blocks
-    standalonePreBlocks.forEach(function(codeBlock) {
-      addCopyButtonToCodeBlock(codeBlock);
+    // Also target .highlight divs directly (for cases where they're not in .highlighter-rouge)
+    const highlightBlocks = document.querySelectorAll('.highlight');
+    highlightBlocks.forEach(function(block) {
+      // Only add if it contains a pre element and isn't already processed
+      if (block.querySelector('pre') && !block.closest('.highlighter-rouge')) {
+        addCopyButtonToCodeBlock(block);
+      }
     });
   }
 
