@@ -19,7 +19,7 @@ bu rehber wsl 2'de docker kullanarak osrm (open source routing machine) kurulumu
 
 ## ön gereksinimler
 
-- windows içerisinde kurulu bir wsl v2
+- windows içerisinde kurulu bir wsl v2 (ubuntu 22)
 - wsl 2 ile çalışan bir docker kurulmuş olması
 - linux ve terminal aşinalığı
 - harita veri dosyaları için yeterli disk alanı
@@ -59,7 +59,8 @@ END
 END
 ```
 
-**not:** veya, çalışma alanı için xmin ymin xmax ymax koordinatlarını almak için [https://boundingbox.klokantech.com/](https://boundingbox.klokantech.com/) kullanabilirsiniz.
+**not:** veya, çalışma alanı için xmin ymin xmax ymax koordinatlarını almak için [https://boundingbox.klokantech.com/](https://boundingbox.klokantech.com/) kullanabilirsiniz. örnek dosyayı ise [blog/osrm-docker/istanbul.poly](/blog/osrm-docker/istanbul.poly) adresinde bulabilirsiniz.
+
 
 ## adım 3: türkiye openstreetmap verilerini indir
 
@@ -112,7 +113,7 @@ graf teorisi açısından, \( G = (V, E) \) yönlendirilmemiş bir graf verildi�
 
 birden fazla bölümü kapsayan rotalama sorguları için osrm, grafikteki kısayolları önceden hesaplayarak en kısa yol hesaplamasını daha da hızlandıran gelişmiş bir teknik olan contraction hierarchies kullanır. bölümleme ve contraction hierarchies'in bu ikili yaklaşımı, osrm'in büyük ölçekli rotalama sorgularını yüksek verimlilik ve hızla işleyebilmesini sağlar.
 
-### routing sunucusunu başlat
+### routing sunucusunu başlatılması
 
 osrm http sunucusunu 5000 portunda başlatıyoruz:
 
@@ -120,8 +121,7 @@ osrm http sunucusunu 5000 portunda başlatıyoruz:
 docker run -t -i -p 5000:5000 -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-routed --algorithm mld /data/istanbul.osrm
 ```
 
-## adım 6: kurulumu test et
-
+## adım 6: kurulumun test edilmesi
 istanbul'da rotalama sorgusunu test etmek için http sunucusuna curl aracılığıyla farklı bir terminalden istek gönderiyoruz:
 
 ```bash
@@ -169,14 +169,7 @@ docker run -t -i -p 5000:5000 -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backen
 
 ### docker compose yaklaşımı
 
-daha basit, otomatik bir çözüm için docker compose kullanarak her şeyi tek komutla halledin. bu yaklaşım iki konteyner kullanır:
-
-1. **data-prep**: harita verilerini indirir ve hazırlar
-2. **osrm**: verileri işler ve routing sunucusunu başlatır
-
-#### kurulum
-
-proje dizininizde bir `docker-compose.yml` dosyası oluşturun. tam yapılandırmayı [blog/osrm-docker/docker-compose.yml](/blog/osrm-docker/docker-compose.yml) adresinde bulabilirsiniz.
+daha basit, otomatik bir çözüm için docker compose kullanarak her şeyi tek komutla halledebiliriz. proje dizininizde bir `docker-compose.yml` dosyası oluşturmak yeterli olacaktır. tam yapılandırmayı [blog/osrm-docker/docker-compose.yml](/blog/osrm-docker/docker-compose.yml) adresinde bulabilirsiniz.
 
 #### kullanım
 
@@ -234,6 +227,8 @@ belirli ihtiyaçlara uygun routing davranışlarını değiştirmek için özel 
    - osrm'i özel profilinizle başlatın.
 
 özel profiller, belirli araç türleri veya test senaryoları için optimize edilmiş routing'e izin verir.
+
+[örnek profil](https://github.com/Project-OSRM/osrm-backend/blob/master/profiles/testbot.lua)
 
 ## referanslar
 
