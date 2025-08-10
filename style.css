@@ -1100,6 +1100,16 @@ sub {
   color: var(--accent-color);
 }
 
+.typo-report-link {
+  color: var(--muted-text);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.typo-report-link:hover {
+  color: var(--accent-color);
+}
+
 .hoverable {
   object-fit: cover;
   object-position: center top;

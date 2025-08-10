@@ -66,6 +66,8 @@ layout: default
       <span>{{ t.post.related }}</span>
       <a href="{{ page.related_url }}">{{ page.related_title }}</a>
     {% endif %}
+    <span class="separator">·</span>
+    {% include typo-report-link.html %}
   </p>
 
   <script>

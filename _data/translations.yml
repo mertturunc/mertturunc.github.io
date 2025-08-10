@@ -24,6 +24,7 @@ tr:
     wip_message: "bu yazı henüz tamamlanmadı ve üzerinde çalışmaya devam ediliyor."
     wip_content: "bu yazının içeriği henüz hazır değil. lütfen daha sonra tekrar kontrol edin."
     tbd: "tbd"
+    report_typo: "bu yazıda yazım hatası olduğunu düşünüyorsanız"
   copy_button:
     copy: "kopyala"
     copied: "kopyalandı!"
@@ -80,6 +81,7 @@ en:
     wip_message: "this post is not yet complete and is still being worked on."
     wip_content: "the content of this post is not ready yet. please check back later."
     tbd: "tbd"
+    report_typo: "if you believe there's a typo in this post"
   copy_button:
     copy: "copy"
     copied: "copied!"

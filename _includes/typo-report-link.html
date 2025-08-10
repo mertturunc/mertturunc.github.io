@@ -1,0 +1,26 @@
+{% comment %}
+  Generate a GitHub issue URL for reporting typos in blog posts
+  Usage: {% include typo-report-link.html %}
+  
+  This will create a link that opens a new GitHub issue with a pre-filled title and body
+  containing the post title and URL for context.
+{% endcomment %}
+
+{% comment %} Get the full URL for the current post {% endcomment %}
+{% assign full_url = site.url | append: page.url %}
+
+{% comment %} Create issue title and body with proper encoding {% endcomment %}
+{% assign issue_title = "Typo in post: " | append: page.title %}
+{% assign issue_body = "I found a typo in the following post:
+
+**Post:** " | append: page.title | append: "
+**URL:** " | append: full_url | append: "
+**Language:** " | append: current_lang | append: "
+**File:** " | append: page.path | append: "
+
+**Description of the typo:**" %}
+
+{% assign encoded_title = issue_title | url_encode %}
+{% assign encoded_body = issue_body | url_encode %}
+
+<a href="https://github.com/mertturunc/mertturunc.github.io/issues/new?title={{ encoded_title }}&body={{ encoded_body }}" target="_blank" rel="noopener noreferrer" class="typo-report-link">{{ t.post.report_typo }}</a>
