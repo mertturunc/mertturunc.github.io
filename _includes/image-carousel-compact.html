@@ -80,7 +80,8 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
       <span class="zoom-indicator-compact">100%</span>
     </div>
     
-    <!-- Dots indicator -->
+    <!-- Dots indicator (only show for multiple images) -->
+    {% if images_list.size > 1 %}
     <div class="carousel-dots-compact">
       {% for i in (1..images_list.size) %}
         <button class="carousel-dot-compact {% if forloop.first %}active{% endif %}" 
@@ -88,6 +89,7 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
                 aria-label="Go to image {{ forloop.index }}"></button>
       {% endfor %}
     </div>
+    {% endif %}
   </div>
 </div>
 
@@ -262,6 +264,22 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
     const image = currentSlide.querySelector('.carousel-image-compact');
     if (!image) return;
     
+    // Check for existing modal overlays and ensure lightbox appears above them
+    const existingModals = document.querySelectorAll('.modal-overlay');
+    let highestZIndex = 9998; // Default modal z-index
+    
+    existingModals.forEach(modal => {
+      const modalZIndex = parseInt(window.getComputedStyle(modal).zIndex) || 9998;
+      if (modalZIndex > highestZIndex) {
+        highestZIndex = modalZIndex;
+      }
+    });
+    
+    // Temporarily hide existing modals to prevent z-index conflicts
+    existingModals.forEach(modal => {
+      modal.style.visibility = 'hidden';
+    });
+    
     const lightbox = document.createElement('div');
     lightbox.className = 'carousel-lightbox';
     lightbox.style.cssText = `
@@ -274,11 +292,12 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1001;
+      z-index: ${highestZIndex + 1000};
       cursor: pointer;
       backdrop-filter: blur(2px);
       opacity: 0;
       transition: opacity 0.3s ease;
+      pointer-events: auto;
     `;
     
     const mediaContainer = document.createElement('div');
@@ -432,9 +451,19 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
         setTimeout(() => {
           if (activeLightbox && document.body.contains(activeLightbox)) {
             document.body.removeChild(activeLightbox);
-            document.body.classList.remove('modal-open');
+            // Don't remove modal-open class if there are still other modals
+            const remainingModals = document.querySelectorAll('.modal-overlay');
+            if (remainingModals.length === 0) {
+              document.body.classList.remove('modal-open');
+            }
           }
           activeLightbox = null;
+          
+          // Restore visibility of any hidden modal overlays
+          const existingModals = document.querySelectorAll('.modal-overlay');
+          existingModals.forEach(modal => {
+            modal.style.visibility = 'visible';
+          });
         }, 300);
         
         // Remove key handler
@@ -468,8 +497,19 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
     };
     
     document.addEventListener('keydown', lightboxKeyHandler);
+    
+    // Add lightbox to body and ensure it's above everything
     document.body.appendChild(lightbox);
     document.body.classList.add('modal-open');
+    
+    // Ensure the lightbox is the topmost element
+    lightbox.style.zIndex = `${highestZIndex + 1000}`;
+    lightbox.style.position = 'fixed';
+    lightbox.style.top = '0';
+    lightbox.style.left = '0';
+    lightbox.style.width = '100vw';
+    lightbox.style.height = '100vh';
+    
     activeLightbox = lightbox;
     
     // Fade in the lightbox
@@ -487,6 +527,23 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
       activeLightbox.dispatchEvent(event);
     }
   };
+  
+  // Add CSS to ensure carousel lightbox is always on top
+  if (!document.getElementById('carousel-lightbox-styles')) {
+    const style = document.createElement('style');
+    style.id = 'carousel-lightbox-styles';
+    style.textContent = `
+      .carousel-lightbox {
+        z-index: 999999999 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
   
   // Event listeners
   if (nextBtn) nextBtn.addEventListener('click', nextSlide);
@@ -632,30 +689,112 @@ Usage: {% include image-carousel-compact.html folder="cin-ali" images="image1.jp
   updateCarousel();
   updateZoomDisplay();
   
-  // Set reasonable height for container
+  // Set container height based on image aspect ratios
   setTimeout(() => {
     const carouselContainer = carousel.querySelector('.carousel-container-compact');
     if (!carouselContainer) return;
     
     const containerWidth = carouselContainer.offsetWidth;
-    const defaultHeight = Math.min(containerWidth * 0.6, 300);
+    const images = carousel.querySelectorAll('.carousel-image-compact');
+    const videos = carousel.querySelectorAll('.carousel-video-compact');
+    const mediaElems = [...images, ...videos];
     
-    // Check if mobile and adjust dots space accordingly
-    const isMobile = window.innerWidth <= 768;
-    const dotsSpace = isMobile ? 12 : 16; // Reduced dots space since dots are absolutely positioned
+    if (mediaElems.length === 0) return;
     
-    // Set container height to include dots space
-    carouselContainer.style.height = (defaultHeight + dotsSpace) + 'px';
+    // Calculate aspect ratios for all images
+    const aspectRatios = [];
+    let allImagesLoaded = 0;
+    const totalImages = mediaElems.length;
     
-    // Apply height to images and videos
-    const mediaElems = carousel.querySelectorAll('.carousel-image-compact, .carousel-video-compact');
-    mediaElems.forEach(el => {
+    function checkAllImagesLoaded() {
+      allImagesLoaded++;
+      if (allImagesLoaded === totalImages) {
+        calculateOptimalHeight();
+      }
+    }
+    
+    function calculateOptimalHeight() {
+      // Check if aspect ratios are similar (within 10% tolerance)
+      const avgAspectRatio = aspectRatios.reduce((a, b) => a + b, 0) / aspectRatios.length;
+      const tolerance = avgAspectRatio * 0.1; // 10% tolerance
+      
+      const similarAspectRatios = aspectRatios.every(ratio => 
+        Math.abs(ratio - avgAspectRatio) <= tolerance
+      );
+      
+      let optimalHeight;
+      
+      if (similarAspectRatios && aspectRatios.length > 1) {
+        // Use the average aspect ratio for consistent sizing
+        optimalHeight = containerWidth / avgAspectRatio;
+        // Limit height to reasonable bounds
+        optimalHeight = Math.max(200, Math.min(optimalHeight, 600));
+      } else {
+        // Use default height for mixed aspect ratios
+        optimalHeight = Math.min(containerWidth * 0.6, 300);
+      }
+      
+      // Check if mobile and adjust dots space accordingly
+      const isMobile = window.innerWidth <= 768;
+      const dotsSpace = (images_list.size > 1 && isMobile) ? 12 : (images_list.size > 1 ? 16 : 0);
+      
+      // Set container height to include dots space
+      carouselContainer.style.height = (optimalHeight + dotsSpace) + 'px';
+      
+      // Apply height to images and videos
+      mediaElems.forEach(el => {
+        if (el.tagName.toLowerCase() === 'img') {
+          // Don't set fixed height, let the image maintain its aspect ratio
+          el.style.height = 'auto';
+          el.style.maxHeight = optimalHeight + 'px';
+          el.style.objectFit = 'contain';
+          el.style.width = '100%';
+        } else if (el.tagName.toLowerCase() === 'video') {
+          el.style.maxHeight = optimalHeight + 'px';
+          el.style.width = '100%';
+        }
+      });
+    }
+    
+    // Load images and calculate aspect ratios
+    mediaElems.forEach((el, index) => {
       if (el.tagName.toLowerCase() === 'img') {
-        el.style.height = defaultHeight + 'px';
-        el.style.objectFit = 'contain';
+        const img = el;
+        if (img.complete && img.naturalWidth > 0) {
+          // Image already loaded
+          aspectRatios[index] = img.naturalWidth / img.naturalHeight;
+          checkAllImagesLoaded();
+        } else {
+          // Wait for image to load
+          img.onload = () => {
+            aspectRatios[index] = img.naturalWidth / img.naturalHeight;
+            checkAllImagesLoaded();
+          };
+          img.onerror = () => {
+            // Fallback aspect ratio if image fails to load
+            aspectRatios[index] = 1.5;
+            checkAllImagesLoaded();
+          };
+        }
       } else if (el.tagName.toLowerCase() === 'video') {
-        el.style.maxHeight = defaultHeight + 'px';
-        el.style.width = '100%';
+        // For videos, use a default aspect ratio or wait for metadata
+        const video = el;
+        if (video.videoWidth > 0) {
+          aspectRatios[index] = video.videoWidth / video.videoHeight;
+          checkAllImagesLoaded();
+        } else {
+          video.addEventListener('loadedmetadata', () => {
+            aspectRatios[index] = video.videoWidth / video.videoHeight;
+            checkAllImagesLoaded();
+          });
+          // Fallback if video metadata doesn't load
+          setTimeout(() => {
+            if (aspectRatios[index] === undefined) {
+              aspectRatios[index] = 16 / 9; // Default video aspect ratio
+              checkAllImagesLoaded();
+            }
+          }, 2000);
+        }
       }
     });
   }, 100);

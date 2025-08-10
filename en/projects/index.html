@@ -231,6 +231,15 @@ summary: A portfolio page
     line-height: 40px;
     white-space: pre-line;
   }
+  
+  .project-date {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85em;
+    font-weight: 300;
+    margin-left: 12px;
+    margin-right: 8px;
+    opacity: 0.8;
+  }
   .maximize-btn {
     background: var(--btn-bg);
     color: var(--primary-text);
@@ -268,7 +277,7 @@ summary: A portfolio page
   }
 
   .content-open {
-    max-height: 800px;
+    max-height: 1200px;
     opacity: 1;
     padding: 15px;
     transform: translateY(0);
@@ -625,6 +634,7 @@ summary: A portfolio page
     
     <button type="button" class="collapsible">
       <span class="collapsible-title">{{ display_title }}{% if project.has_full_page %} <span class="language-indicator">{{ lang_indicators }}</span>{% endif %}</span>
+      <span class="project-date">{{ project.date | date: "%Y" }}</span>
       <span class="maximize-btn" style="display:none;">⛶</span>
     </button>
     <div class="content">

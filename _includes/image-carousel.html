@@ -187,7 +187,6 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     const mediaElements = carouselElement.querySelectorAll('.carousel-image, .carousel-video');
     if (mediaElements.length === 0) return;
     
-    console.log('🎨 Detecting aspect ratios for', mediaElements.length, 'media elements...');
     
     let loadedCount = 0;
     const aspectRatios = [];
@@ -253,13 +252,6 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
       Math.abs(ratio - firstRatio) / firstRatio < tolerance
     );
     
-    console.log('🎨 Aspect ratio analysis:', {
-      ratios: aspectRatios.map(r => r ? r.toFixed(3) : 'undefined'),
-      firstRatio: firstRatio ? firstRatio.toFixed(3) : 'undefined',
-      isConsistent,
-      tolerance: (tolerance * 100) + '%',
-      containerWidth: carouselElement.querySelector('.carousel-container')?.offsetWidth + 'px'
-    });
     
     if (isConsistent && validRatios.length >= 1) {
       // Apply consistent aspect ratio
@@ -286,15 +278,12 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
           media.style.maxHeight = finalHeight + 'px';
           media.style.objectFit = 'contain';
         });
-        
-        console.log('🎨 ✅ Optimized carousel for aspect ratio', avgRatio.toFixed(3), 
-                   '→ height:', finalHeight + 'px');
+      
         
         // Mark as optimized
         carouselElement.setAttribute('data-aspect-optimized', 'true');
       }
     } else {
-      console.log('🎨 Mixed aspect ratios detected, keeping flexible layout');
     }
   }
   

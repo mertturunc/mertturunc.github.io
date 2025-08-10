@@ -162,11 +162,9 @@ summary: Portfolyo sayılabilecek bir sayfa
         
         // REINITIALIZE CAROUSELS IN MODAL
         setTimeout(() => {
-          console.log('🎠 Reinitializing carousels in modal...');
           
           // Fix IDs to avoid conflicts and reinitialize carousels
           const carousels = modalContent.querySelectorAll('.image-carousel');
-          console.log('🎠 Found', carousels.length, 'main carousels');
           
           carousels.forEach(function(carousel, index) {
             // Generate unique ID for modal carousel
@@ -174,7 +172,6 @@ summary: Portfolyo sayılabilecek bir sayfa
             const modalId = originalId + '-modal-' + Date.now() + '-' + index;
             carousel.id = modalId;
             
-            console.log('🎠 Reinitializing carousel', originalId, '→', modalId);
             
             // Clear the initialization flag completely
             delete carousel.carouselInitialized;
@@ -186,31 +183,19 @@ summary: Portfolyo sayılabilecek bir sayfa
             const prevBtn = carousel.querySelector('.carousel-prev');
             const nextBtn = carousel.querySelector('.carousel-next');
             
-            console.log('🎠 Carousel elements:', {
-              track: !!track,
-              slides: slides.length,
-              prevBtn: !!prevBtn,
-              nextBtn: !!nextBtn,
-              id: carousel.id
-            });
             
             // Call the full initialization function
             if (window.initializeCarousel) {
-              console.log('🎠 Calling initializeCarousel for', carousel.id);
               try {
                 window.initializeCarousel(carousel);
-                console.log('🎠 ✅ Successfully initialized', carousel.id);
               } catch (error) {
-                console.error('🎠 ❌ Error initializing', carousel.id, error);
               }
             } else {
-              console.error('🎠 ❌ initializeCarousel function not found');
             }
           });
           
           // Also handle compact carousels
           const compactCarousels = modalContent.querySelectorAll('.image-carousel-compact');
-          console.log('🎠 Found', compactCarousels.length, 'compact carousels');
           
           compactCarousels.forEach(function(carousel, index) {
             // Generate unique ID
@@ -218,7 +203,6 @@ summary: Portfolyo sayılabilecek bir sayfa
             const modalId = originalId + '-modal-' + Date.now() + '-' + index;
             carousel.id = modalId;
             
-            console.log('🎠 Reinitializing compact carousel', originalId, '→', modalId);
             
             // Manually reinitialize compact carousel since it doesn't use the global function
             const track = carousel.querySelector('.carousel-track-compact');
@@ -287,106 +271,149 @@ summary: Portfolyo sayılabilecek bir sayfa
                 currentZoom = 1; translateX = 0; translateY = 0; updateZoom();
               };
               
-              // Fullscreen
+              // Fullscreen - use the same logic as the original compact carousel
               if (fullscreenBtn) fullscreenBtn.onclick = () => {
                 const currentImage = slides[currentIndex]?.querySelector('.carousel-image-compact');
                 if (!currentImage) return;
                 
+                // Check for existing modal overlays and ensure lightbox appears above them
+                const existingModals = document.querySelectorAll('.modal-overlay');
+                let highestZIndex = 9998; // Default modal z-index
+                
+                existingModals.forEach(modal => {
+                  const modalZIndex = parseInt(window.getComputedStyle(modal).zIndex) || 9998;
+                  if (modalZIndex > highestZIndex) {
+                    highestZIndex = modalZIndex;
+                  }
+                });
+                
+                // Temporarily hide existing modals to prevent z-index conflicts
+                existingModals.forEach(modal => {
+                  modal.style.visibility = 'hidden';
+                });
+                
                 const lightbox = document.createElement('div');
                 lightbox.className = 'carousel-lightbox';
+                lightbox.style.cssText = `
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  width: 100vw;
+                  height: 100vh;
+                  background: rgba(0, 0, 0, 0.95);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  z-index: ${highestZIndex + 1000};
+                  cursor: pointer;
+                  backdrop-filter: blur(2px);
+                  opacity: 0;
+                  transition: opacity 0.3s ease;
+                  pointer-events: auto;
+                `;
                 
-                const imageContainer = document.createElement('div');
-                imageContainer.className = 'lightbox-image-container';
+                const mediaContainer = document.createElement('div');
+                mediaContainer.style.cssText = `
+                  position: relative;
+                  max-width: 95vw;
+                  max-height: 95vh;
+                  cursor: default;
+                `;
                 
-                const img = document.createElement('img');
-                img.src = currentImage.src;
-                img.alt = currentImage.alt;
-                img.className = 'carousel-image lightbox-image';
-                
-                const lightboxControls = document.createElement('div');
-                lightboxControls.className = 'lightbox-controls';
-                lightboxControls.innerHTML = `
-                  <button class="carousel-control-btn lightbox-zoom-out" aria-label="Zoom out">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                      <path d="M8 11h6" stroke="currentColor" stroke-width="2"/>
-                      <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                  </button>
-                  <button class="carousel-control-btn lightbox-zoom-in" aria-label="Zoom in">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                      <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="2"/>
-                      <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                  </button>
-                  <button class="carousel-control-btn lightbox-zoom-reset" aria-label="Reset zoom" style="display: none;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2"/>
-                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                  </button>
-                  <span class="zoom-indicator lightbox-zoom-indicator">100%</span>
+                const lightboxImage = document.createElement('img');
+                lightboxImage.className = 'lightbox-image';
+                lightboxImage.src = currentImage.src;
+                lightboxImage.alt = currentImage.alt;
+                lightboxImage.style.cssText = `
+                  max-width: 100%;
+                  max-height: 95vh;
+                  border-radius: 6px;
+                  object-fit: contain;
+                  transition: opacity 0.3s ease;
                 `;
                 
                 const closeBtn = document.createElement('button');
-                closeBtn.className = 'lightbox-close';
                 closeBtn.innerHTML = '×';
-                closeBtn.onclick = () => {
-                  document.body.removeChild(lightbox);
-                  document.body.classList.remove('modal-open');
-                };
+                closeBtn.style.cssText = `
+                  position: absolute;
+                  top: 20px;
+                  right: 20px;
+                  background: rgba(0, 0, 0, 0.7);
+                  color: white;
+                  border: none;
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  font-size: 24px;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  z-index: 1002;
+                  transition: background 0.2s ease;
+                `;
                 
-                imageContainer.appendChild(img);
-                imageContainer.appendChild(lightboxControls);
-                lightbox.appendChild(imageContainer);
+                closeBtn.addEventListener('mouseenter', () => {
+                  closeBtn.style.background = 'rgba(0, 0, 0, 0.9)';
+                });
+                
+                closeBtn.addEventListener('mouseleave', () => {
+                  closeBtn.style.background = 'rgba(0, 0, 0, 0.7)';
+                });
+                
+                mediaContainer.appendChild(lightboxImage);
+                lightbox.appendChild(mediaContainer);
                 lightbox.appendChild(closeBtn);
                 
-                lightbox.onclick = (e) => {
-                  if (e.target === lightbox) {
-                    document.body.removeChild(lightbox);
-                    document.body.classList.remove('modal-open');
+                // Event listeners for lightbox
+                const closeLightbox = () => {
+                  if (lightbox && document.body.contains(lightbox)) {
+                    lightbox.style.opacity = '0';
+                    setTimeout(() => {
+                      if (lightbox && document.body.contains(lightbox)) {
+                        document.body.removeChild(lightbox);
+                        // Don't remove modal-open class if there are still other modals
+                        const remainingModals = document.querySelectorAll('.modal-overlay');
+                        if (remainingModals.length === 0) {
+                          document.body.classList.remove('modal-open');
+                        }
+                      }
+                      
+                      // Restore visibility of any hidden modal overlays
+                      const existingModals = document.querySelectorAll('.modal-overlay');
+                      existingModals.forEach(modal => {
+                        modal.style.visibility = 'visible';
+                      });
+                    }, 300);
                   }
                 };
                 
-                document.body.appendChild(lightbox);
+                closeBtn.addEventListener('click', closeLightbox);
+                lightbox.addEventListener('click', closeLightbox);
+                mediaContainer.addEventListener('click', (e) => e.stopPropagation());
                 
-                // Initialize lightbox zoom
-                let lightboxZoom = 1;
-                let lightboxTranslateX = 0;
-                let lightboxTranslateY = 0;
-                
-                function updateLightboxZoom() {
-                  img.style.transform = `scale(${lightboxZoom}) translate(${lightboxTranslateX}px, ${lightboxTranslateY}px)`;
-                  lightboxControls.querySelector('.lightbox-zoom-indicator').textContent = Math.round(lightboxZoom * 100) + '%';
-                  lightboxControls.querySelector('.lightbox-zoom-reset').style.display = lightboxZoom > 1 ? 'flex' : 'none';
-                }
-                
-                lightboxControls.querySelector('.lightbox-zoom-in').onclick = () => {
-                  if (lightboxZoom < 3) { lightboxZoom = Math.min(3, lightboxZoom + 0.25); updateLightboxZoom(); }
-                };
-                lightboxControls.querySelector('.lightbox-zoom-out').onclick = () => {
-                  if (lightboxZoom > 1) {
-                    lightboxZoom = Math.max(1, lightboxZoom - 0.25);
-                    if (lightboxZoom === 1) { lightboxTranslateX = 0; lightboxTranslateY = 0; }
-                    updateLightboxZoom();
-                  }
-                };
-                lightboxControls.querySelector('.lightbox-zoom-reset').onclick = () => {
-                  lightboxZoom = 1; lightboxTranslateX = 0; lightboxTranslateY = 0; updateLightboxZoom();
-                };
-                
-                updateLightboxZoom();
-                
-                // ESC to close
+                // ESC key support
                 const escHandler = (e) => {
                   if (e.key === 'Escape') {
-                    document.body.removeChild(lightbox);
-                    document.body.classList.remove('modal-open');
+                    closeLightbox();
                     document.removeEventListener('keydown', escHandler);
                   }
                 };
                 document.addEventListener('keydown', escHandler);
+                
+                // Add lightbox to body and ensure it's above everything
+                document.body.appendChild(lightbox);
+                document.body.classList.add('modal-open');
+                
+                // Ensure the lightbox is the topmost element
+                lightbox.style.zIndex = `${highestZIndex + 1000}`;
+                
+                // Fade in the lightbox
+                setTimeout(() => {
+                  if (lightbox) {
+                    lightbox.style.opacity = '1';
+                  }
+                }, 10);
               };
               
               // Dots
@@ -401,19 +428,14 @@ summary: Portfolyo sayılabilecek bir sayfa
               updateCarousel();
               updateZoom();
               
-              console.log('🎠 ✅ Compact carousel initialized:', carousel.id);
               
               // Test that buttons work
-              console.log('🎠 Testing compact carousel buttons for', carousel.id);
               if (nextBtn) {
-                console.log('🎠 Next button found and clickable');
               } else {
-                console.log('🎠 ❌ Next button not found');
               }
             }
           });
           
-          console.log('🎠 ✅ Modal carousel reinitialization complete');
           
           // Fallback verification - ensure at least basic click handlers work
           setTimeout(() => {
@@ -422,17 +444,11 @@ summary: Portfolyo sayılabilecek bir sayfa
               const nextBtns = carousel.querySelectorAll('.carousel-next, .carousel-next-compact');
               const prevBtns = carousel.querySelectorAll('.carousel-prev, .carousel-prev-compact');
               
-              console.log('🎠 Fallback check for', carousel.id, {
-                nextBtns: nextBtns.length,
-                prevBtns: prevBtns.length
-              });
               
               // Double-check event listeners are attached
               nextBtns.forEach(btn => {
                 if (!btn.onclick && !btn._hasClickListener) {
-                  console.log('🎠 🔧 Adding fallback click handler to next button');
                   btn.onclick = () => {
-                    console.log('🎠 Fallback next button clicked!');
                     // Trigger click on original functionality
                     const track = carousel.querySelector('.carousel-track, .carousel-track-compact');
                     if (track) {
@@ -453,9 +469,7 @@ summary: Portfolyo sayılabilecek bir sayfa
               
               prevBtns.forEach(btn => {
                 if (!btn.onclick && !btn._hasClickListener) {
-                  console.log('🎠 🔧 Adding fallback click handler to prev button');
                   btn.onclick = () => {
-                    console.log('🎠 Fallback prev button clicked!');
                     const track = carousel.querySelector('.carousel-track, .carousel-track-compact');
                     if (track) {
                       const slides = carousel.querySelectorAll('.carousel-slide, .carousel-slide-compact');
@@ -547,6 +561,15 @@ summary: Portfolyo sayılabilecek bir sayfa
     line-height: 40px;
     white-space: pre-line;
   }
+  
+  .project-date {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85em;
+    font-weight: 300;
+    margin-left: 12px;
+    margin-right: 8px;
+    opacity: 0.8;
+  }
   .maximize-btn {
     background: var(--btn-bg);
     color: var(--primary-text);
@@ -584,7 +607,7 @@ summary: Portfolyo sayılabilecek bir sayfa
   }
 
   .content-open {
-    max-height: 800px;
+    max-height: 1200px;
     opacity: 1;
     padding: 15px;
     transform: translateY(0);
@@ -930,6 +953,7 @@ summary: Portfolyo sayılabilecek bir sayfa
     
     <button type="button" class="collapsible">
       <span class="collapsible-title">{{ display_title }}{% if project.has_full_page %} <span class="language-indicator">{{ lang_indicators }}</span>{% endif %}</span>
+      <span class="project-date">{{ project.date | date: "%Y" }}</span>
       <span class="maximize-btn" style="display:none;">⛶</span>
     </button>
     <div class="content">

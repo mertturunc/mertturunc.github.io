@@ -589,9 +589,9 @@ pre>code {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    min-width: 40px; /* Genişletildi */
+    min-width: 20px; /* Genişletildi */
     max-width: 40px; /* Genişletildi */
-    width: 40px; /* Sabit genişlik */
+    width: 20px; /* Sabit genişlik */
     position: relative;
     overflow: hidden;
     /* Garanti görünürlük */
@@ -630,7 +630,7 @@ pre>code {
 /* Code Content Area - All Variants */
 .content-codeblock pre {
     border-radius: 0 4px 4px 0;
-    background-color: var(--code-bg);
+    background-color: var(--syntax-bg);
     flex: 1;
     margin: 0;
     padding: 16px 20px 14px 20px; /* Normal padding */
@@ -696,7 +696,7 @@ pre>code {
 .content-codeblock pre::-webkit-scrollbar-thumb,
 .content-codeblock .highlight::-webkit-scrollbar-thumb,
 .content-codeblock .highlighter-rouge::-webkit-scrollbar-thumb {
-    background: var(--muted-text);
+    background: var(--syntax-comment);
     border-radius: 4px;
     opacity: 0.6;
 }
@@ -704,7 +704,7 @@ pre>code {
 .content-codeblock pre::-webkit-scrollbar-thumb:hover,
 .content-codeblock .highlight::-webkit-scrollbar-thumb:hover,
 .content-codeblock .highlighter-rouge::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-color);
+    background: var(--syntax-accent);
     opacity: 0.8;
 }
 
@@ -719,16 +719,422 @@ pre>code {
 .content-codeblock .highlight,
 .content-codeblock .highlighter-rouge {
     scrollbar-width: thin;
-    scrollbar-color: var(--muted-text) rgba(0, 0, 0, 0.1);
+    scrollbar-color: var(--syntax-comment) rgba(0, 0, 0, 0.1);
 }
 
 /* Hover effects removed - no longer needed */
 
 /* ========================================
-   SYNTAX HIGHLIGHTING - MOVED TO DEDICATED FILE
+   SYNTAX HIGHLIGHTING - MASTER CONFIGURATION
    ======================================== */
-/* All syntax highlighting styles have been moved to _includes/syntax-highlighting.html */
-/* This includes: language chip colors, Rouge syntax classes, copy button styles */
+
+/* ========================================
+   THEME COLOR SCHEMES - GRUVBOX
+   ======================================== */
+
+/* Gruvbox Light Theme - Syntax Colors */
+:root {
+  /* Base Colors */
+  --syntax-bg: #f2e5bc;
+  --syntax-text: #3c3836;
+  
+  /* Syntax Element Colors */
+  --syntax-comment: #928374;
+  --syntax-keyword: #9d0006;
+  --syntax-string: #79740e;
+  --syntax-number: #b57614;
+  --syntax-function: #8f3f71;
+  --syntax-variable: #af3a03;
+  --syntax-operator: #3c3836;
+  --syntax-punctuation: #504945;
+  
+  /* Additional Syntax Colors */
+  --syntax-error: #af3a03;
+  --syntax-warning: #b57614;
+  --syntax-info: #427b58;
+  --syntax-debug: #8f3f71;
+  --syntax-accent: #d65d0e;
+  --syntax-accent-hover: #af3a03;
+}
+
+/* Gruvbox Dark Theme - Syntax Colors */
+html[data-theme="dark"] {
+  /* Base Colors */
+  --syntax-bg: #3c3836;
+  --syntax-text: #ebdbb2;
+  
+  /* Syntax Element Colors */
+  --syntax-comment: #928374;
+  --syntax-keyword: #fb4934;
+  --syntax-string: #b8bb26;
+  --syntax-number: #fabd2f;
+  --syntax-function: #d3869b;
+  --syntax-variable: #fe8019;
+  --syntax-operator: #ebdbb2;
+  --syntax-punctuation: #d5c4a1;
+  
+  /* Additional Syntax Colors */
+  --syntax-error: #fe8019;
+  --syntax-warning: #fabd2f;
+  --syntax-info: #83a598;
+  --syntax-debug: #d3869b;
+  --syntax-accent: #fe8019;
+  --syntax-accent-hover: #fd971f;
+}
+
+/* ========================================
+   LANGUAGE CHIP COLORS - VISUAL IDENTIFIERS
+   ======================================== */
+
+/* Web Technologies */
+.type-html {
+  background-color: #DE4B25;
+  color: #FFFFFF;
+}
+.type-html:after { content: 'HTML'; }
+
+.type-css {
+  background-color: #3B9ADB;
+  color: #FFFFFF;
+}
+.type-css:after { content: 'CSS'; }
+
+.type-sass {
+  background-color: #CD6799;
+  color: #FFFFFF;
+}
+.type-sass:after { content: 'SASS'; }
+
+.type-javascript {
+  background-color: #F1D63B;
+  color: #2D2D2B;
+}
+.type-javascript:after { content: 'JavaScript'; }
+
+/* Server-Side Languages */
+.type-php {
+  background-color: #858FBC;
+  color: #21232F;
+}
+.type-php:after { content: 'PHP'; }
+
+.type-python {
+  background-color: #3776AB;
+  color: #FFFFFF;
+}
+.type-python:after { content: 'Python'; }
+
+/* Data & Configuration */
+.type-json {
+  background-color: #FF6B35;
+  color: #FFFFFF;
+}
+.type-json:after { content: 'JSON'; }
+
+.type-sql {
+  background-color: #597C90;
+  color: #FFFFFF;
+}
+.type-sql:after { content: 'SQL'; }
+
+/* Shell & Terminal */
+.type-bash {
+  background-color: #2D2D2B;
+  color: #FFFFFF;
+}
+.type-bash:after { content: 'Bash'; }
+
+/* Plain Text */
+.type-text {
+  background-color: #D6D6D6;
+  color: #2D2D2B;
+}
+.type-text:after { content: 'Text'; }
+
+/* ========================================
+   ROUGE SYNTAX HIGHLIGHTING CLASSES
+   ======================================== */
+
+/* Comments */
+.highlight .c { color: var(--syntax-comment); font-style: italic; } /* Comment */
+.highlight .cm { color: var(--syntax-comment); font-style: italic; } /* Comment.Multiline */
+.highlight .cp { color: var(--syntax-comment); font-weight: bold; } /* Comment.Preproc */
+.highlight .c1 { color: var(--syntax-comment); font-style: italic; } /* Comment.Single */
+.highlight .cs { color: var(--syntax-comment); font-weight: bold; font-style: italic; } /* Comment.Special */
+
+/* Keywords */
+.highlight .k { color: var(--syntax-keyword); font-weight: bold; } /* Keyword */
+.highlight .kc { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Constant */
+.highlight .kd { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Declaration */
+.highlight .kn { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Namespace */
+.highlight .kp { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Pseudo */
+.highlight .kr { color: var(--syntax-keyword); font-weight: bold; } /* Keyword.Reserved */
+.highlight .kt { color: var(--syntax-function); font-weight: bold; } /* Keyword.Type */
+.highlight .ow { color: var(--syntax-keyword); font-weight: bold; } /* Operator.Word */
+
+/* Strings */
+.highlight .s { color: var(--syntax-string); } /* Literal.String */
+.highlight .sb { color: var(--syntax-string); } /* Literal.String.Backtick */
+.highlight .sc { color: var(--syntax-string); } /* Literal.String.Char */
+.highlight .sd { color: var(--syntax-string); } /* Literal.String.Doc */
+.highlight .s2 { color: var(--syntax-string); } /* Literal.String.Double */
+.highlight .se { color: var(--syntax-string); } /* Literal.String.Escape */
+.highlight .sh { color: var(--syntax-string); } /* Literal.String.Heredoc */
+.highlight .si { color: var(--syntax-string); } /* Literal.String.Interpol */
+.highlight .sx { color: var(--syntax-string); } /* Literal.String.Other */
+.highlight .sr { color: var(--syntax-string); } /* Literal.String.Regex */
+.highlight .s1 { color: var(--syntax-string); } /* Literal.String.Single */
+.highlight .ss { color: var(--syntax-string); } /* Literal.String.Symbol */
+
+/* Numbers */
+.highlight .m { color: var(--syntax-number); } /* Literal.Number */
+.highlight .mf { color: var(--syntax-number); } /* Literal.Number.Float */
+.highlight .mh { color: var(--syntax-number); } /* Literal.Number.Hex */
+.highlight .mi { color: var(--syntax-number); } /* Literal.Number.Integer */
+.highlight .mo { color: var(--syntax-number); } /* Literal.Number.Oct */
+.highlight .il { color: var(--syntax-number); } /* Literal.Number.Integer.Long */
+
+/* Functions & Names */
+.highlight .na { color: var(--syntax-function); } /* Name.Attribute */
+.highlight .nb { color: var(--syntax-function); } /* Name.Builtin */
+.highlight .nc { color: var(--syntax-function); font-weight: bold; } /* Name.Class */
+.highlight .nd { color: var(--syntax-function); } /* Name.Decorator */
+.highlight .nf { color: var(--syntax-function); font-weight: bold; } /* Name.Function */
+.highlight .nl { color: var(--syntax-function); } /* Name.Label */
+.highlight .nn { color: var(--syntax-function); } /* Name.Namespace */
+.highlight .nt { color: var(--syntax-keyword); } /* Name.Tag */
+.highlight .bp { color: var(--syntax-function); } /* Name.Builtin.Pseudo */
+
+/* Variables */
+.highlight .nv { color: var(--syntax-variable); } /* Name.Variable */
+.highlight .vc { color: var(--syntax-variable); } /* Name.Variable.Class */
+.highlight .vg { color: var(--syntax-variable); } /* Name.Variable.Global */
+.highlight .vi { color: var(--syntax-variable); } /* Name.Variable.Instance */
+
+/* Operators & Punctuation */
+.highlight .o { color: var(--syntax-operator); } /* Operator */
+
+/* Generic Elements */
+.highlight .err { color: var(--syntax-error); } /* Error */
+.highlight .gd { color: var(--syntax-variable); } /* Generic.Deleted */
+.highlight .ge { font-style: italic; } /* Generic.Emph */
+.highlight .gr { color: var(--syntax-error); } /* Generic.Error */
+.highlight .gh { color: var(--syntax-text); font-weight: bold; } /* Generic.Heading */
+.highlight .gi { color: var(--syntax-string); } /* Generic.Inserted */
+.highlight .go { color: var(--syntax-comment); } /* Generic.Output */
+.highlight .gp { color: var(--syntax-comment); } /* Generic.Prompt */
+.highlight .gs { font-weight: bold; } /* Generic.Strong */
+.highlight .gu { color: var(--syntax-comment); font-weight: bold; } /* Generic.Subheading */
+.highlight .gt { color: var(--syntax-error); } /* Generic.Traceback */
+
+/* Constants & Exceptions */
+.highlight .no { color: var(--syntax-variable); } /* Name.Constant */
+.highlight .ne { color: var(--syntax-variable); font-weight: bold; } /* Name.Exception */
+.highlight .ni { color: var(--syntax-variable); } /* Name.Entity */
+
+/* Whitespace */
+.highlight .w { color: var(--syntax-text); } /* Text.Whitespace */
+
+/* ========================================
+   LANGUAGE-SPECIFIC BEHAVIORS
+   ======================================== */
+
+/* Languages that should NOT wrap (code-like) */
+.highlight[data-lang="json"] pre,
+.highlight[data-lang="javascript"] pre,
+.highlight[data-lang="js"] pre,
+.highlight[data-lang="typescript"] pre,
+.highlight[data-lang="ts"] pre,
+.highlight[data-lang="xml"] pre,
+.highlight[data-lang="html"] pre,
+.highlight[data-lang="css"] pre,
+.highlight[data-lang="scss"] pre,
+.highlight[data-lang="sass"] pre,
+.highlight[data-lang="sql"] pre,
+.highlight[data-lang="mysql"] pre,
+.highlight[data-lang="postgresql"] pre,
+.highlight[data-lang="yaml"] pre,
+.highlight[data-lang="yml"] pre,
+.highlight[data-lang="toml"] pre,
+.highlight[data-lang="ini"] pre,
+.highlight[data-lang="config"] pre,
+.highlight[data-lang="bash"] pre,
+.highlight[data-lang="shell"] pre,
+.highlight[data-lang="sh"] pre,
+.highlight[data-lang="zsh"] pre,
+.highlight[data-lang="powershell"] pre,
+.highlight[data-lang="cmd"] pre,
+.highlight[data-lang="terminal"] pre,
+.highlight[data-lang="console"] pre,
+.highlight[data-lang="python"] pre,
+.highlight[data-lang="py"] pre,
+.highlight[data-lang="php"] pre,
+.highlight[data-lang="ruby"] pre,
+.highlight[data-lang="rb"] pre,
+.highlight[data-lang="java"] pre,
+.highlight[data-lang="c"] pre,
+.highlight[data-lang="cpp"] pre,
+.highlight[data-lang="csharp"] pre,
+.highlight[data-lang="cs"] pre {
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Languages that SHOULD wrap (text-like) */
+.highlight[data-lang="markdown"] pre,
+.highlight[data-lang="md"] pre,
+.highlight[data-lang="text"] pre,
+.highlight[data-lang="txt"] pre,
+.highlight[data-lang="plain"] pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-x: hidden;
+}
+
+/* ========================================
+   STANDALONE CODE BLOCKS (NOT IN CHIP STRUCTURE)
+   ======================================== */
+
+.highlight {
+  background: var(--syntax-bg);
+  border-radius: 4px;
+  margin: 1em -30px;
+  padding: 0;
+  overflow-x: auto;
+  position: relative;
+}
+
+.highlight pre {
+  background: none;
+  margin: 0;
+  padding: 16px 30px 14px 30px;
+  border-radius: 0;
+  border: none;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 100%;
+  transition: padding 0.2s ease;
+}
+
+/* ========================================
+   COPY BUTTON STYLING
+   ======================================== */
+
+.copy-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--syntax-accent);
+  color: var(--syntax-bg);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'body', sans-serif;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.copy-button:hover {
+  background: var(--syntax-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.copy-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.copy-button.copied {
+  background: #28a745;
+  color: white;
+}
+
+.copy-button.copied:hover {
+  background: #218838;
+}
+
+/* Dark Theme Copy Button Adjustments */
+html[data-theme="dark"] .copy-button {
+  color: var(--syntax-bg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] .copy-button:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Mobile Responsive Copy Button */
+@media (max-width: 768px) {
+  .copy-button {
+    opacity: 1;
+    top: 6px;
+    right: 6px;
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+}
+
+/* ========================================
+   RESPONSIVE DESIGN FOR SYNTAX HIGHLIGHTING
+   ======================================== */
+
+@media (max-width: 768px) {
+  .content-codeblock {
+    flex-direction: column;
+  }
+  
+  .codeblock-chip {
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 32px;
+    border-radius: 4px 4px 0 0;
+  }
+  
+  .codeblock-chip:after {
+    transform: none;
+    position: static;
+    content: attr(data-lang);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .content-codeblock pre,
+  .content-codeblock .highlight,
+  .content-codeblock .highlighter-rouge {
+    border-radius: 0 0 4px 4px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .highlight {
+    margin: 1em -15px;
+  }
+  
+  .highlight pre {
+    padding: 12px 15px 10px 15px;
+  }
+  
+  .content-codeblock pre {
+    padding: 12px 15px 10px 15px;
+  }
+}
 
 /* Table Styles */
 table {
@@ -782,34 +1188,7 @@ tbody tr:hover td {
     padding: 6px 8px;
   }
   
-  /* Responsive chip styling */
-  .content-codeblock {
-    flex-direction: column;
-  }
-  
-  .codeblock-chip {
-    min-width: 100%;
-    max-width: 100%;
-    min-height: 32px;
-    border-radius: 4px 4px 0 0;
-  }
-  
-  .codeblock-chip:after {
-    transform: none;
-    position: static;
-    content: attr(data-lang);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  
-  .content-codeblock pre,
-  .content-codeblock .highlight,
-  .content-codeblock .highlighter-rouge {
-    border-radius: 0 0 4px 4px;
-    max-width: 100%;
-  }
+
   
   /* Stack table on very small screens */
   @media (max-width: 480px) {
@@ -1800,8 +2179,8 @@ html[data-theme="dark"] .carousel-nav:hover {
 }
 
 .carousel-control-btn {
-  background: rgba(0, 0, 0, 0.7);
-  color: var(--primary-bg);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
   border: none;
   width: 40px;
   height: 40px;
@@ -1812,16 +2191,24 @@ html[data-theme="dark"] .carousel-nav:hover {
   justify-content: center;
   transition: all 0.2s ease;
   backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-control-btn svg {
+  color: white;
+  fill: none;
+  stroke: white;
 }
 
 .carousel-control-btn:hover {
   background: var(--accent-color);
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .zoom-indicator {
-  background: rgba(0, 0, 0, 0.7);
-  color: var(--primary-bg);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 12px;
@@ -1829,22 +2216,32 @@ html[data-theme="dark"] .carousel-nav:hover {
   backdrop-filter: blur(4px);
   min-width: 45px;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Dark theme adjustments for controls */
 html[data-theme="dark"] .carousel-control-btn {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--primary-text);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] .carousel-control-btn svg {
+  color: white;
+  fill: none;
+  stroke: white;
 }
 
 html[data-theme="dark"] .carousel-control-btn:hover {
   background: var(--accent-color);
   color: var(--primary-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 html[data-theme="dark"] .zoom-indicator {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--primary-text);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 /* Fullscreen Lightbox */
@@ -1855,11 +2252,12 @@ html[data-theme="dark"] .zoom-indicator {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.95);
-  z-index: 10000;
+  z-index: 99999999;
   display: flex;
   align-items: center;
   justify-content: center;
   animation: fadeIn 0.3s ease;
+  pointer-events: auto;
 }
 
 .lightbox-image-container {
@@ -2210,8 +2608,7 @@ html[data-theme="dark"] .zoom-indicator {
   border: 1px solid var(--border-color);
   /* Ensure proper positioning for absolutely positioned dots */
   min-height: 200px;
-  /* Better space utilization */
-  aspect-ratio: 16/10;
+  /* Remove fixed aspect ratio to allow images to display properly */
 }
 
 .carousel-container-compact {
@@ -2241,6 +2638,7 @@ html[data-theme="dark"] .zoom-indicator {
 
 .carousel-image-compact {
   width: 100%;
+  height: auto;
   display: block;
   max-height: none;
   object-fit: contain;
@@ -2386,8 +2784,8 @@ html[data-theme="dark"] .carousel-nav-compact:hover {
 }
 
 .carousel-control-btn-compact {
-  background: rgba(0, 0, 0, 0.7);
-  color: var(--primary-bg);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
   border: none;
   width: 30px;
   height: 30px;
@@ -2398,16 +2796,24 @@ html[data-theme="dark"] .carousel-nav-compact:hover {
   justify-content: center;
   transition: all 0.2s ease;
   backdrop-filter: blur(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-control-btn-compact svg {
+  color: white;
+  fill: none;
+  stroke: white;
 }
 
 .carousel-control-btn-compact:hover {
   background: var(--accent-color);
   transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
 }
 
 .zoom-indicator-compact {
-  background: rgba(0, 0, 0, 0.7);
-  color: var(--primary-bg);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
   padding: 3px 6px;
   border-radius: 4px;
   font-size: 10px;
@@ -2415,22 +2821,32 @@ html[data-theme="dark"] .carousel-nav-compact:hover {
   backdrop-filter: blur(4px);
   min-width: 35px;
   text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* Dark theme adjustments for compact controls */
 html[data-theme="dark"] .carousel-control-btn-compact {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--primary-text);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] .carousel-control-btn-compact svg {
+  color: white;
+  fill: none;
+  stroke: white;
 }
 
 html[data-theme="dark"] .carousel-control-btn-compact:hover {
   background: var(--accent-color);
   color: var(--primary-bg);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
 }
 
 html[data-theme="dark"] .zoom-indicator-compact {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--primary-text);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
 /* Compact Dots Indicator */
