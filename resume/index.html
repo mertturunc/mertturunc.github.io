@@ -7,120 +7,264 @@ sitemap: false
 {% include language-utils.html %}
 
 <style>
-  figure {
-    margin: 96px -124px 24px;
-    padding: 48px 96px;
-    border-radius: 8px;
-    background: #FFF;
-    width: 792px;
-  }
-
-  figure>img {
-    width: 100%;
+  /* Compact resume styling */
+  .resume-container {
+    max-width: 800px;
     margin: 0 auto;
+    padding: 0 20px;
   }
 
-  figure.nobg {
-    background: transparent;
+  .header-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
   }
 
-  figure.icon {
-    background: transparent;
+  .profile-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    flex-shrink: 0;
   }
 
-  figure.icon>img {
-    background: #FFF;
-    width: 228px;
-    border-radius: 36px;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.1);
+  .header-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
-  figure.full {
-    padding: 0;
+  .name {
+    font-size: 1.6em;
+    font-weight: 700;
+    margin: 0;
+    color: var(--primary-text);
   }
 
-  .table {
+  .title {
+    font-size: 0.95em;
+    color: var(--accent-color);
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .contact-info {
     font-size: 12px;
-    line-height: 25px;
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    grid-gap: 1px 10px;
+    color: var(--secondary-text);
+    line-height: 1.3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
   }
 
-  .table>div:nth-child(2n+1) {
-    font-weight: 300;
+  .contact-info a {
+    color: var(--accent-color);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent-color);
   }
 
-  .ikili {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .summary,
-  .summary1 {
+  .download-link {
+    display: inline-block;
     font-size: 12px;
-    width: 275px;
-    height: fit-content;
-    line-height: 1.25em;
-    padding-bottom: 10px;
-    min-height: 6em;
+    margin-left: auto;
   }
 
-  br {
-    content: "";
-    margin: 3.935em;
-    display: block;
-    font-size: 69%;
+  /* Section styling */
+  .section {
+    margin-bottom: 20px;
   }
 
-  p {
+  .section-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--primary-text);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 4px;
+  }
+
+  /* Compact entry styling */
+  .entry {
+    margin-bottom: 12px;
+  }
+
+  .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+
+  .entry-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--primary-text);
     margin: 0;
   }
 
-  img {
-    margin-bottom: 1.5em;
+  .entry-subtitle {
+    font-size: 0.9em;
+    color: var(--accent-color);
+    margin: 0;
   }
 
-  @media print {
-    .svglogo,
-    .gh-stars {
-      color: black;
+  .entry-date {
+    font-size: 0.8em;
+    color: var(--muted-text);
+    font-weight: 500;
+  }
+
+  .entry-content {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--secondary-text);
+    margin: 0 0 4px 0;
+  }
+
+  .entry-meta {
+    font-size: 12px;
+    color: var(--muted-text);
+    margin: 0;
+  }
+
+  /* Skills grid */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+  }
+
+  .skill-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    padding: 4px 0;
+  }
+
+  .skill-name {
+    color: var(--primary-text);
+  }
+
+  .skill-level {
+    color: var(--accent-color);
+    font-weight: 500;
+  }
+
+  /* Activities and interests */
+  .activities-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 12px;
+    font-size: 13px;
+  }
+
+  .activities-list > div:nth-child(odd) {
+    font-weight: 600;
+    color: var(--accent-color);
+  }
+
+  .activities-list > div:nth-child(even) {
+    color: var(--secondary-text);
+  }
+
+  .interests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .interest-category {
+    font-size: 13px;
+  }
+
+  .interest-category strong {
+    color: var(--primary-text);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .interest-category ul {
+    margin: 0;
+    padding-left: 16px;
+  }
+
+  .interest-category li {
+    margin: 2px 0;
+    color: var(--secondary-text);
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .header-section {
+      flex-direction: column;
+      text-align: center;
+      gap: 16px;
+      align-items: center;
     }
-  }
 
-  /* Eklenen Stil Kuralları */
-  h1,
-  h2 {
-    margin: 1em 0 0.5em !important; 
-  }
+    .profile-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+    }
 
-  .egitim {
-    margin: 0.5em 0 0.5em !important; 
-  }
+    .header-info {
+      align-items: center;
+      text-align: center;
+    }
 
-  h4, h6 {
-    color: #2a748c;
-    margin-top: 0.25em !important;
-  }
+    .contact-info {
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
-  ul>li,
-  ol>li {
-    margin: 0em 0em 1em;
-  }
+    .download-link {
+      margin-left: 0;
+      margin-top: 4px;
+    }
 
-  @media (max-width: 600px) {
-    .ikili {
+    .skills-grid {
       grid-template-columns: 1fr;
     }
+
+    .interests-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .entry-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+
+    .activities-list {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
   }
 
-  .deneyim {
-    display: flex;
-    flex-direction: column;
-    margin-top: 0.25em;
+  @media (max-width: 480px) {
+    .resume-container {
+      padding: 0 12px;
+    }
+
+    .name {
+      font-size: 1.6em;
+    }
   }
-  .table {
-    margin-top: auto;
+
+  /* Print styles */
+  @media print {
+    .resume-container {
+      max-width: none;
+      padding: 0;
+    }
   }
 </style>
 
@@ -131,238 +275,213 @@ sitemap: false
   <div class="spacer"></div>
 </ul>
 
-<h1 style="margin: 1em 0 0 0;">Mert Turunç</h1>
-<h6>CBS</h6>
-
-<img src="/i/vesikalık.jpg" style="height: 175px">
-<p></p>
-<a href="mailto:mertturunc@gmail.com">mertturunc {at} gmail {dot} com</a> | +90 (530) - 922-5429 | İstanbul
-<p><a href="/resume/cv.pdf">💾</a></p>
-
-<h1>Eğitim</h1>
-<div class="ikili">
-  <div class="egitim">
-    <h4>Yüksek Lisans</h4>
-    <div class="table">
-      <div>Okul</div>
-      <div>İstanbul Teknik Üniversitesi</div>
-      <div>Lokasyon</div>
-      <div>İstanbul</div>
-      <div>Program</div>
-      <div>Coğrafi Bilgi Teknolojileri</div>
-      <div>Yıl</div>
-      <div>2023 - </div>
-    </div>
-  </div>
-</div>
-
-<h4>Lisans</h4>
-<div class="ikili">
-  <div class="egitim">
-    <div class="table">
-      <div>Okul</div>
-      <div>Necmettin Erbakan Üniversitesi</div>
-      <div>Lokasyon</div>
-      <div>Konya</div>
-      <div>Bölüm</div>
-      <div>Harita Mühendisliği</div>
-      <div>Yıl</div>
-      <div>2015 - 2023</div>
+<div class="resume-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <img src="/i/vesikalık.jpg" alt="Mert Turunç" class="profile-image">
+    <div class="header-info">
+      <h1 class="name">Mert Turunç</h1>
+      <div class="title">CBS Uzmanı | Harita Mühendisi</div>
+      <div class="contact-info">
+        <a href="mailto:mertturunc@gmail.com">mertturunc[at]gmail[dot]com</a>
+        <span>+90 (530) 922-5429</span>
+        <span>İstanbul, Türkiye</span>
+        <a href="/resume/cv.pdf" class="download-link">📄 PDF</a>
+      </div>
     </div>
   </div>
 
-  <div class="egitim">
-    <div class="table">
+  <!-- Education Section -->
+  <div class="section">
+    <h2 class="section-title">Eğitim</h2>
+    
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">Yüksek Lisans</div>
+          <div class="entry-subtitle">Coğrafi Bilgi Teknolojileri</div>
+        </div>
+        <div class="entry-date">İstanbul</div>
+      </div>
+      <div class="entry-content">İstanbul Teknik Üniversitesi</div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">Lisans</div>
+          <div class="entry-subtitle">Harita Mühendisliği</div>
+        </div>
+        <div class="entry-date">Konya</div>
+      </div>
+      <div class="entry-content">Necmettin Erbakan Üniversitesi</div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">Lise</div>
+          <div class="entry-subtitle">Matematik - Fen</div>
+        </div>
+        <div class="entry-date">Tekirdağ</div>
+      </div>
+      <div class="entry-content">Namık Kemal Lisesi</div>
     </div>
   </div>
 
-  <div class="egitim">
-    <h4>Lise</h4>
-    <div class="table">
-      <div>Okul</div>
-      <div>Namık Kemal Lisesi</div>
-      <div>Lokasyon</div>
-      <div>Süleymanpaşa, Tekirdağ</div>
-      <div>Program</div>
-      <div>Matematik - Fen</div>
-      <div>Yıl</div>
-      <div>2011 - 2015</div>
+  <!-- Experience Section -->
+  <div class="section">
+    <h2 class="section-title">Deneyim</h2>
+    
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">Parametre Araştırma Bilişim</div>
+          <div class="entry-subtitle">CBS Uzmanı</div>
+        </div>
+        <div class="entry-date">Mayıs '24 - Günümüz</div>
+      </div>
+      <div class="entry-content">ArcGIS Enterprise ile belediye dijital dönüşüm projelerinde PoC geliştirme, kurulum ve yapılandırma. Müşteri ortamlarında sorun giderme ve iş analizleri.</div>
+      <div class="entry-meta">Şişli, İstanbul | İş Geliştirme</div>
     </div>
-  </div>
-</div>
 
-<h1>Deneyim</h1>
-<div class="ikili">
-  <div class="deneyim">
-    <h4>Parametre Araştırma Bilişim</h4>
-    <div class="summary">
-      <ul>
-        <li>ArcGIS Enterprise ile belediye dijital dönüşüm projelerinde PoC geliştirme ve çözüm doğrulama süreçlerini yönetti.</li>
-        <li>Müşteri ortamlarında ArcGIS Enterprise kurulumu, yapılandırması ve sorun giderme işlemlerini yönetti.</li>
-        <li>Paydaş gereksinimlerini entegre CBS çözümlerine dönüştürmek için iş analizleri gerçekleştirdi.</li>
-        <li>Eğitim ve dokümantasyon dahil olmak üzere projeleri uçtan uca hayata geçirdi.</li>
-      </ul>
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">Mavi Harita</div>
+          <div class="entry-subtitle">Topoğraf</div>
+        </div>
+        <div class="entry-date">Haziran '21 - Ağustos '23</div>
+      </div>
+      <div class="entry-content">GNSS, total station ve UAV ile arazi ölçümleri. Netcad ve AutoCAD ile ölçüm raporları. Doğal gaz altyapı projelerinde aplikasyon ve as-built kontrol.</div>
+      <div class="entry-meta">Süleymanpaşa, Tekirdağ</div>
     </div>
-    <div class="table">
-      <div>Ünvan</div>
-      <div>CBS Uzmanı</div>
-      <div>Lokasyon</div>
-      <div>Şişli, İstanbul</div>
-      <div>Departman</div>
-      <div>İş Geliştirme</div>
-      <div>Yıl</div>
-      <div>Mayıs '24 - Günümüz</div>
-    </div>
-  </div>
 
-  <div class="deneyim">
-    <h4>Mavi Harita</h4>
-    <div class="summary">
-      <ul>
-        <li>GNSS, total station ve UAV gibi ekipmanlarla arazi ölçümleri gerçekleştirdi; doğal gaz altyapı projelerinde aplikasyon ve as-built kontrol çalışmaları yürüttü.</li>
-        <li>Netcad ve AutoCAD ile ölçüm raporları ve çizimleri hazırladı; saha ve ofis ekipleriyle koordineli çalıştı.</li>
-        <li>Müşteri ihtiyaçlarını analiz ederek süreci yönetti, ölçüm verilerini düzenli arşivledi ve ekipman kalibrasyonlarını sağladı.</li>
-      </ul>
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">Süleymanpaşa Belediyesi</div>
+          <div class="entry-subtitle">Stajyer</div>
+        </div>
+        <div class="entry-date">Temmuz '19 - Eylül '19</div>
+      </div>
+      <div class="entry-content">İmar ve Şehircilik Müdürlüğü'nde arazi çalışmaları. Global Mapper ile ortofoto haritalar üretimi.</div>
+      <div class="entry-meta">Süleymanpaşa, Tekirdağ | İmar ve Şehircilik Müdürlüğü</div>
     </div>
-    <div class="table">
-      <div>Ünvan</div>
-      <div>Topoğraf</div>
-      <div>Lokasyon</div>
-      <div>Süleymanpaşa, Tekirdağ</div>
-      <div>Departman</div>
-      <div>-</div>
-      <div>Yıl</div>
-      <div>Haziran '21 - Ağustos '23</div>
-    </div>
-  </div>
 
-  <div class="deneyim">
-    <h4>Süleymanpaşa Belediyesi</h4>
-    <div class="summary">
-      <ul>
-        <li>İmar ve Şehircilik Müdürlüğü dışında Etüd Proje Müdürlüğü ile arazi çalışmalarında bulundu.</li>
-        <li>Kurum içerisinde kullanılmak üzere Global Mapper ile ortofoto haritalar üretti.</li>
-        <li>Personel yükünü azaltmak adına resmi yazışmaları hazırlayarak yardımcı oldu.</li>
-      </ul>
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">TESKİ</div>
+          <div class="entry-subtitle">Stajyer</div>
+        </div>
+        <div class="entry-date">Haziran '18 - Temmuz '18</div>
+      </div>
+      <div class="entry-content">NetCAD CBS modülü ile web servisi data entegrasyonu.</div>
+      <div class="entry-meta">Süleymanpaşa, Tekirdağ | CBS</div>
     </div>
-    <div class="table">
-      <div>Ünvan</div>
-      <div>Stajyer</div>
-      <div>Lokasyon</div>
-      <div>Süleymanpaşa, Tekirdağ</div>
-      <div>Departman</div>
-      <div>İmar ve Şehircilik Müdürlüğü</div>
-      <div>Yıl</div>
-      <div>Temmuz '19 - Eylül '19</div>
+
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">CK Enerji Boğaziçi Elektrik</div>
+          <div class="entry-subtitle">CBS Entegrasyon Operatörü</div>
+        </div>
+        <div class="entry-date">Ağustos '17 - Eylül '17</div>
+      </div>
+      <div class="entry-content">CBS entegrasyon işlemleri ve sözleşmeli personel olarak çalışma.</div>
+      <div class="entry-meta">Beyoğlu, İstanbul | CBS Entegrasyon</div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-title">Emi Grup Bilgi Teknolojileri A.Ş.</div>
+          <div class="entry-subtitle">Stajyer</div>
+        </div>
+        <div class="entry-date">Haziran '17</div>
+      </div>
+      <div class="entry-content">ArcGIS ve Oracle SQL Developer ile CBS departmanında çalışma.</div>
+      <div class="entry-meta">Beyoğlu, İstanbul | CBS Entegrasyon</div>
     </div>
   </div>
 
-  <div class="deneyim">
-    <h4>TESKİ</h4>
-    <div class="summary">
-      <ul>
-        <li>NetCAD'in CBS modülünü kullanarak kurumun web servisi için data entegrasyonu yaptı.</li>
-      </ul>
-    </div>
-    <div class="table">
-      <div>Ünvan</div>
-      <div>Stajyer</div>
-      <div>Lokasyon</div>
-      <div>Süleymanpaşa, Tekirdağ</div>
-      <div>Departman</div>
-      <div>CBS</div>
-      <div>Yıl</div>
-      <div>Haziran '18 - Temmuz '18</div>
+  <!-- Skills Section -->
+  <div class="section">
+    <h2 class="section-title">Beceriler</h2>
+    <div class="skills-grid">
+      <div class="skill-item">
+        <span class="skill-name">ArcGIS</span>
+        <span class="skill-level">★★★☆☆</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-name">NetCAD</span>
+        <span class="skill-level">★★★★☆</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-name">PostgreSQL</span>
+        <span class="skill-level">★★★☆☆</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-name">Agisoft Metashape</span>
+        <span class="skill-level">★★★★☆</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-name">AutoCAD</span>
+        <span class="skill-level">★★★☆☆</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-name">Pix4D</span>
+        <span class="skill-level">★★★☆☆</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-name">Adobe Creative Suite</span>
+        <span class="skill-level">★★★★☆</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-name">Microsoft Office</span>
+        <span class="skill-level">★★★☆☆</span>
+      </div>
     </div>
   </div>
 
-  <div class="deneyim">
-    <h4>CK Enerji Boğaziçi Elektrik</h4>
-    <div class="summary">
-      Bir aylık stajın sonunda sözleşmeli personel olarak çalışmaya başladı. Stajyer iken yaptığım entegrasyon işine devam etti.
-    </div>
-    <div class="table">
-      <div>Ünvan</div>
-      <div>CBS Entegrasyon Operatörü</div>
-      <div>Lokasyon</div>
-      <div>Beyoğlu, İstanbul</div>
-      <div>Departman</div>
-      <div>CBS Entegrasyon</div>
-      <div>Yıl</div>
-      <div>Ağustos '17 - Eylül '17</div>
+  <!-- Activities Section -->
+  <div class="section">
+    <h2 class="section-title">Faaliyetler</h2>
+    <div class="activities-list">
+      <div>2021</div>
+      <div>18. Türkiye Harita Bilimsel ve Teknik Kurultayı</div>
+      <div>2020</div>
+      <div>Mustafa Akgül Özgür Yazılım Kış Kampı - PostgreSQL Eğitimi</div>
+      <div>2019</div>
+      <div>TUJK Ulusal Jeodezi Çalıştayı</div>
+      <div>2019</div>
+      <div>TMMOB 6. Coğrafi Bilgi Sistemleri Kongresi</div>
+      <div>2018</div>
+      <div>Süleymanpaşa Belediyesi CBS Çalıştayı</div>
     </div>
   </div>
 
-  <div class="deneyim">
-    <h4>Emi Grup Bilgi Teknolojileri A.Ş.</h4>
-    <div class="summary">
-      CBS departmanında stajyer olarak çalıştı. ArcGIS ve Oracle SQL Developer programlarını kullandı.
+  <!-- Interests Section -->
+  <div class="section">
+    <h2 class="section-title">Hobiler ve İlgi Alanları</h2>
+    <div class="interests-grid">
+      <div class="interest-category">
+        <strong>Kişisel</strong>
+        <ul>
+          <li>Formula 1 yarışlarını izlemek</li>
+          <li>Amatör fotoğrafçılık</li>
+          <li>Müzik dinlemek</li>
+        </ul>
+      </div>
+      <div class="interest-category">
+        <strong>Profesyonel</strong>
+        <ul>
+          <li>Coğrafi Bilgi Sistemleri</li>
+          <li>Kartografya</li>
+          <li>Grafik Tasarım</li>
+        </ul>
+      </div>
     </div>
-    <div class="table">
-      <div>Ünvan</div>
-      <div>Stajyer</div>
-      <div>Lokasyon</div>
-      <div>Beyoğlu, İstanbul</div>
-      <div>Departman</div>
-      <div>CBS Entegrasyon</div>
-      <div>Yıl</div>
-      <div>Haziran '17 - Haziran '17</div>
-    </div>
-  </div>
-</div>
-
-<h1>Faaliyetler</h1>
-<div class="table">
-  <b>2021</b>
-  <div>18. Türkiye Harita Bilimsel ve Teknik Kurultayı</div>
-  <b>2020</b>
-  <div>Mustafa Akgül Özgür Yazılım Kış Kampı - PostgreSQL Eğitimi</div>
-  <b>2019</b>
-  <div>TUJK Ulusal Jeodezi Çalıştayı</div>
-  <b>2019</b>
-  <div>TMMOB 6. Coğrafi Bilgi Sistemleri Kongresi</div>
-  <b>2018</b>
-  <div>Süleymanpaşa Belediyesi CBS Çalıştayı</div>
-</div>
-
-<h1>Beceriler</h1>
-<div class="ikili">
-  <div class="table">
-    <div>★★★☆☆</div>
-    <div>Microsoft Office Suite</div>
-    <div>★★★☆☆</div>
-    <div>PostgreSQL</div>
-    <div>★★★★☆</div>
-    <div>Adobe Creative Suite</div>
-    <div>★★★★☆</div>
-    <div>NetCAD</div>
-  </div>
-  <div class="table">
-    <div>★★★☆☆</div>
-    <div>ArcGIS</div>
-    <div>★★★★☆</div>
-    <div>Agisoft Metashape</div>
-    <div>★★★☆☆</div>
-    <div>Pix4D</div>
-    <div>★★★☆☆</div>
-    <div>AutoCAD</div>
-  </div>
-</div>
-
-<h1>Hobiler ve İlgi Alanları</h1>
-<div class="ikili">
-  <div class="summary">
-    <ul>
-      <li>Formula 1 yarışlarını izlemek</li>
-      <li>Amatör fotoğrafçılık</li>
-      <li>Müzik dinlemek</li>
-    </ul>
-  </div>
-  <div class="summary">
-    <ul>
-      <li>Coğrafi Bilgi Sistemleri</li>
-      <li>Kartografya</li>
-      <li>Grafik Tasarım</li>
-    </ul>
   </div>
 </div>
