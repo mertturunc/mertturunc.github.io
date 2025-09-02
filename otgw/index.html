@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover">
+  <title>Into the Unknown</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Pomodoro Timer Floating -->
+  <div id="pomo-timer" aria-live="polite">
+    <div class="pomo-label" id="pomo-phase">Work</div>
+    <div class="pomo-time" id="pomo-time">25:00</div>
+    <button id="pomo-settings-toggle" class="pomo-gear" aria-expanded="false" aria-controls="pomo-settings" aria-label="Open Pomodoro settings">⚙</button>
+    <div class="pomo-buttons">
+      <button id="pomo-start" aria-label="Start Pomodoro">Start</button>
+      <button id="pomo-pause" aria-label="Pause Pomodoro" disabled>Pause</button>
+      <button id="pomo-reset" aria-label="Reset Pomodoro" disabled>Reset</button>
+    </div>
+    <div class="pomo-cycles" id="pomo-cycles" aria-label="Completed work sessions">0/4</div>
+    <form id="pomo-settings" class="hidden" aria-label="Pomodoro settings" autocomplete="off">
+      <div class="row">
+        <label for="pomo-work">Work (min)</label>
+        <input type="number" id="pomo-work" min="1" max="180" value="25">
+      </div>
+      <div class="row">
+        <label for="pomo-short">Short Break</label>
+        <input type="number" id="pomo-short" min="1" max="60" value="5">
+      </div>
+      <div class="row">
+        <label for="pomo-long">Long Break</label>
+        <input type="number" id="pomo-long" min="1" max="180" value="15">
+      </div>
+      <div class="row">
+        <label for="pomo-cycles-input">Cycles</label>
+        <input type="number" id="pomo-cycles-input" min="1" max="12" value="4">
+      </div>
+      <div class="settings-actions">
+        <button type="button" id="pomo-apply" aria-label="Apply Pomodoro settings">Apply</button>
+      </div>
+    </form>
+  </div>
+  <!-- Welcome Popup -->
+  <div id="welcome-popup" aria-modal="true" role="dialog" aria-labelledby="welcome-title">
+    <div class="welcome-card panel">
+      <h2 id="welcome-title" class="welcome-heading">Welcome</h2>
+      <p class="welcome-sub">Collecting woods from the unknown…</p>
+      <div id="loading-spinner" class="loading-spinner" aria-label="Loading" role="status"></div>
+      <div id="eta" class="eta-text" style="display:none;">Loading…</div>
+      <button id="welcome-btn" class="primary-btn" style="display:none;">Enter</button>
+    </div>
+  </div>
+  <div id="controls" class="panel">
+    <div class="sound-control">
+      <label>Rain</label>
+  <input type="range" id="vol0" min="0" max="100" value="0">
+      <button id="toggle0">▶</button>
+    </div>
+    <div class="sound-control">
+      <label>Thunder</label>
+  <input type="range" id="vol1" min="0" max="100" value="0">
+      <button id="toggle1">▶</button>
+    </div>
+    <div class="sound-control">
+      <label>Fireplace</label>
+  <input type="range" id="vol2" min="0" max="100" value="0">
+      <button id="toggle2">▶</button>
+    </div>
+    <div class="sound-control">
+      <label>Forest</label>
+  <input type="range" id="vol3" min="0" max="100" value="2">
+      <button id="toggle3">▶</button>
+    </div>
+    <div class="sound-control">
+      <label>Snow</label>
+  <input type="range" id="vol4" min="0" max="100" value="0">
+      <button id="toggle4">▶</button>
+    </div>
+    <div class="sound-control">
+      <label>Wind</label>
+  <input type="range" id="vol5" min="0" max="100" value="2">
+      <button id="toggle5">▶</button>
+    </div>
+  </div>
+  <div id="players"></div>
+
+  <!-- Audio Templates Panel -->
+  <div id="audio-templates" class="panel" aria-label="Ambient sound templates" role="region">
+    <div class="tpl-header">Presets</div>
+    <div class="tpl-buttons">
+      <button class="tpl-btn" data-template="calmRain">Calm Rain</button>
+      <button class="tpl-btn" data-template="storm">Storm</button>
+      <button class="tpl-btn" data-template="cozyFire">Cozy Fire</button>
+      <button class="tpl-btn" data-template="winter">Winter</button>
+      <button class="tpl-btn" data-template="forestBreeze">Forest Breeze</button>
+    </div>
+  </div>
+
+  <!-- Mobile Floating Toggle for Presets -->
+  <button id="mobile-presets-toggle" aria-expanded="false" aria-controls="audio-templates" aria-label="Show presets">Presets</button>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="script.js"></script>
+</body>
+</html>
