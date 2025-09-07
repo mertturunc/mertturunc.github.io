@@ -2065,6 +2065,25 @@ hr {
   width: 1em;
 }
 
+.mastodon-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  color: var(--muted-text);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 2px;
+  margin-left: 10px;
+  vertical-align: middle;
+  margin-bottom: 2px;
+}
+.mastodon-link:hover {
+  color: var(--accent-color);
+  border-bottom-color: var(--accent-hover);
+}
+
 /* Image Carousel Styles */
 .image-carousel {
   position: relative;
