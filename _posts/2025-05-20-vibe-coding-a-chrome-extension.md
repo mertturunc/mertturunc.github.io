@@ -3,8 +3,9 @@ category: blog
 title: "vibe coding a chrome extension"
 summary: "after taking a huge break in blogging scene i finally managed to start writing again."
 lang: en
-geo: true
-wip: true
+published: false
+starred: false
+hidden: true
 sitemap: false
 ---
 
