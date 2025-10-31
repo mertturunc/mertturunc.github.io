@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>diy turkey</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Geo:ital@0;1&family=Oxanium:wght@200..800&display=swap" rel="stylesheet">
+    
+    <!-- MapLibre GL JS -->
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style/style.css">
+    <link rel="icon" type="image/x-icon" href="/diy-turkey/favicon.ico">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h1>diy turkey</h1>
+            <p class="subtitle">create your own cities by selecting districts</p>
+            
+            <div class="instructions">
+                <h3>how to:</h3>
+                <ol>
+                    <li>click districts on the map to select them</li>
+                    <li>selected districts turn yellow</li>
+                    <li>click "create city" to group them</li>
+                    <li>give your city a name</li>
+                </ol>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">selected districts:</span>
+                    <span class="stat-value" id="selectedCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">cities created:</span>
+                    <span class="stat-value" id="citiesCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">districts left:</span>
+                    <span class="stat-value" id="districtsLeft">0</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="createCityBtn" class="btn btn-primary" disabled>
+                    create city from selection
+                </button>
+                <button id="clearSelectionBtn" class="btn btn-secondary" disabled>
+                    clear selection
+                </button>
+                <button id="checkAccuracyBtn" class="btn btn-check" disabled>
+                    check accuracy
+                </button>
+                <button id="resetAllBtn" class="btn btn-danger">
+                    reset all
+                </button>
+            </div>
+
+            <div class="cities-list">
+                <h3>your cities:</h3>
+                <div id="citiesList" class="cities-container">
+                    <p class="empty-message">no cities created yet. start selecting districts.</p>
+                </div>
+            </div>
+
+            <div class="export-section">
+                <button id="exportBtn" class="btn btn-export" disabled>
+                    export as image
+                </button>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="zoom-controls">
+                <button id="zoomIn" class="zoom-btn" title="Zoom In">+</button>
+                <button id="zoomOut" class="zoom-btn" title="Zoom Out">-</button>
+            </div>
+            <div class="map-legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #c0c0c0"></span>
+                    <span>unassigned districts</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #f39c12"></span>
+                    <span>selected districts</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #ff0000"></span>
+                    <span>assigned to cities</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for naming cities -->
+    <div id="nameModal" class="modal">
+        <div class="modal-content">
+            <h2>name your city</h2>
+            <p>you've selected <span id="districtCountText">0</span> districts.</p>
+            <input type="text" id="cityNameInput" placeholder="enter city name..." maxlength="50">
+            <div class="modal-actions">
+                <button id="confirmNameBtn" class="btn btn-primary">create city</button>
+                <button id="cancelNameBtn" class="btn btn-secondary">cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for renaming cities -->
+    <div id="renameModal" class="modal">
+        <div class="modal-content">
+            <h2>rename city</h2>
+            <p>current name: <strong><span id="currentCityName"></span></strong></p>
+            <input type="text" id="renameInput" placeholder="enter new name..." maxlength="50">
+            <div class="modal-actions">
+                <button id="confirmRenameBtn" class="btn btn-primary">rename</button>
+                <button id="cancelRenameBtn" class="btn btn-secondary">cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Popup -->
+    <div id="customAlert" class="custom-alert">
+        <div class="alert-content">
+            <div class="alert-icon" id="alertIcon">⚠️</div>
+            <div class="alert-message" id="alertMessage"></div>
+            <div class="alert-buttons" id="alertButtons">
+                <button class="alert-close" onclick="closeAlert()">OK</button>
+            </div>
+            <div class="alert-buttons confirm-buttons" id="confirmButtons" style="display: none;">
+                <button class="alert-close" onclick="closeAlert(true)">yes</button>
+                <button class="alert-close" onclick="closeAlert(false)">no</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for image preview -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content preview-modal-content">
+            <h2>preview your map</h2>
+            <p class="preview-info">high quality export ready for download</p>
+            <div class="preview-image-container">
+                <img id="previewImage" alt="Map Preview">
+            </div>
+            <div class="preview-details">
+                <div class="detail-item">
+                    <strong>cities:</strong> <span id="previewCityCount">0</span>
+                </div>
+                <div class="detail-item">
+                    <strong>districts:</strong> <span id="previewDistrictCount">0</span>
+                </div>
+                <div class="detail-item">
+                    <strong>size:</strong> <span id="previewSize">0x0</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="downloadImageBtn" class="btn btn-primary">download png</button>
+                <button id="cancelPreviewBtn" class="btn btn-secondary" onclick="closePreviewModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for accuracy results -->
+    <div id="accuracyModal" class="modal">
+        <div class="modal-content accuracy-modal-content">
+            <h2>accuracy check</h2>
+            <p class="accuracy-info">compare your cities with real turkey provinces</p>
+            <div id="accuracyResults"></div>
+            <div class="modal-actions">
+                <button id="closeAccuracyBtn" class="btn btn-primary">close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="js/script.js"></script>
+</body>
+</html>
+
