@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GeoJSON Simplifier</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.css" />
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f7f7f7;
+    --panel: #ffffff;
+    --border: #d7d7d7;
+    --text: #111827;
+    --muted: #4b5563;
+    --error: #b91c1c;
+    --warn: #92400e;
+    --ok: #166534;
+    --primary: #2563eb;
+  }
+
+  html,
+  body {
+    margin: 0;
+    height: 100%;
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    line-height: 1.3;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  .app {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+  }
+
+  .sidebar {
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--panel);
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .map-panel {
+    position: relative;
+  }
+
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+    line-height: 1.15;
+  }
+
+  section {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: var(--panel);
+  }
+
+  section h2 {
+    margin: 0 0 7px;
+    font-size: 0.83rem;
+    letter-spacing: 0.01em;
+  }
+
+  .section-compact {
+    margin-bottom: 6px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .hint {
+    margin-top: 2px;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+
+  input[type="number"],
+  input[type="range"],
+  input[type="file"],
+  textarea,
+  select,
+  button {
+    width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+  }
+
+  input[type="number"],
+  textarea,
+  select,
+  button {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 7px;
+    background: #fff;
+    font-size: 0.78rem;
+  }
+
+  input[type="number"]:focus,
+  textarea:focus,
+  select:focus,
+  button:focus {
+    outline: 1px solid rgba(37, 99, 235, 0.28);
+    outline-offset: 0;
+    border-color: var(--primary);
+  }
+
+  input[type="range"] {
+    margin: 0 0 7px;
+  }
+
+  textarea {
+    min-height: 94px;
+    resize: vertical;
+    line-height: 1.2;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  button.primary {
+    background: #eef3ff;
+    border-color: #c5d4ff;
+    color: #1e3a8a;
+    font-weight: 500;
+  }
+
+  button.secondary {
+    background: #fff;
+    border-color: var(--border);
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .row > button {
+    flex: 1;
+  }
+
+  .param-group {
+    margin-bottom: 7px;
+  }
+
+  .compact-details summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.74rem;
+    user-select: none;
+  }
+
+  .compact-details textarea {
+    margin-top: 6px;
+  }
+
+  .compact-details .row {
+    margin-top: 6px;
+  }
+
+  .algorithm-help {
+    margin: 4px 0 6px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .message {
+    margin: 0 0 4px;
+    font-size: 0.75rem;
+    line-height: 1.25;
+  }
+
+  .message.info {
+    color: #e5e7eb;
+  }
+
+  .message.success {
+    color: #bbf7d0;
+  }
+
+  .message.error {
+    color: #fecaca;
+  }
+
+  .stats {
+    margin: 5px 0 0;
+    white-space: pre-line;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    color: #d1d5db;
+  }
+
+  .quick-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-size: 0.72rem;
+    margin-bottom: 4px;
+  }
+
+  .quick-stats strong {
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .warnings {
+    margin: 4px 0 0;
+    padding-left: 14px;
+    color: #fde68a;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    max-height: 84px;
+    overflow: auto;
+  }
+
+  .checkbox-label {
+    color: var(--text);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.75rem;
+  }
+
+  .checkbox-label input {
+    width: auto;
+  }
+
+  .status-popup {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    z-index: 700;
+    width: min(380px, calc(100% - 16px));
+    background: rgba(17, 24, 39, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 6px;
+    padding: 8px;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    box-sizing: border-box;
+  }
+
+  .leaflet-control-layers {
+    font-size: 12px;
+  }
+
+  .leaflet-control.map-action-control {
+    background: #fff;
+    border: 1px solid #cfcfcf;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .leaflet-control.map-action-control button {
+    border: 0;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 4px 7px;
+    font-size: 11px;
+    background: #fff;
+    color: #111827;
+    min-width: 42px;
+  }
+
+  .leaflet-control.map-action-control button:last-child {
+    border-bottom: 0;
+  }
+
+  @media (max-width: 1100px) {
+    .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 54vh;
+    }
+
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1>GeoJSON Simplifier</h1>
+
+      <section>
+        <h2>Import GeoJSON</h2>
+        <label for="fileInput">GeoJSON file</label>
+        <input id="fileInput" type="file" accept=".geojson,.json,application/geo+json,application/json" />
+        <details class="compact-details">
+          <summary>Paste GeoJSON text</summary>
+          <textarea id="geojsonText" placeholder='Paste a Feature, FeatureCollection, Polygon or MultiPolygon JSON here'></textarea>
+          <div class="row">
+            <button id="applyTextBtn" type="button">Apply</button>
+            <button id="clearTextBtn" type="button">Clear</button>
+          </div>
+        </details>
+      </section>
+
+      <section>
+        <h2>Simplification</h2>
+        <label for="algorithmSelect">Algorithm</label>
+        <select id="algorithmSelect">
+          <option value="douglas-peucker">Douglas-Peucker</option>
+          <option value="snap-to-grid">Snap to Grid</option>
+          <option value="visvalingam-whyatt">Visvalingam-Whyatt</option>
+          <option value="lang">Lang</option>
+          <option value="reumann-witkam">Reumann-Witkam</option>
+          <option value="radial-distance">Radial Distance (Vertex Reduction)</option>
+        </select>
+        <p id="algorithmHelp" class="algorithm-help"></p>
+
+        <div id="distanceGroup" class="param-group">
+          <label for="distanceToleranceNumber">Distance tolerance</label>
+          <input id="distanceToleranceNumber" type="number" min="0" step="0.00001" value="0.00035" />
+          <input id="distanceToleranceRange" type="range" min="0" max="0.01" step="0.00001" value="0.00035" />
+        </div>
+
+        <div id="areaGroup" class="param-group" hidden>
+          <label for="areaToleranceNumber">Area tolerance (triangle area)</label>
+          <input id="areaToleranceNumber" type="number" min="0" step="0.0000001" value="0.0000002" />
+          <input id="areaToleranceRange" type="range" min="0" max="0.00005" step="0.0000001" value="0.0000002" />
+        </div>
+
+        <div id="gridGroup" class="param-group" hidden>
+          <label for="gridSizeNumber">Grid size</label>
+          <input id="gridSizeNumber" type="number" min="0" step="0.00001" value="0.0001" />
+          <input id="gridSizeRange" type="range" min="0" max="0.01" step="0.00001" value="0.0001" />
+        </div>
+
+        <div id="langGroup" class="param-group" hidden>
+          <label for="lookAheadNumber">Lang look-ahead</label>
+          <input id="lookAheadNumber" type="number" min="2" max="64" step="1" value="8" />
+          <input id="lookAheadRange" type="range" min="2" max="64" step="1" value="8" />
+        </div>
+
+        <label class="checkbox-label" for="liveUpdateToggle">
+          <input id="liveUpdateToggle" type="checkbox" checked />
+          Live update on parameter changes
+        </label>
+
+        <div style="height: 8px;"></div>
+        <button id="runSimplifyBtn" type="button">Run Simplification Now</button>
+      </section>
+
+      <section>
+        <h2>Export</h2>
+        <div class="row">
+          <button id="downloadBtn" type="button" disabled>Download GeoJSON</button>
+          <button id="copyBtn" type="button" disabled>Copy JSON</button>
+        </div>
+        <div style="height: 6px;"></div>
+        <button id="resetEditsBtn" type="button">Reset Edited Geometry</button>
+        <div class="hint">Use map controls for basemap and Geoman edit mode.</div>
+      </section>
+    </aside>
+
+    <main class="map-panel">
+      <div id="map"></div>
+      <div class="status-popup">
+        <p id="message" class="message info">Import a Polygon or MultiPolygon GeoJSON to start.</p>
+        <div class="quick-stats">
+          <span>Input: <strong id="statInputVertices">0</strong></span>
+          <span>Output: <strong id="statOutputVertices">0</strong></span>
+          <span>Reduction: <strong id="statReduction">0.00%</strong></span>
+        </div>
+        <div id="stats" class="stats"></div>
+        <ul id="warnings" class="warnings"></ul>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.min.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const DISTANCE_ALGORITHMS = new Set([
+        "douglas-peucker",
+        "lang",
+        "reumann-witkam",
+        "radial-distance"
+      ]);
+
+      const DEFAULT_VIEW = {
+        center: [41.2, 28.75],
+        zoom: 11
+      };
+
+      const ALGORITHM_HELP = {
+        "douglas-peucker": "Keeps points with highest distance from simplified edges. Good general-purpose shape retention.",
+        "snap-to-grid": "Snaps vertices to a regular grid. Fast and deterministic, but can collapse small details.",
+        "visvalingam-whyatt": "Removes points with the smallest triangle area first. Use area tolerance, not distance.",
+        "lang": "Local look-ahead simplification with distance tolerance. Look-ahead controls aggressiveness.",
+        "reumann-witkam": "Strip-based simplification using perpendicular distance to a moving baseline.",
+        "radial-distance": "Fast vertex reduction by removing nearby consecutive points from the last kept point."
+      };
+
+      const ui = {
+        fileInput: document.getElementById("fileInput"),
+        geojsonText: document.getElementById("geojsonText"),
+        applyTextBtn: document.getElementById("applyTextBtn"),
+        clearTextBtn: document.getElementById("clearTextBtn"),
+        algorithmSelect: document.getElementById("algorithmSelect"),
+        algorithmHelp: document.getElementById("algorithmHelp"),
+        distanceGroup: document.getElementById("distanceGroup"),
+        areaGroup: document.getElementById("areaGroup"),
+        gridGroup: document.getElementById("gridGroup"),
+        langGroup: document.getElementById("langGroup"),
+        distanceToleranceNumber: document.getElementById("distanceToleranceNumber"),
+        distanceToleranceRange: document.getElementById("distanceToleranceRange"),
+        areaToleranceNumber: document.getElementById("areaToleranceNumber"),
+        areaToleranceRange: document.getElementById("areaToleranceRange"),
+        gridSizeNumber: document.getElementById("gridSizeNumber"),
+        gridSizeRange: document.getElementById("gridSizeRange"),
+        lookAheadNumber: document.getElementById("lookAheadNumber"),
+        lookAheadRange: document.getElementById("lookAheadRange"),
+        liveUpdateToggle: document.getElementById("liveUpdateToggle"),
+        runSimplifyBtn: document.getElementById("runSimplifyBtn"),
+        resetEditsBtn: document.getElementById("resetEditsBtn"),
+        downloadBtn: document.getElementById("downloadBtn"),
+        copyBtn: document.getElementById("copyBtn"),
+        message: document.getElementById("message"),
+        statInputVertices: document.getElementById("statInputVertices"),
+        statOutputVertices: document.getElementById("statOutputVertices"),
+        statReduction: document.getElementById("statReduction"),
+        stats: document.getElementById("stats"),
+        warnings: document.getElementById("warnings")
+      };
+
+      const state = {
+        originalGeoJSON: null,
+        simplifiedGeoJSON: null,
+        editedGeoJSON: null,
+        simplifyDebounceHandle: null
+      };
+
+      const map = L.map("map", { preferCanvas: true }).setView(DEFAULT_VIEW.center, DEFAULT_VIEW.zoom);
+
+      const osmBaseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+      });
+
+      const googleSatelliteLayer = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
+        attribution: "&copy; Google",
+        subdomains: ["mt0", "mt1", "mt2", "mt3"],
+        maxZoom: 21
+      });
+
+      osmBaseLayer.addTo(map);
+
+      L.control.layers(
+        {
+          "OpenStreetMap": osmBaseLayer,
+          "Google Satellite": googleSatelliteLayer
+        },
+        null,
+        { position: "topright", collapsed: true }
+      ).addTo(map);
+
+      const mapActionControl = L.control({ position: "topright" });
+      mapActionControl.onAdd = function () {
+        const container = L.DomUtil.create("div", "leaflet-control map-action-control");
+        const fitButton = L.DomUtil.create("button", "", container);
+        fitButton.type = "button";
+        fitButton.title = "Fit imported geometry";
+        fitButton.textContent = "Fit";
+        const homeButton = L.DomUtil.create("button", "", container);
+        homeButton.type = "button";
+        homeButton.title = "Reset default view";
+        homeButton.textContent = "Home";
+
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.on(fitButton, "click", function (event) {
+          L.DomEvent.stop(event);
+          fitMapToData();
+        });
+        L.DomEvent.on(homeButton, "click", function (event) {
+          L.DomEvent.stop(event);
+          map.setView(DEFAULT_VIEW.center, DEFAULT_VIEW.zoom);
+        });
+        return container;
+      };
+      mapActionControl.addTo(map);
+
+      map.pm.setGlobalOptions({
+        snappable: true,
+        snapDistance: 20,
+        snapMiddle: true
+      });
+
+      map.pm.addControls({
+        position: "topleft",
+        drawMarker: false,
+        drawCircleMarker: false,
+        drawPolyline: false,
+        drawRectangle: false,
+        drawCircle: false,
+        drawPolygon: false,
+        drawText: false,
+        cutPolygon: false,
+        rotateMode: false,
+        editMode: true,
+        dragMode: false,
+        removalMode: false,
+        oneBlock: false
+      });
+
+      const originalLayer = L.geoJSON(null, {
+        pmIgnore: true,
+        interactive: false,
+        style: {
+          color: "#2563eb",
+          weight: 2,
+          fillColor: "#60a5fa",
+          fillOpacity: 0.08
+        }
+      }).addTo(map);
+
+      const simplifiedLayerGroup = L.featureGroup().addTo(map);
+
+      function setMessage(text, type) {
+        ui.message.textContent = text;
+        ui.message.className = "message " + (type || "info");
+      }
+
+      function updateAlgorithmHelp() {
+        ui.algorithmHelp.textContent = ALGORITHM_HELP[ui.algorithmSelect.value] || "";
+      }
+
+      function updateAlgorithmControlVisibility() {
+        const algorithm = ui.algorithmSelect.value;
+        ui.distanceGroup.hidden = !DISTANCE_ALGORITHMS.has(algorithm);
+        ui.areaGroup.hidden = algorithm !== "visvalingam-whyatt";
+        ui.gridGroup.hidden = algorithm !== "snap-to-grid";
+        ui.langGroup.hidden = algorithm !== "lang";
+        updateAlgorithmHelp();
+      }
+
+      function bindNumericAndRange(numberInput, rangeInput, onChange) {
+        numberInput.addEventListener("input", function () {
+          const value = Number(numberInput.value);
+          if (Number.isFinite(value)) {
+            rangeInput.value = String(value);
+          }
+          onChange();
+        });
+
+        rangeInput.addEventListener("input", function () {
+          numberInput.value = rangeInput.value;
+          onChange();
+        });
+      }
+
+      function deepClone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function pointsEqual(a, b) {
+        return a && b && a[0] === b[0] && a[1] === b[1];
+      }
+
+      function removeConsecutiveDuplicates(points) {
+        if (!Array.isArray(points) || points.length === 0) {
+          return [];
+        }
+        const deduped = [points[0].slice(0, 2)];
+        for (let i = 1; i < points.length; i += 1) {
+          const point = points[i];
+          const last = deduped[deduped.length - 1];
+          if (!pointsEqual(last, point)) {
+            deduped.push(point.slice(0, 2));
+          }
+        }
+        return deduped;
+      }
+
+      function closeRing(openRing) {
+        const cleaned = removeConsecutiveDuplicates(openRing);
+        if (cleaned.length === 0) {
+          return [];
+        }
+        if (!pointsEqual(cleaned[0], cleaned[cleaned.length - 1])) {
+          cleaned.push(cleaned[0].slice(0, 2));
+        }
+        return cleaned;
+      }
+
+      function toOpenRing(ring) {
+        if (!Array.isArray(ring)) {
+          return [];
+        }
+        const normalized = [];
+        for (let i = 0; i < ring.length; i += 1) {
+          const coord = ring[i];
+          if (!Array.isArray(coord) || coord.length < 2) {
+            continue;
+          }
+          const x = Number(coord[0]);
+          const y = Number(coord[1]);
+          if (Number.isFinite(x) && Number.isFinite(y)) {
+            normalized.push([x, y]);
+          }
+        }
+        const deduped = removeConsecutiveDuplicates(normalized);
+        if (deduped.length >= 2 && pointsEqual(deduped[0], deduped[deduped.length - 1])) {
+          deduped.pop();
+        }
+        return deduped;
+      }
+
+      function sanitizeRing(rawRing) {
+        const open = toOpenRing(rawRing);
+        if (open.length < 3) {
+          return null;
+        }
+        return closeRing(open);
+      }
+
+      function sanitizePolygonCoordinates(rawCoordinates) {
+        if (!Array.isArray(rawCoordinates) || rawCoordinates.length === 0) {
+          throw new Error("Polygon coordinates are missing.");
+        }
+
+        const sanitizedRings = [];
+        for (let ringIndex = 0; ringIndex < rawCoordinates.length; ringIndex += 1) {
+          const sanitized = sanitizeRing(rawCoordinates[ringIndex]);
+          if (!sanitized) {
+            if (ringIndex === 0) {
+              throw new Error("Polygon outer ring is invalid or collapsed.");
+            }
+            continue;
+          }
+          sanitizedRings.push(sanitized);
+        }
+
+        if (sanitizedRings.length === 0) {
+          throw new Error("Polygon has no valid rings after sanitization.");
+        }
+
+        return sanitizedRings;
+      }
+
+      function sanitizeMultiPolygonCoordinates(rawCoordinates) {
+        if (!Array.isArray(rawCoordinates) || rawCoordinates.length === 0) {
+          throw new Error("MultiPolygon coordinates are missing.");
+        }
+        const polygons = [];
+        for (let polygonIndex = 0; polygonIndex < rawCoordinates.length; polygonIndex += 1) {
+          polygons.push(sanitizePolygonCoordinates(rawCoordinates[polygonIndex]));
+        }
+        return polygons;
+      }
+
+      function normalizeGeoJSON(input) {
+        if (!input || typeof input !== "object") {
+          throw new Error("GeoJSON input must be a JSON object.");
+        }
+
+        let featureCandidates = [];
+
+        if (input.type === "FeatureCollection") {
+          if (!Array.isArray(input.features)) {
+            throw new Error("FeatureCollection.features must be an array.");
+          }
+          featureCandidates = input.features;
+        } else if (input.type === "Feature") {
+          featureCandidates = [input];
+        } else if (input.type === "Polygon" || input.type === "MultiPolygon") {
+          featureCandidates = [{
+            type: "Feature",
+            properties: {},
+            geometry: input
+          }];
+        } else {
+          throw new Error("Only FeatureCollection, Feature, Polygon and MultiPolygon are supported.");
+        }
+
+        const normalizedFeatures = [];
+
+        for (let i = 0; i < featureCandidates.length; i += 1) {
+          const feature = featureCandidates[i];
+          if (!feature || feature.type !== "Feature") {
+            throw new Error("Each feature must be a valid GeoJSON Feature object.");
+          }
+          if (!feature.geometry) {
+            continue;
+          }
+
+          const geometry = feature.geometry;
+          let normalizedGeometry = null;
+
+          if (geometry.type === "Polygon") {
+            normalizedGeometry = {
+              type: "Polygon",
+              coordinates: sanitizePolygonCoordinates(geometry.coordinates)
+            };
+          } else if (geometry.type === "MultiPolygon") {
+            normalizedGeometry = {
+              type: "MultiPolygon",
+              coordinates: sanitizeMultiPolygonCoordinates(geometry.coordinates)
+            };
+          } else {
+            throw new Error(
+              "Unsupported geometry type \"" +
+              geometry.type +
+              "\" found. This tool supports only Polygon and MultiPolygon."
+            );
+          }
+
+          normalizedFeatures.push({
+            type: "Feature",
+            properties: deepClone(feature.properties || {}),
+            geometry: normalizedGeometry
+          });
+        }
+
+        if (normalizedFeatures.length === 0) {
+          throw new Error("No valid Polygon/MultiPolygon features were found in the input.");
+        }
+
+        return {
+          type: "FeatureCollection",
+          features: normalizedFeatures
+        };
+      }
+
+      function sqDist(a, b) {
+        const dx = a[0] - b[0];
+        const dy = a[1] - b[1];
+        return dx * dx + dy * dy;
+      }
+
+      function sqSegDist(point, segStart, segEnd) {
+        let x = segStart[0];
+        let y = segStart[1];
+        let dx = segEnd[0] - x;
+        let dy = segEnd[1] - y;
+
+        if (dx !== 0 || dy !== 0) {
+          const t = ((point[0] - x) * dx + (point[1] - y) * dy) / (dx * dx + dy * dy);
+          if (t > 1) {
+            x = segEnd[0];
+            y = segEnd[1];
+          } else if (t > 0) {
+            x += dx * t;
+            y += dy * t;
+          }
+        }
+
+        dx = point[0] - x;
+        dy = point[1] - y;
+        return dx * dx + dy * dy;
+      }
+
+      function pointSegmentDistance(point, segStart, segEnd) {
+        return Math.sqrt(sqSegDist(point, segStart, segEnd));
+      }
+
+      function pointLineDistance(point, lineStart, lineEnd) {
+        const dx = lineEnd[0] - lineStart[0];
+        const dy = lineEnd[1] - lineStart[1];
+        if (dx === 0 && dy === 0) {
+          return Math.hypot(point[0] - lineStart[0], point[1] - lineStart[1]);
+        }
+        const numerator = Math.abs(
+          dy * point[0] -
+          dx * point[1] +
+          lineEnd[0] * lineStart[1] -
+          lineEnd[1] * lineStart[0]
+        );
+        return numerator / Math.hypot(dx, dy);
+      }
+
+      function simplifyRadialDistance(points, tolerance) {
+        if (points.length <= 2 || tolerance <= 0) {
+          return points.slice();
+        }
+        const sqTolerance = tolerance * tolerance;
+        let previous = points[0];
+        const result = [previous];
+        let point = null;
+
+        for (let i = 1; i < points.length; i += 1) {
+          point = points[i];
+          if (sqDist(point, previous) > sqTolerance) {
+            result.push(point);
+            previous = point;
+          }
+        }
+
+        if (point && !pointsEqual(previous, point)) {
+          result.push(point);
+        }
+
+        return result;
+      }
+
+      function simplifyDPStep(points, first, last, sqTolerance, simplified) {
+        let maxSqDist = sqTolerance;
+        let index = -1;
+
+        for (let i = first + 1; i < last; i += 1) {
+          const sqDistance = sqSegDist(points[i], points[first], points[last]);
+          if (sqDistance > maxSqDist) {
+            index = i;
+            maxSqDist = sqDistance;
+          }
+        }
+
+        if (index !== -1 && maxSqDist > sqTolerance) {
+          if (index - first > 1) {
+            simplifyDPStep(points, first, index, sqTolerance, simplified);
+          }
+          simplified.push(points[index]);
+          if (last - index > 1) {
+            simplifyDPStep(points, index, last, sqTolerance, simplified);
+          }
+        }
+      }
+
+      function simplifyDouglasPeucker(points, tolerance) {
+        if (points.length <= 2 || tolerance <= 0) {
+          return points.slice();
+        }
+
+        const sqTolerance = tolerance * tolerance;
+        const last = points.length - 1;
+        const simplified = [points[0]];
+        simplifyDPStep(points, 0, last, sqTolerance, simplified);
+        simplified.push(points[last]);
+        return simplified;
+      }
+
+      function simplifySnapToGrid(points, gridSize) {
+        if (points.length <= 2 || gridSize <= 0) {
+          return points.slice();
+        }
+        const snapped = [];
+        for (let i = 0; i < points.length; i += 1) {
+          const x = Math.round(points[i][0] / gridSize) * gridSize;
+          const y = Math.round(points[i][1] / gridSize) * gridSize;
+          snapped.push([x, y]);
+        }
+        return removeConsecutiveDuplicates(snapped);
+      }
+
+      function triangleArea(a, b, c) {
+        return Math.abs(
+          (a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1])) * 0.5
+        );
+      }
+
+      class MinHeap {
+        constructor(compare) {
+          this.values = [];
+          this.compare = compare;
+        }
+
+        isEmpty() {
+          return this.values.length === 0;
+        }
+
+        push(value) {
+          this.values.push(value);
+          this.bubbleUp(this.values.length - 1);
+        }
+
+        pop() {
+          if (this.values.length === 0) {
+            return null;
+          }
+          const top = this.values[0];
+          const end = this.values.pop();
+          if (this.values.length > 0 && end) {
+            this.values[0] = end;
+            this.bubbleDown(0);
+          }
+          return top;
+        }
+
+        bubbleUp(index) {
+          while (index > 0) {
+            const parent = Math.floor((index - 1) / 2);
+            if (this.compare(this.values[index], this.values[parent]) >= 0) {
+              break;
+            }
+            const temp = this.values[index];
+            this.values[index] = this.values[parent];
+            this.values[parent] = temp;
+            index = parent;
+          }
+        }
+
+        bubbleDown(index) {
+          const length = this.values.length;
+          while (true) {
+            const left = index * 2 + 1;
+            const right = index * 2 + 2;
+            let smallest = index;
+
+            if (
+              left < length &&
+              this.compare(this.values[left], this.values[smallest]) < 0
+            ) {
+              smallest = left;
+            }
+            if (
+              right < length &&
+              this.compare(this.values[right], this.values[smallest]) < 0
+            ) {
+              smallest = right;
+            }
+            if (smallest === index) {
+              break;
+            }
+            const temp = this.values[index];
+            this.values[index] = this.values[smallest];
+            this.values[smallest] = temp;
+            index = smallest;
+          }
+        }
+      }
+
+      function simplifyVisvalingamWhyatt(points, areaTolerance) {
+        if (points.length <= 3 || areaTolerance <= 0) {
+          return points.slice();
+        }
+
+        const n = points.length;
+        const prev = new Array(n);
+        const next = new Array(n);
+        const alive = new Array(n).fill(true);
+        const version = new Array(n).fill(0);
+
+        for (let i = 0; i < n; i += 1) {
+          prev[i] = i - 1;
+          next[i] = i + 1 < n ? i + 1 : -1;
+        }
+
+        function areaAt(index) {
+          const pi = prev[index];
+          const ni = next[index];
+          if (pi < 0 || ni < 0) {
+            return Infinity;
+          }
+          return triangleArea(points[pi], points[index], points[ni]);
+        }
+
+        const heap = new MinHeap(function (a, b) {
+          return a.area - b.area;
+        });
+
+        for (let i = 1; i < n - 1; i += 1) {
+          heap.push({
+            index: i,
+            area: areaAt(i),
+            version: version[i]
+          });
+        }
+
+        while (!heap.isEmpty()) {
+          const current = heap.pop();
+          if (!current) {
+            break;
+          }
+          const idx = current.index;
+          if (!alive[idx]) {
+            continue;
+          }
+          if (version[idx] !== current.version) {
+            continue;
+          }
+          if (current.area >= areaTolerance) {
+            break;
+          }
+
+          const prevIndex = prev[idx];
+          const nextIndex = next[idx];
+          alive[idx] = false;
+
+          if (prevIndex >= 0) {
+            next[prevIndex] = nextIndex;
+          }
+          if (nextIndex >= 0) {
+            prev[nextIndex] = prevIndex;
+          }
+
+          if (prevIndex > 0 && prevIndex < n - 1 && alive[prevIndex]) {
+            version[prevIndex] += 1;
+            heap.push({
+              index: prevIndex,
+              area: areaAt(prevIndex),
+              version: version[prevIndex]
+            });
+          }
+          if (nextIndex > 0 && nextIndex < n - 1 && alive[nextIndex]) {
+            version[nextIndex] += 1;
+            heap.push({
+              index: nextIndex,
+              area: areaAt(nextIndex),
+              version: version[nextIndex]
+            });
+          }
+        }
+
+        const simplified = [];
+        let cursor = 0;
+        while (cursor !== -1) {
+          if (alive[cursor]) {
+            simplified.push(points[cursor]);
+          }
+          cursor = next[cursor];
+        }
+
+        return simplified.length > 1 ? simplified : points.slice();
+      }
+
+      function simplifyLang(points, tolerance, lookAhead) {
+        if (points.length <= 2 || tolerance <= 0) {
+          return points.slice();
+        }
+        const maxLookAhead = Math.max(2, Math.floor(lookAhead));
+        const result = [points[0]];
+        let start = 0;
+
+        while (start < points.length - 1) {
+          let end = Math.min(start + maxLookAhead, points.length - 1);
+          let acceptedEnd = start + 1;
+
+          while (end > start + 1) {
+            let withinTolerance = true;
+            for (let i = start + 1; i < end; i += 1) {
+              if (pointSegmentDistance(points[i], points[start], points[end]) > tolerance) {
+                withinTolerance = false;
+                break;
+              }
+            }
+
+            if (withinTolerance) {
+              acceptedEnd = end;
+              break;
+            }
+            end -= 1;
+          }
+
+          result.push(points[acceptedEnd]);
+          start = acceptedEnd;
+        }
+
+        if (!pointsEqual(result[result.length - 1], points[points.length - 1])) {
+          result.push(points[points.length - 1]);
+        }
+
+        return result;
+      }
+
+      function simplifyReumannWitkam(points, tolerance) {
+        if (points.length <= 2 || tolerance <= 0) {
+          return points.slice();
+        }
+
+        const simplified = [points[0]];
+        let lineStart = points[0];
+        let lineEnd = points[1];
+
+        for (let i = 2; i < points.length; i += 1) {
+          const distance = pointLineDistance(points[i], lineStart, lineEnd);
+          if (distance > tolerance) {
+            const key = points[i - 1];
+            if (!pointsEqual(simplified[simplified.length - 1], key)) {
+              simplified.push(key);
+            }
+            lineStart = key;
+            lineEnd = points[i];
+          }
+        }
+
+        const finalPoint = points[points.length - 1];
+        if (!pointsEqual(simplified[simplified.length - 1], finalPoint)) {
+          simplified.push(finalPoint);
+        }
+
+        return simplified;
+      }
+
+      function simplifyOpenPath(points, params, preserveEndpoints) {
+        if (!Array.isArray(points) || points.length <= 1) {
+          return Array.isArray(points) ? points.slice() : [];
+        }
+
+        const source = points.map(function (point) {
+          return [point[0], point[1]];
+        });
+
+        let simplified;
+        switch (params.algorithm) {
+          case "douglas-peucker":
+            simplified = simplifyDouglasPeucker(source, params.distanceTolerance);
+            break;
+          case "radial-distance":
+            simplified = simplifyRadialDistance(source, params.distanceTolerance);
+            break;
+          case "snap-to-grid":
+            simplified = simplifySnapToGrid(source, params.gridSize);
+            break;
+          case "visvalingam-whyatt":
+            simplified = simplifyVisvalingamWhyatt(source, params.areaTolerance);
+            break;
+          case "lang":
+            simplified = simplifyLang(source, params.distanceTolerance, params.lookAhead);
+            break;
+          case "reumann-witkam":
+            simplified = simplifyReumannWitkam(source, params.distanceTolerance);
+            break;
+          default:
+            simplified = source.slice();
+        }
+
+        simplified = removeConsecutiveDuplicates(simplified || []);
+        if (preserveEndpoints && source.length >= 2) {
+          if (simplified.length === 0) {
+            simplified = [source[0], source[source.length - 1]];
+          } else if (simplified.length === 1) {
+            simplified.push(source[source.length - 1]);
+          }
+          simplified[0] = source[0];
+          simplified[simplified.length - 1] = source[source.length - 1];
+        }
+
+        simplified = removeConsecutiveDuplicates(simplified);
+        if (simplified.length < 2) {
+          return source.length >= 2
+            ? [source[0], source[source.length - 1]]
+            : source.slice();
+        }
+
+        return simplified;
+      }
+
+      function ringAreaAbs(ring) {
+        if (!Array.isArray(ring) || ring.length < 4) {
+          return 0;
+        }
+        let sum = 0;
+        for (let i = 0; i < ring.length - 1; i += 1) {
+          const p1 = ring[i];
+          const p2 = ring[i + 1];
+          sum += p1[0] * p2[1] - p2[0] * p1[1];
+        }
+        return Math.abs(sum / 2);
+      }
+
+      function coordinateKey(point) {
+        const x = Math.round(point[0] * 1e12) / 1e12;
+        const y = Math.round(point[1] * 1e12) / 1e12;
+        return String(x) + "," + String(y);
+      }
+
+      function canonicalSegmentKey(a, b) {
+        const keyA = coordinateKey(a);
+        const keyB = coordinateKey(b);
+        return keyA < keyB
+          ? keyA + "|" + keyB
+          : keyB + "|" + keyA;
+      }
+
+      function splitRingRuns(openPoints, sharedFlags) {
+        const n = openPoints.length;
+        if (!n) {
+          return [];
+        }
+
+        const allSame = sharedFlags.every(function (flag) {
+          return flag === sharedFlags[0];
+        });
+        if (allSame) {
+          return [{
+            shared: sharedFlags[0],
+            points: openPoints.concat([openPoints[0]])
+          }];
+        }
+
+        let start = 0;
+        for (let i = 0; i < n; i += 1) {
+          const prev = sharedFlags[(i - 1 + n) % n];
+          if (sharedFlags[i] !== prev) {
+            start = i;
+            break;
+          }
+        }
+
+        const runs = [];
+        let currentShared = sharedFlags[start];
+        let runPoints = [openPoints[start]];
+
+        for (let step = 0; step < n; step += 1) {
+          const segIndex = (start + step) % n;
+          const segShared = sharedFlags[segIndex];
+          const segEnd = openPoints[(segIndex + 1) % n];
+
+          if (segShared !== currentShared) {
+            runs.push({
+              shared: currentShared,
+              points: runPoints
+            });
+            currentShared = segShared;
+            runPoints = [openPoints[segIndex]];
+          }
+
+          runPoints.push(segEnd);
+        }
+
+        runs.push({
+          shared: currentShared,
+          points: runPoints
+        });
+
+        return runs.filter(function (run) {
+          return run.points.length >= 2;
+        });
+      }
+
+      function getCanonicalRunInfo(points) {
+        const forward = points.map(coordinateKey).join(">");
+        const reversedPoints = points.slice().reverse();
+        const backward = reversedPoints.map(coordinateKey).join(">");
+
+        if (forward <= backward) {
+          return {
+            key: forward,
+            canonicalPoints: points.slice(),
+            reverseFromCanonical: false
+          };
+        }
+
+        return {
+          key: backward,
+          canonicalPoints: reversedPoints,
+          reverseFromCanonical: true
+        };
+      }
+
+      function simplifyRing(rawRing, params, isShell) {
+        const originalOpen = toOpenRing(rawRing);
+        if (originalOpen.length < 3) {
+          return isShell ? closeRing(originalOpen) : null;
+        }
+
+        let simplifiedOpen = simplifyOpenPath(originalOpen, params, false);
+
+        simplifiedOpen = removeConsecutiveDuplicates(simplifiedOpen || []);
+        if (simplifiedOpen.length < 3) {
+          return isShell ? closeRing(originalOpen) : null;
+        }
+
+        const closed = closeRing(simplifiedOpen);
+        if (ringAreaAbs(closed) === 0) {
+          return isShell ? closeRing(originalOpen) : null;
+        }
+
+        return closed;
+      }
+
+      function simplifyPolygonCoordinates(rings, params) {
+        const shell = simplifyRing(rings[0], params, true) || rings[0];
+        const holes = [];
+        for (let i = 1; i < rings.length; i += 1) {
+          const simplifiedHole = simplifyRing(rings[i], params, false);
+          if (simplifiedHole) {
+            holes.push(simplifiedHole);
+          }
+        }
+        return [shell].concat(holes);
+      }
+
+      function simplifyPolygonCoordinatesWithSharedBorders(rings, params) {
+        return simplifyPolygonCoordinates(rings, params);
+      }
+
+      function simplifyGeometry(geometry, params) {
+        if (geometry.type === "Polygon") {
+          return {
+            type: "Polygon",
+            coordinates: simplifyPolygonCoordinatesWithSharedBorders(geometry.coordinates, params)
+          };
+        }
+        if (geometry.type === "MultiPolygon") {
+          return {
+            type: "MultiPolygon",
+            coordinates: geometry.coordinates.map(function (polygon) {
+              return simplifyPolygonCoordinatesWithSharedBorders(polygon, params);
+            })
+          };
+        }
+        return null;
+      }
+
+      function simplifyFeatureCollectionIndependent(featureCollection, params) {
+        return {
+          type: "FeatureCollection",
+          features: featureCollection.features.map(function (feature) {
+            return {
+              type: "Feature",
+              properties: deepClone(feature.properties || {}),
+              geometry: simplifyGeometry(feature.geometry, params)
+            };
+          })
+        };
+      }
+
+      function flattenRingRecords(featureCollection) {
+        const records = [];
+
+        featureCollection.features.forEach(function (feature, featureIndex) {
+          const geometry = feature.geometry;
+          if (!geometry) {
+            return;
+          }
+
+          if (geometry.type === "Polygon") {
+            geometry.coordinates.forEach(function (ring, ringIndex) {
+              records.push({
+                id: "f" + featureIndex + "-p0-r" + ringIndex,
+                featureIndex: featureIndex,
+                polygonIndex: 0,
+                ringIndex: ringIndex,
+                geometryType: "Polygon",
+                isShell: ringIndex === 0,
+                originalClosed: closeRing(toOpenRing(ring)),
+                openPoints: toOpenRing(ring)
+              });
+            });
+            return;
+          }
+
+          if (geometry.type === "MultiPolygon") {
+            geometry.coordinates.forEach(function (polygon, polygonIndex) {
+              polygon.forEach(function (ring, ringIndex) {
+                records.push({
+                  id: "f" + featureIndex + "-p" + polygonIndex + "-r" + ringIndex,
+                  featureIndex: featureIndex,
+                  polygonIndex: polygonIndex,
+                  ringIndex: ringIndex,
+                  geometryType: "MultiPolygon",
+                  isShell: ringIndex === 0,
+                  originalClosed: closeRing(toOpenRing(ring)),
+                  openPoints: toOpenRing(ring)
+                });
+              });
+            });
+          }
+        });
+
+        return records;
+      }
+
+      function simplifyFeatureCollectionCoverage(featureCollection, params) {
+        const ringRecords = flattenRingRecords(featureCollection);
+        if (!ringRecords.length) {
+          return simplifyFeatureCollectionIndependent(featureCollection, params);
+        }
+
+        const segmentUsage = new Map();
+        ringRecords.forEach(function (record) {
+          if (record.openPoints.length < 3) {
+            return;
+          }
+          const n = record.openPoints.length;
+          for (let i = 0; i < n; i += 1) {
+            const a = record.openPoints[i];
+            const b = record.openPoints[(i + 1) % n];
+            const key = canonicalSegmentKey(a, b);
+            segmentUsage.set(key, (segmentUsage.get(key) || 0) + 1);
+          }
+        });
+
+        const sharedRunRegistry = new Map();
+
+        ringRecords.forEach(function (record) {
+          if (record.openPoints.length < 3) {
+            record.hasShared = false;
+            record.runs = [];
+            return;
+          }
+
+          const n = record.openPoints.length;
+          const sharedFlags = [];
+          let hasShared = false;
+
+          for (let i = 0; i < n; i += 1) {
+            const a = record.openPoints[i];
+            const b = record.openPoints[(i + 1) % n];
+            const shared = (segmentUsage.get(canonicalSegmentKey(a, b)) || 0) > 1;
+            sharedFlags.push(shared);
+            if (shared) {
+              hasShared = true;
+            }
+          }
+
+          record.hasShared = hasShared;
+          if (!hasShared) {
+            record.runs = null;
+            return;
+          }
+
+          const runs = splitRingRuns(record.openPoints, sharedFlags);
+          runs.forEach(function (run) {
+            if (!run.shared) {
+              return;
+            }
+            const canonicalInfo = getCanonicalRunInfo(run.points);
+            run.sharedKey = canonicalInfo.key;
+            run.reverseFromCanonical = canonicalInfo.reverseFromCanonical;
+            if (!sharedRunRegistry.has(canonicalInfo.key)) {
+              sharedRunRegistry.set(canonicalInfo.key, canonicalInfo.canonicalPoints);
+            }
+          });
+          record.runs = runs;
+        });
+
+        const simplifiedSharedRuns = new Map();
+        sharedRunRegistry.forEach(function (canonicalPoints, key) {
+          const isClosed = pointsEqual(
+            canonicalPoints[0],
+            canonicalPoints[canonicalPoints.length - 1]
+          );
+          if (isClosed) {
+            const closedRing = simplifyRing(canonicalPoints, params, true);
+            simplifiedSharedRuns.set(key, closedRing || canonicalPoints.slice());
+            return;
+          }
+
+          simplifiedSharedRuns.set(
+            key,
+            simplifyOpenPath(canonicalPoints, params, true)
+          );
+        });
+
+        const simplifiedRingById = new Map();
+
+        ringRecords.forEach(function (record) {
+          const originalClosed = record.originalClosed;
+          const isShell = record.isShell;
+
+          if (record.openPoints.length < 3) {
+            simplifiedRingById.set(record.id, isShell ? originalClosed : null);
+            return;
+          }
+
+          if (!record.hasShared) {
+            simplifiedRingById.set(
+              record.id,
+              simplifyRing(originalClosed, params, isShell)
+            );
+            return;
+          }
+
+          const merged = [];
+          record.runs.forEach(function (run, runIndex) {
+            let runPoints;
+
+            if (run.shared) {
+              const sharedSimplified = simplifiedSharedRuns.get(run.sharedKey) || run.points;
+              runPoints = run.reverseFromCanonical
+                ? sharedSimplified.slice().reverse()
+                : sharedSimplified.slice();
+            } else {
+              const isClosedRun = pointsEqual(run.points[0], run.points[run.points.length - 1]);
+              if (isClosedRun) {
+                runPoints = simplifyRing(run.points, params, true) || run.points.slice();
+              } else {
+                runPoints = simplifyOpenPath(run.points, params, true);
+              }
+            }
+
+            if (!Array.isArray(runPoints) || runPoints.length < 2) {
+              runPoints = run.points.slice();
+            }
+
+            if (runIndex === 0) {
+              merged.push.apply(merged, runPoints);
+            } else {
+              merged.push.apply(merged, runPoints.slice(1));
+            }
+          });
+
+          let mergedOpen = removeConsecutiveDuplicates(merged);
+          if (mergedOpen.length > 1 && pointsEqual(mergedOpen[0], mergedOpen[mergedOpen.length - 1])) {
+            mergedOpen.pop();
+          }
+
+          if (mergedOpen.length < 3) {
+            simplifiedRingById.set(record.id, isShell ? originalClosed : null);
+            return;
+          }
+
+          const rebuiltClosed = closeRing(mergedOpen);
+          if (ringAreaAbs(rebuiltClosed) === 0) {
+            simplifiedRingById.set(record.id, isShell ? originalClosed : null);
+            return;
+          }
+
+          simplifiedRingById.set(record.id, rebuiltClosed);
+        });
+
+        return {
+          type: "FeatureCollection",
+          features: featureCollection.features.map(function (feature, featureIndex) {
+            const geometry = feature.geometry;
+
+            if (geometry.type === "Polygon") {
+              const rebuiltRings = [];
+              geometry.coordinates.forEach(function (ring, ringIndex) {
+                const id = "f" + featureIndex + "-p0-r" + ringIndex;
+                const simplifiedRing = simplifiedRingById.get(id);
+                if (simplifiedRing || ringIndex === 0) {
+                  rebuiltRings.push(simplifiedRing || closeRing(toOpenRing(ring)));
+                }
+              });
+
+              return {
+                type: "Feature",
+                properties: deepClone(feature.properties || {}),
+                geometry: {
+                  type: "Polygon",
+                  coordinates: rebuiltRings
+                }
+              };
+            }
+
+            const rebuiltPolygons = [];
+            geometry.coordinates.forEach(function (polygon, polygonIndex) {
+              const rebuiltRings = [];
+              polygon.forEach(function (ring, ringIndex) {
+                const id = "f" + featureIndex + "-p" + polygonIndex + "-r" + ringIndex;
+                const simplifiedRing = simplifiedRingById.get(id);
+                if (simplifiedRing || ringIndex === 0) {
+                  rebuiltRings.push(simplifiedRing || closeRing(toOpenRing(ring)));
+                }
+              });
+              if (rebuiltRings.length > 0) {
+                rebuiltPolygons.push(rebuiltRings);
+              }
+            });
+
+            return {
+              type: "Feature",
+              properties: deepClone(feature.properties || {}),
+              geometry: {
+                type: "MultiPolygon",
+                coordinates: rebuiltPolygons
+              }
+            };
+          })
+        };
+      }
+
+      function simplifyFeatureCollection(featureCollection, params) {
+        if (params.preserveSharedBorders) {
+          return simplifyFeatureCollectionCoverage(featureCollection, params);
+        }
+        return simplifyFeatureCollectionIndependent(featureCollection, params);
+      }
+
+      function renderOriginalLayer() {
+        originalLayer.clearLayers();
+        if (state.originalGeoJSON) {
+          originalLayer.addData(state.originalGeoJSON);
+        }
+      }
+
+      function onLayerEdited() {
+        try {
+          const edited = normalizeGeoJSON(simplifiedLayerGroup.toGeoJSON());
+          state.editedGeoJSON = edited;
+          updateStatus();
+          updateExportButtons();
+        } catch (error) {
+          setMessage("Edit sync failed: " + error.message, "error");
+        }
+      }
+
+      function attachSimplifiedLayerHandlers(layer) {
+        if (!layer || !layer.pm) {
+          return;
+        }
+        layer.pm.setOptions({
+          allowSelfIntersection: true,
+          snappable: true,
+          snapDistance: 20,
+          snapMiddle: true,
+          addVertexOn: "click",
+          removeVertexOn: "contextmenu"
+        });
+        layer.on("pm:edit", onLayerEdited);
+        layer.on("pm:vertexadded", onLayerEdited);
+        layer.on("pm:vertexremoved", onLayerEdited);
+        layer.on("pm:markerdragend", onLayerEdited);
+        layer.on("pm:dragend", onLayerEdited);
+      }
+
+      function detachSimplifiedLayerHandlers() {
+        simplifiedLayerGroup.eachLayer(function (layer) {
+          layer.off("pm:edit", onLayerEdited);
+          layer.off("pm:vertexadded", onLayerEdited);
+          layer.off("pm:vertexremoved", onLayerEdited);
+          layer.off("pm:markerdragend", onLayerEdited);
+          layer.off("pm:dragend", onLayerEdited);
+        });
+      }
+
+      function renderSimplifiedLayer() {
+        detachSimplifiedLayerHandlers();
+        simplifiedLayerGroup.clearLayers();
+
+        if (!state.simplifiedGeoJSON) {
+          return;
+        }
+
+        const generatedLayer = L.geoJSON(state.simplifiedGeoJSON, {
+          pmIgnore: false,
+          style: {
+            color: "#dc2626",
+            weight: 2,
+            fillColor: "#f87171",
+            fillOpacity: 0.12
+          }
+        });
+
+        generatedLayer.eachLayer(function (layer) {
+          attachSimplifiedLayerHandlers(layer);
+          simplifiedLayerGroup.addLayer(layer);
+        });
+      }
+
+      function fitMapToData() {
+        if (!state.originalGeoJSON) {
+          return;
+        }
+        const bounds = originalLayer.getBounds();
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [20, 20] });
+        }
+      }
+
+      function countVerticesInGeometry(geometry) {
+        if (!geometry) {
+          return 0;
+        }
+        if (geometry.type === "Polygon") {
+          return geometry.coordinates.reduce(function (sum, ring) {
+            return sum + toOpenRing(ring).length;
+          }, 0);
+        }
+        if (geometry.type === "MultiPolygon") {
+          return geometry.coordinates.reduce(function (sum, polygon) {
+            return sum + polygon.reduce(function (ringSum, ring) {
+              return ringSum + toOpenRing(ring).length;
+            }, 0);
+          }, 0);
+        }
+        return 0;
+      }
+
+      function countVerticesInGeoJSON(geojson) {
+        if (!geojson || geojson.type !== "FeatureCollection") {
+          return 0;
+        }
+        return geojson.features.reduce(function (sum, feature) {
+          return sum + countVerticesInGeometry(feature.geometry);
+        }, 0);
+      }
+
+      function orientation(a, b, c) {
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+      }
+
+      function onSegment(a, b, p) {
+        return (
+          Math.min(a[0], b[0]) <= p[0] &&
+          p[0] <= Math.max(a[0], b[0]) &&
+          Math.min(a[1], b[1]) <= p[1] &&
+          p[1] <= Math.max(a[1], b[1])
+        );
+      }
+
+      function segmentsIntersect(p1, p2, q1, q2) {
+        const o1 = orientation(p1, p2, q1);
+        const o2 = orientation(p1, p2, q2);
+        const o3 = orientation(q1, q2, p1);
+        const o4 = orientation(q1, q2, p2);
+
+        if ((o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) && (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0)) {
+          return true;
+        }
+
+        if (o1 === 0 && onSegment(p1, p2, q1)) {
+          return true;
+        }
+        if (o2 === 0 && onSegment(p1, p2, q2)) {
+          return true;
+        }
+        if (o3 === 0 && onSegment(q1, q2, p1)) {
+          return true;
+        }
+        if (o4 === 0 && onSegment(q1, q2, p2)) {
+          return true;
+        }
+        return false;
+      }
+
+      function ringHasSelfIntersections(ring) {
+        const closed = closeRing(toOpenRing(ring));
+        if (closed.length < 4) {
+          return false;
+        }
+
+        const segmentCount = closed.length - 1;
+        for (let i = 0; i < segmentCount; i += 1) {
+          const a1 = closed[i];
+          const a2 = closed[i + 1];
+
+          for (let j = i + 1; j < segmentCount; j += 1) {
+            const areAdjacent = Math.abs(i - j) <= 1;
+            const isFirstAndLast = i === 0 && j === segmentCount - 1;
+            if (areAdjacent || isFirstAndLast) {
+              continue;
+            }
+            const b1 = closed[j];
+            const b2 = closed[j + 1];
+            if (segmentsIntersect(a1, a2, b1, b2)) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      }
+
+      function collectWarnings(geojson) {
+        if (!geojson || geojson.type !== "FeatureCollection") {
+          return [];
+        }
+        const warnings = [];
+
+        geojson.features.forEach(function (feature, featureIndex) {
+          const geom = feature.geometry;
+          if (!geom) {
+            return;
+          }
+
+          const polygons = geom.type === "Polygon" ? [geom.coordinates] : geom.coordinates;
+          polygons.forEach(function (rings, polygonIndex) {
+            rings.forEach(function (ring, ringIndex) {
+              if (ring.length < 4) {
+                warnings.push(
+                  "Feature " +
+                  (featureIndex + 1) +
+                  ", polygon " +
+                  (polygonIndex + 1) +
+                  ", ring " +
+                  (ringIndex + 1) +
+                  " has fewer than 4 coordinates."
+                );
+              }
+              if (ringAreaAbs(ring) === 0) {
+                warnings.push(
+                  "Feature " +
+                  (featureIndex + 1) +
+                  ", polygon " +
+                  (polygonIndex + 1) +
+                  ", ring " +
+                  (ringIndex + 1) +
+                  " has zero area."
+                );
+              }
+              if (ringHasSelfIntersections(ring)) {
+                warnings.push(
+                  "Feature " +
+                  (featureIndex + 1) +
+                  ", polygon " +
+                  (polygonIndex + 1) +
+                  ", ring " +
+                  (ringIndex + 1) +
+                  " may self-intersect."
+                );
+              }
+            });
+          });
+        });
+
+        return warnings;
+      }
+
+      function renderWarnings(warnings) {
+        ui.warnings.innerHTML = "";
+        if (!warnings.length) {
+          const clean = document.createElement("li");
+          clean.textContent = "No basic validity warnings detected.";
+          ui.warnings.appendChild(clean);
+          return;
+        }
+        warnings.forEach(function (warning) {
+          const item = document.createElement("li");
+          item.textContent = warning;
+          ui.warnings.appendChild(item);
+        });
+      }
+
+      function currentOutputGeoJSON() {
+        return state.editedGeoJSON || state.simplifiedGeoJSON;
+      }
+
+      function updateExportButtons() {
+        const hasOutput = Boolean(currentOutputGeoJSON());
+        ui.downloadBtn.disabled = !hasOutput;
+        ui.copyBtn.disabled = !hasOutput;
+      }
+
+      function updateStatus() {
+        const input = state.originalGeoJSON;
+        const output = currentOutputGeoJSON();
+        const inputVertices = countVerticesInGeoJSON(input);
+        const outputVertices = countVerticesInGeoJSON(output);
+        const reduction = inputVertices > 0
+          ? ((1 - outputVertices / inputVertices) * 100).toFixed(2)
+          : "0.00";
+
+        ui.statInputVertices.textContent = String(inputVertices);
+        ui.statOutputVertices.textContent = String(outputVertices);
+        ui.statReduction.textContent = reduction + "%";
+
+        const statsLines = [
+          "Input features: " + (input ? input.features.length : 0),
+          "Algorithm: " + (ui.algorithmSelect.options[ui.algorithmSelect.selectedIndex] || {}).text,
+          "Output source: " + (state.editedGeoJSON ? "edited simplified geometry" : "simplified geometry")
+        ];
+        ui.stats.textContent = statsLines.join("\n");
+
+        renderWarnings(output ? collectWarnings(output) : []);
+      }
+
+      function readParameters() {
+        const lookAheadValue = Math.round(Number(ui.lookAheadNumber.value));
+        return {
+          algorithm: ui.algorithmSelect.value,
+          distanceTolerance: Math.max(0, Number(ui.distanceToleranceNumber.value) || 0),
+          areaTolerance: Math.max(0, Number(ui.areaToleranceNumber.value) || 0),
+          gridSize: Math.max(0, Number(ui.gridSizeNumber.value) || 0),
+          lookAhead: Number.isFinite(lookAheadValue) ? Math.max(2, lookAheadValue) : 8,
+          preserveSharedBorders: true
+        };
+      }
+
+      function applySimplification(fitAfterRender) {
+        if (!state.originalGeoJSON) {
+          setMessage("Import GeoJSON first.", "info");
+          return;
+        }
+
+        try {
+          const params = readParameters();
+          const simplified = simplifyFeatureCollection(state.originalGeoJSON, params);
+          state.simplifiedGeoJSON = simplified;
+          state.editedGeoJSON = null;
+          renderSimplifiedLayer();
+          if (fitAfterRender) {
+            fitMapToData();
+          }
+          updateExportButtons();
+          updateStatus();
+
+          const selectedText = ui.algorithmSelect.options[ui.algorithmSelect.selectedIndex].text;
+          setMessage("Simplification complete (" + selectedText + ").", "success");
+        } catch (error) {
+          setMessage("Simplification failed: " + error.message, "error");
+        }
+      }
+
+      function scheduleSimplification() {
+        if (!ui.liveUpdateToggle.checked || !state.originalGeoJSON) {
+          return;
+        }
+        window.clearTimeout(state.simplifyDebounceHandle);
+        state.simplifyDebounceHandle = window.setTimeout(function () {
+          applySimplification(false);
+        }, 140);
+      }
+
+      function importFromText(rawText, sourceLabel) {
+        const text = rawText.trim();
+        if (!text) {
+          setMessage("GeoJSON text input is empty.", "error");
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(text);
+          const normalized = normalizeGeoJSON(parsed);
+          state.originalGeoJSON = normalized;
+          state.simplifiedGeoJSON = null;
+          state.editedGeoJSON = null;
+          renderOriginalLayer();
+          applySimplification(true);
+          setMessage(
+            sourceLabel +
+            ": imported " +
+            normalized.features.length +
+            " Polygon/MultiPolygon feature(s).",
+            "success"
+          );
+        } catch (error) {
+          setMessage(sourceLabel + ": " + error.message, "error");
+        }
+      }
+
+      function setupEvents() {
+        ui.fileInput.addEventListener("change", function () {
+          const file = ui.fileInput.files && ui.fileInput.files[0];
+          if (!file) {
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            const text = String(event.target && event.target.result ? event.target.result : "");
+            ui.geojsonText.value = text;
+            importFromText(text, "File import");
+          };
+          reader.onerror = function () {
+            setMessage("Failed to read the selected file.", "error");
+          };
+          reader.readAsText(file);
+        });
+
+        ui.applyTextBtn.addEventListener("click", function () {
+          importFromText(ui.geojsonText.value, "Text import");
+        });
+
+        ui.geojsonText.addEventListener("keydown", function (event) {
+          const isApplyShortcut = (event.ctrlKey || event.metaKey) && event.key === "Enter";
+          if (!isApplyShortcut) {
+            return;
+          }
+          event.preventDefault();
+          importFromText(ui.geojsonText.value, "Text import");
+        });
+
+        ui.clearTextBtn.addEventListener("click", function () {
+          ui.geojsonText.value = "";
+        });
+
+        ui.algorithmSelect.addEventListener("change", function () {
+          updateAlgorithmControlVisibility();
+          scheduleSimplification();
+        });
+
+        bindNumericAndRange(
+          ui.distanceToleranceNumber,
+          ui.distanceToleranceRange,
+          scheduleSimplification
+        );
+        bindNumericAndRange(
+          ui.areaToleranceNumber,
+          ui.areaToleranceRange,
+          scheduleSimplification
+        );
+        bindNumericAndRange(
+          ui.gridSizeNumber,
+          ui.gridSizeRange,
+          scheduleSimplification
+        );
+        bindNumericAndRange(
+          ui.lookAheadNumber,
+          ui.lookAheadRange,
+          scheduleSimplification
+        );
+
+        ui.runSimplifyBtn.addEventListener("click", function () {
+          applySimplification(false);
+        });
+
+        ui.liveUpdateToggle.addEventListener("change", function () {
+          if (ui.liveUpdateToggle.checked) {
+            scheduleSimplification();
+          }
+        });
+
+        ui.resetEditsBtn.addEventListener("click", function () {
+          if (!state.simplifiedGeoJSON) {
+            setMessage("Nothing to reset. Import and simplify a geometry first.", "info");
+            return;
+          }
+          state.editedGeoJSON = null;
+          renderSimplifiedLayer();
+          updateStatus();
+          updateExportButtons();
+          setMessage("Edits reset to the latest simplification result.", "success");
+        });
+
+        ui.downloadBtn.addEventListener("click", function () {
+          const output = currentOutputGeoJSON();
+          if (!output) {
+            setMessage("No output to export.", "info");
+            return;
+          }
+          const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/geo+json" });
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement("a");
+          anchor.href = url;
+          anchor.download = "simplified-" + ui.algorithmSelect.value + ".geojson";
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          URL.revokeObjectURL(url);
+          setMessage("GeoJSON downloaded.", "success");
+        });
+
+        ui.copyBtn.addEventListener("click", async function () {
+          const output = currentOutputGeoJSON();
+          if (!output) {
+            setMessage("No output to copy.", "info");
+            return;
+          }
+          const text = JSON.stringify(output, null, 2);
+          try {
+            await navigator.clipboard.writeText(text);
+            setMessage("GeoJSON copied to clipboard.", "success");
+          } catch (error) {
+            setMessage("Clipboard copy failed. Use download instead.", "error");
+          }
+        });
+      }
+
+      updateAlgorithmControlVisibility();
+      setupEvents();
+      updateExportButtons();
+      updateStatus();
+    })();
+  </script>
+</body>
+</html>
