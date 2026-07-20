@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Draft Tournament</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f7f7f7;
+    --panel: #ffffff;
+    --border: #d7d7d7;
+    --text: #111827;
+    --muted: #4b5563;
+    --error: #b91c1c;
+    --warn: #92400e;
+    --ok: #166534;
+    --primary: #2563eb;
+    --now: #fef3c7;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+    line-height: 1.35;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 12px;
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+  }
+
+  .sub {
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .toolbar .spacer { flex: 1; }
+
+  .status-bar {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .status-bar.error { color: var(--error); }
+  .status-bar.ok { color: var(--ok); }
+
+  .steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .steps button {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  .steps button.active {
+    background: #eef3ff;
+    border-color: #c5d4ff;
+    color: #1e3a8a;
+    font-weight: 600;
+  }
+
+  .steps button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  section.panel {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    background: var(--panel);
+    margin-bottom: 10px;
+  }
+
+  section.panel h2 {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+  }
+
+  .hint {
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="search"],
+  select,
+  button,
+  textarea {
+    font: inherit;
+    font-size: 0.85rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="search"],
+  select,
+  textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    background: #fff;
+  }
+
+  button {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  button.primary {
+    background: #eef3ff;
+    border-color: #c5d4ff;
+    color: #1e3a8a;
+    font-weight: 600;
+  }
+
+  button.danger {
+    color: var(--error);
+    border-color: #fecaca;
+    background: #fef2f2;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 8px;
+  }
+
+  .row > * { min-width: 0; }
+  .grow { flex: 1; }
+  .field { margin-bottom: 8px; }
+
+  .manager-row {
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .manager-row .idx {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .kit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+  }
+
+  .kit-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    background: #fafafa;
+  }
+
+  .kit-card h3 {
+    margin: 0 0 6px;
+    font-size: 0.88rem;
+  }
+
+  .kit-picked {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 0.82rem;
+  }
+
+  .kit-picked img,
+  .club-opt img,
+  .crest {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+  }
+
+  .club-list {
+    max-height: 220px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #fff;
+  }
+
+  .club-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-bottom: 1px solid #eee;
+    border-radius: 0;
+    padding: 6px 8px;
+    background: #fff;
+  }
+
+  .club-opt:hover { background: #f3f4f6; }
+  .club-opt:disabled { opacity: 0.4; }
+
+  .order-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .order-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 6px;
+    background: #fff;
+  }
+
+  .order-list .pick-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #eef3ff;
+    color: #1e3a8a;
+    display: grid;
+    place-items: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .order-list .name { flex: 1; font-weight: 600; }
+
+  .now-banner {
+    background: var(--now);
+    border: 1px solid #f59e0b;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .draft-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 800px) {
+    .draft-layout { grid-template-columns: 1fr; }
+  }
+
+  .filters {
+    display: grid;
+    grid-template-columns: 1fr 90px 110px 90px 90px;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 700px) {
+    .filters { grid-template-columns: 1fr 1fr; }
+  }
+
+  .player-list {
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .player-row {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-bottom: 1px solid #eee;
+    border-radius: 0;
+    padding: 7px 8px;
+    background: #fff;
+  }
+
+  .player-row:hover { background: #f0f7ff; }
+  .player-row:disabled { opacity: 0.4; background: #f9fafb; }
+
+  .ovr {
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  .player-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .pos-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #374151;
+    background: #f3f4f6;
+    border-radius: 3px;
+    padding: 2px 6px;
+  }
+
+  .squads {
+    display: grid;
+    gap: 8px;
+    max-height: 520px;
+    overflow: auto;
+  }
+
+  .squad {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    background: #fafafa;
+  }
+
+  .squad.current {
+    border-color: #f59e0b;
+    background: #fffbeb;
+  }
+
+  .squad h3 {
+    margin: 0 0 6px;
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .squad ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.75rem;
+  }
+
+  .squad li {
+    display: flex;
+    gap: 6px;
+    padding: 2px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .squad li .slot { color: var(--muted); width: 18px; }
+
+  .transfer-block {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #fafafa;
+  }
+
+  .transfer-block h3 {
+    margin: 0 0 6px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .transfer-block h4 {
+    margin: 10px 0 4px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .transfer-block ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.8rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    background: #fff;
+  }
+
+  th, td {
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    text-align: left;
+  }
+
+  th { background: #f3f4f6; font-size: 0.75rem; }
+
+  td.num, th.num { text-align: center; }
+
+  .score-inputs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .score-inputs input {
+    width: 52px;
+    text-align: center;
+  }
+
+  .matchday {
+    margin-bottom: 14px;
+  }
+
+  .matchday h3 {
+    margin: 0 0 6px;
+    font-size: 0.85rem;
+  }
+
+  .fixture-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 6px;
+    background: #fff;
+  }
+
+  .fixture-row .home { text-align: right; }
+  .fixture-row .away { text-align: left; }
+  .fixture-row .vs { font-size: 0.75rem; color: var(--muted); text-align: center; }
+
+  .hidden { display: none !important; }
+
+  .nav-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .empty {
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+
+  #fileImport { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Draft Tournament</h1>
+  <p class="sub">Host tool: kits → pick order → snake draft (18) → transfers → fixtures → standings</p>
+
+  <div class="toolbar">
+    <button type="button" id="btnExport" class="secondary">Export JSON</button>
+    <button type="button" id="btnImport">Import JSON</button>
+    <input type="file" id="fileImport" accept="application/json,.json" />
+    <span class="spacer"></span>
+    <button type="button" id="btnReset" class="danger">Reset tournament</button>
+  </div>
+
+  <div id="statusBar" class="status-bar">Loading player database…</div>
+
+  <div class="steps" id="steps"></div>
+
+  <div id="app" class="hidden"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "draft-tournament-v1";
+  const PICKS_PER_TEAM = 18;
+  const PHASES = [
+    { id: "setup", label: "Setup" },
+    { id: 1, label: "1 Kits" },
+    { id: 2, label: "2 Order" },
+    { id: 3, label: "3 Draft" },
+    { id: 4, label: "4 Transfers" },
+    { id: 5, label: "5 Fixtures" },
+    { id: 6, label: "6 Results" },
+  ];
+
+  /** @type {Array<{id:string, displayName:string, search:string, overallRating:number, firstName:string, lastName:string, commonName:string|null, leagueName:string, nationality:any, team:any, position:any}>} */
+  let players = [];
+  /** @type {Map<string|number, {id:string|number, label:string, imageUrl:string}>} */
+  let clubsById = new Map();
+  /** @type {Array<{id:string|number, label:string, imageUrl:string}>} */
+  let clubs = [];
+  /** @type {Map<string, typeof players[0]>} */
+  let playersById = new Map();
+
+  let state = defaultState();
+  let draftFilter = { q: "", pos: "", type: "", minOvr: "", maxOvr: "" };
+  let kitSearchByManager = {};
+
+  function defaultState() {
+    return {
+      version: 1,
+      phase: "setup",
+      managers: [
+        { id: uid(), name: "Manager 1", kitTeamId: null },
+        { id: uid(), name: "Manager 2", kitTeamId: null },
+        { id: uid(), name: "Manager 3", kitTeamId: null },
+        { id: uid(), name: "Manager 4", kitTeamId: null },
+        { id: uid(), name: "Manager 5", kitTeamId: null },
+      ],
+      pickOrder: [],
+      picks: [],
+      fixtures: [],
+    };
+  }
+
+  function uid() {
+    return "m_" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function playerId(p) {
+    return [p.team && p.team.id, p.firstName, p.lastName, p.position && p.position.id, p.overallRating].join("|");
+  }
+
+  function displayName(p) {
+    if (p.commonName) return p.commonName;
+    return [p.firstName, p.lastName].filter(Boolean).join(" ");
+  }
+
+  function b64ToBytes(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  async function decryptPlayers(payload, password) {
+    if (payload.v !== 1) throw new Error("Unsupported payload version");
+    if (payload.alg !== "aes-256-gcm") throw new Error("Unsupported algorithm");
+
+    const salt = b64ToBytes(payload.salt);
+    const iv = b64ToBytes(payload.iv);
+    const tag = b64ToBytes(payload.tag);
+    const ciphertext = b64ToBytes(payload.ciphertext);
+    const iterations = payload.iterations || 210000;
+
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["decrypt"]
+    );
+
+    const combined = new Uint8Array(ciphertext.length + tag.length);
+    combined.set(ciphertext);
+    combined.set(tag, ciphertext.length);
+
+    const plainBuf = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, combined);
+    return JSON.parse(new TextDecoder().decode(plainBuf));
+  }
+
+  function indexPlayers(raw) {
+    players = raw.map(function (p) {
+      const id = playerId(p);
+      const name = displayName(p);
+      const teamLabel = (p.team && p.team.label) || "";
+      const pos = (p.position && p.position.shortLabel) || "";
+      const type = (p.position && p.position.positionType && p.position.positionType.id) || "";
+      return {
+        id: id,
+        displayName: name,
+        search: (name + " " + teamLabel + " " + pos + " " + (p.leagueName || "")).toLowerCase(),
+        overallRating: p.overallRating,
+        firstName: p.firstName,
+        lastName: p.lastName,
+        commonName: p.commonName,
+        leagueName: p.leagueName,
+        nationality: p.nationality,
+        team: p.team,
+        position: p.position,
+        posType: type,
+      };
+    });
+    playersById = new Map(players.map(function (p) { return [p.id, p]; }));
+
+    const map = new Map();
+    players.forEach(function (p) {
+      if (!p.team || p.team.id == null) return;
+      if (!map.has(p.team.id)) {
+        map.set(p.team.id, {
+          id: p.team.id,
+          label: p.team.label || String(p.team.id),
+          imageUrl: p.team.imageUrl || "",
+        });
+      }
+    });
+    clubsById = map;
+    clubs = Array.from(map.values()).sort(function (a, b) {
+      return a.label.localeCompare(b.label);
+    });
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.warn("localStorage save failed", e);
+    }
+  }
+
+  function loadSaved() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.version !== 1) return;
+      state = Object.assign(defaultState(), parsed);
+    } catch (e) {
+      console.warn("localStorage load failed", e);
+    }
+  }
+
+  function setStatus(msg, kind) {
+    const el = document.getElementById("statusBar");
+    el.textContent = msg;
+    el.className = "status-bar" + (kind ? " " + kind : "");
+  }
+
+  function managerById(id) {
+    return state.managers.find(function (m) { return m.id === id; });
+  }
+
+  function kitClub(m) {
+    if (!m || m.kitTeamId == null) return null;
+    return clubsById.get(m.kitTeamId) || null;
+  }
+
+  function takenKits() {
+    return new Set(
+      state.managers.map(function (m) { return m.kitTeamId; }).filter(function (x) { return x != null; })
+    );
+  }
+
+  function draftedIds() {
+    return new Set(state.picks.map(function (p) { return p.playerId; }));
+  }
+
+  function picksForManager(mid) {
+    return state.picks.filter(function (p) { return p.managerId === mid; });
+  }
+
+  function snakeOrder(order, totalPicksPer) {
+    const seq = [];
+    for (let round = 0; round < totalPicksPer; round++) {
+      const forward = round % 2 === 0;
+      const slice = forward ? order.slice() : order.slice().reverse();
+      slice.forEach(function (mid) { seq.push(mid); });
+    }
+    return seq;
+  }
+
+  function draftSequence() {
+    const order = state.pickOrder.length
+      ? state.pickOrder.slice()
+      : state.managers.map(function (m) { return m.id; });
+    return snakeOrder(order, PICKS_PER_TEAM);
+  }
+
+  function currentPickInfo() {
+    const seq = draftSequence();
+    const idx = state.picks.length;
+    if (idx >= seq.length) return null;
+    const managerId = seq[idx];
+    const m = managerById(managerId);
+    const soFar = picksForManager(managerId).length;
+    return {
+      globalIndex: idx,
+      total: seq.length,
+      managerId: managerId,
+      manager: m,
+      pickNumber: soFar + 1,
+    };
+  }
+
+  function setupComplete() {
+    return state.managers.length >= 2 &&
+      state.managers.every(function (m) { return m.name && m.name.trim(); });
+  }
+
+  function kitsComplete() {
+    return state.managers.every(function (m) { return m.kitTeamId != null; });
+  }
+
+  function orderComplete() {
+    return state.pickOrder.length === state.managers.length &&
+      state.managers.every(function (m) { return state.pickOrder.indexOf(m.id) !== -1; });
+  }
+
+  function draftComplete() {
+    return state.picks.length === state.managers.length * PICKS_PER_TEAM;
+  }
+
+  function fixturesExist() {
+    return state.fixtures.length > 0;
+  }
+
+  function maxReachablePhase() {
+    if (!setupComplete()) return "setup";
+    if (!kitsComplete()) return 1;
+    if (!orderComplete()) return 2;
+    if (!draftComplete()) return 3;
+    if (!fixturesExist()) return 5;
+    return 6;
+  }
+
+  function phaseRank(p) {
+    if (p === "setup") return 0;
+    return Number(p);
+  }
+
+  function canVisit(p) {
+    const max = maxReachablePhase();
+    if (p === "setup") return true;
+    if (phaseRank(p) <= phaseRank(max)) return true;
+    // Allow visiting completed phases and the next incomplete one
+    if (p === 4 && draftComplete()) return true;
+    if (p === 5 && draftComplete()) return true;
+    if (p === 6 && fixturesExist()) return true;
+    return phaseRank(p) <= phaseRank(max) + (max === 3 && draftComplete() ? 1 : 0);
+  }
+
+  function ensurePickOrder() {
+    if (state.pickOrder.length !== state.managers.length) {
+      state.pickOrder = state.managers.map(function (m) { return m.id; });
+    } else {
+      const ids = new Set(state.managers.map(function (m) { return m.id; }));
+      state.pickOrder = state.pickOrder.filter(function (id) { return ids.has(id); });
+      state.managers.forEach(function (m) {
+        if (state.pickOrder.indexOf(m.id) === -1) state.pickOrder.push(m.id);
+      });
+    }
+  }
+
+  function circleRoundRobin(ids) {
+    // Circle method for single round-robin; returns rounds of [home, away]
+    const n = ids.length;
+    const arr = ids.slice();
+    if (n % 2 === 1) arr.push(null); // bye
+    const total = arr.length;
+    const rounds = total - 1;
+    const half = total / 2;
+    const result = [];
+
+    for (let r = 0; r < rounds; r++) {
+      const pairs = [];
+      for (let i = 0; i < half; i++) {
+        const a = arr[i];
+        const b = arr[total - 1 - i];
+        if (a != null && b != null) {
+          if (r % 2 === 0) pairs.push([a, b]);
+          else pairs.push([b, a]);
+        }
+      }
+      result.push(pairs);
+      // rotate: keep first fixed
+      const fixed = arr[0];
+      const rest = arr.slice(1);
+      rest.unshift(rest.pop());
+      arr.splice(0, arr.length, fixed, ...rest);
+    }
+    return result;
+  }
+
+  function generateFixtures() {
+    const ids = state.managers.map(function (m) { return m.id; });
+    const single = circleRoundRobin(ids);
+    const fixtures = [];
+    let mid = 1;
+    // first half
+    single.forEach(function (pairs) {
+      pairs.forEach(function (pair) {
+        fixtures.push({
+          id: "f_" + fixtures.length,
+          matchday: mid,
+          homeId: pair[0],
+          awayId: pair[1],
+          homeGoals: null,
+          awayGoals: null,
+        });
+      });
+      mid++;
+    });
+    // return fixtures (swap home/away)
+    single.forEach(function (pairs) {
+      pairs.forEach(function (pair) {
+        fixtures.push({
+          id: "f_" + fixtures.length,
+          matchday: mid,
+          homeId: pair[1],
+          awayId: pair[0],
+          homeGoals: null,
+          awayGoals: null,
+        });
+      });
+      mid++;
+    });
+    state.fixtures = fixtures;
+  }
+
+  function standings() {
+    const table = {};
+    state.managers.forEach(function (m) {
+      table[m.id] = {
+        id: m.id,
+        name: m.name,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        gf: 0,
+        ga: 0,
+        gd: 0,
+        pts: 0,
+      };
+    });
+    state.fixtures.forEach(function (f) {
+      if (f.homeGoals == null || f.awayGoals == null) return;
+      if (f.homeGoals === "" || f.awayGoals === "") return;
+      const hg = Number(f.homeGoals);
+      const ag = Number(f.awayGoals);
+      if (!Number.isFinite(hg) || !Number.isFinite(ag)) return;
+      const home = table[f.homeId];
+      const away = table[f.awayId];
+      if (!home || !away) return;
+      home.played++;
+      away.played++;
+      home.gf += hg;
+      home.ga += ag;
+      away.gf += ag;
+      away.ga += hg;
+      if (hg > ag) {
+        home.won++;
+        away.lost++;
+        home.pts += 3;
+      } else if (hg < ag) {
+        away.won++;
+        home.lost++;
+        away.pts += 3;
+      } else {
+        home.drawn++;
+        away.drawn++;
+        home.pts += 1;
+        away.pts += 1;
+      }
+    });
+    Object.values(table).forEach(function (r) {
+      r.gd = r.gf - r.ga;
+    });
+    return Object.values(table).sort(function (a, b) {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      if (b.gd !== a.gd) return b.gd - a.gd;
+      if (b.gf !== a.gf) return b.gf - a.gf;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  function invalidateFrom(phase) {
+    // Clear data belonging to later phases when going back / changing earlier data
+    if (phaseRank(phase) < 3) {
+      state.picks = [];
+    }
+    if (phaseRank(phase) < 5) {
+      state.fixtures = [];
+    }
+    if (phaseRank(phase) < 2) {
+      // kits change: keep order ids but fine
+    }
+    if (phaseRank(phase) < 1) {
+      state.managers.forEach(function (m) { m.kitTeamId = null; });
+      state.pickOrder = [];
+      state.picks = [];
+      state.fixtures = [];
+    }
+  }
+
+  function goPhase(p, force) {
+    if (!force && !canVisit(p) && phaseRank(p) > phaseRank(state.phase)) {
+      return;
+    }
+    state.phase = p;
+    save();
+    render();
+  }
+
+  // ——— Render ———
+
+  function renderSteps() {
+    const el = document.getElementById("steps");
+    el.innerHTML = "";
+    PHASES.forEach(function (ph) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = ph.label;
+      const active = String(state.phase) === String(ph.id);
+      if (active) btn.classList.add("active");
+      const reachable = canVisit(ph.id) || String(state.phase) === String(ph.id);
+      btn.disabled = !reachable;
+      btn.addEventListener("click", function () {
+        goPhase(ph.id);
+      });
+      el.appendChild(btn);
+    });
+  }
+
+  function render() {
+    renderSteps();
+    const app = document.getElementById("app");
+    app.classList.remove("hidden");
+    app.innerHTML = "";
+
+    if (state.phase === "setup") renderSetup(app);
+    else if (state.phase === 1) renderKits(app);
+    else if (state.phase === 2) renderOrder(app);
+    else if (state.phase === 3) renderDraft(app);
+    else if (state.phase === 4) renderTransfers(app);
+    else if (state.phase === 5) renderFixtures(app);
+    else if (state.phase === 6) renderResults(app);
+  }
+
+  function navButtons(container, opts) {
+    const row = document.createElement("div");
+    row.className = "nav-row";
+    if (opts.back) {
+      const back = document.createElement("button");
+      back.type = "button";
+      back.textContent = opts.backLabel || "Back";
+      back.addEventListener("click", opts.back);
+      row.appendChild(back);
+    }
+    if (opts.next) {
+      const next = document.createElement("button");
+      next.type = "button";
+      next.className = "primary";
+      next.textContent = opts.nextLabel || "Continue";
+      next.disabled = !!opts.nextDisabled;
+      next.addEventListener("click", opts.next);
+      row.appendChild(next);
+    }
+    container.appendChild(row);
+  }
+
+  function renderSetup(app) {
+    const panel = document.createElement("section");
+    panel.className = "panel";
+    panel.innerHTML = "<h2>Setup managers</h2><p class=\"hint\">Add 2–8 managers. Names are required.</p>";
+
+    const countField = document.createElement("div");
+    countField.className = "field";
+    countField.innerHTML = "<label>Number of managers</label>";
+    const countInput = document.createElement("input");
+    countInput.type = "number";
+    countInput.min = 2;
+    countInput.max = 8;
+    countInput.value = state.managers.length;
+    countInput.style.maxWidth = "120px";
+    countInput.addEventListener("change", function () {
+      let n = Math.max(2, Math.min(8, Number(countInput.value) || 2));
+      countInput.value = n;
+      const prev = state.managers.slice();
+      if (n < prev.length && (state.picks.length || state.fixtures.length)) {
+        if (!confirm("Reducing managers clears later tournament data. Continue?")) {
+          countInput.value = state.managers.length;
+          return;
+        }
+        invalidateFrom("setup");
+      }
+      const next = [];
+      for (let i = 0; i < n; i++) {
+        if (prev[i]) next.push(prev[i]);
+        else next.push({ id: uid(), name: "Manager " + (i + 1), kitTeamId: null });
+      }
+      state.managers = next;
+      ensurePickOrder();
+      save();
+      render();
+    });
+    countField.appendChild(countInput);
+    panel.appendChild(countField);
+
+    state.managers.forEach(function (m, i) {
+      const row = document.createElement("div");
+      row.className = "manager-row";
+      row.innerHTML = "<div class=\"idx\">" + (i + 1) + "</div>";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = m.name;
+      input.placeholder = "Manager name";
+      input.addEventListener("input", function () {
+        m.name = input.value;
+        save();
+      });
+      input.addEventListener("change", function () {
+        m.name = input.value.trim() || ("Manager " + (i + 1));
+        input.value = m.name;
+        save();
+        renderSteps();
+      });
+      row.appendChild(input);
+      panel.appendChild(row);
+    });
+
+    navButtons(panel, {
+      nextLabel: "Continue to kits →",
+      nextDisabled: !setupComplete(),
+      next: function () {
+        if (!setupComplete()) return;
+        ensurePickOrder();
+        goPhase(1, true);
+      },
+    });
+    app.appendChild(panel);
+  }
+
+  function renderKits(app) {
+    const panel = document.createElement("section");
+    panel.className = "panel";
+    panel.innerHTML = "<h2>Phase 1 — Kit clubs</h2><p class=\"hint\">Each manager picks a unique club kit. Search and click a club.</p>";
+
+    const grid = document.createElement("div");
+    grid.className = "kit-grid";
+    const taken = takenKits();
+
+    state.managers.forEach(function (m) {
+      const card = document.createElement("div");
+      card.className = "kit-card";
+      const h = document.createElement("h3");
+      h.textContent = m.name;
+      card.appendChild(h);
+
+      const picked = kitClub(m);
+      if (picked) {
+        const row = document.createElement("div");
+        row.className = "kit-picked";
+        if (picked.imageUrl) {
+          const img = document.createElement("img");
+          img.src = picked.imageUrl;
+          img.alt = "";
+          img.className = "crest";
+          row.appendChild(img);
+        }
+        const span = document.createElement("span");
+        span.textContent = picked.label;
+        row.appendChild(span);
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.textContent = "Change";
+        clear.addEventListener("click", function () {
+          if (state.picks.length && !confirm("Changing kits clears draft picks and fixtures. Continue?")) return;
+          if (state.picks.length) invalidateFrom(1);
+          m.kitTeamId = null;
+          save();
+          render();
+        });
+        row.appendChild(clear);
+        card.appendChild(row);
+      } else {
+        const search = document.createElement("input");
+        search.type = "search";
+        search.placeholder = "Search clubs…";
+        search.value = kitSearchByManager[m.id] || "";
+        const list = document.createElement("div");
+        list.className = "club-list";
+
+        function fillList() {
+          const q = (kitSearchByManager[m.id] || "").toLowerCase().trim();
+          list.innerHTML = "";
+          let shown = 0;
+          for (let i = 0; i < clubs.length && shown < 80; i++) {
+            const c = clubs[i];
+            if (q && c.label.toLowerCase().indexOf(q) === -1) continue;
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "club-opt";
+            btn.disabled = taken.has(c.id);
+            if (c.imageUrl) {
+              const img = document.createElement("img");
+              img.src = c.imageUrl;
+              img.alt = "";
+              btn.appendChild(img);
+            }
+            const lab = document.createElement("span");
+            lab.textContent = c.label + (taken.has(c.id) ? " (taken)" : "");
+            btn.appendChild(lab);
+            btn.addEventListener("click", function () {
+              if (state.picks.length && !confirm("Changing kits clears draft picks and fixtures. Continue?")) return;
+              if (state.picks.length) invalidateFrom(1);
+              m.kitTeamId = c.id;
+              save();
+              render();
+            });
+            list.appendChild(btn);
+            shown++;
+          }
+          if (!shown) {
+            list.innerHTML = "<div class=\"empty\">No clubs found</div>";
+          }
+        }
+
+        search.addEventListener("input", function () {
+          kitSearchByManager[m.id] = search.value;
+          fillList();
+        });
+        card.appendChild(search);
+        card.appendChild(list);
+        fillList();
+      }
+      grid.appendChild(card);
+    });
+
+    panel.appendChild(grid);
+    navButtons(panel, {
+      back: function () { goPhase("setup"); },
+      nextLabel: "Continue to pick order →",
+      nextDisabled: !kitsComplete(),
+      next: function () {
+        if (!kitsComplete()) return;
+        ensurePickOrder();
+        goPhase(2, true);
+      },
+    });
+    app.appendChild(panel);
+  }
+
+  function renderOrder(app) {
+    ensurePickOrder();
+    const panel = document.createElement("section");
+    panel.className = "panel";
+    panel.innerHTML = "<h2>Phase 2 — Pick order</h2><p class=\"hint\">Moderator sets draft order. Position 1 picks first in round 1.</p>";
+
+    const list = document.createElement("ol");
+    list.className = "order-list";
+
+    state.pickOrder.forEach(function (mid, idx) {
+      const m = managerById(mid);
+      const li = document.createElement("li");
+      const num = document.createElement("div");
+      num.className = "pick-num";
+      num.textContent = String(idx + 1);
+      li.appendChild(num);
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = m ? m.name : mid;
+      const kit = m && kitClub(m);
+      if (kit) name.textContent += " — " + kit.label;
+      li.appendChild(name);
+
+      const up = document.createElement("button");
+      up.type = "button";
+      up.textContent = "↑";
+      up.disabled = idx === 0;
+      up.addEventListener("click", function () {
+        if (state.picks.length && !confirm("Changing order clears draft picks. Continue?")) return;
+        if (state.picks.length) invalidateFrom(2);
+        const arr = state.pickOrder;
+        const t = arr[idx - 1];
+        arr[idx - 1] = arr[idx];
+        arr[idx] = t;
+        save();
+        render();
+      });
+      const down = document.createElement("button");
+      down.type = "button";
+      down.textContent = "↓";
+      down.disabled = idx === state.pickOrder.length - 1;
+      down.addEventListener("click", function () {
+        if (state.picks.length && !confirm("Changing order clears draft picks. Continue?")) return;
+        if (state.picks.length) invalidateFrom(2);
+        const arr = state.pickOrder;
+        const t = arr[idx + 1];
+        arr[idx + 1] = arr[idx];
+        arr[idx] = t;
+        save();
+        render();
+      });
+      li.appendChild(up);
+      li.appendChild(down);
+      list.appendChild(li);
+    });
+    panel.appendChild(list);
+
+    const shuffle = document.createElement("button");
+    shuffle.type = "button";
+    shuffle.textContent = "Shuffle random order";
+    shuffle.addEventListener("click", function () {
+      if (state.picks.length && !confirm("Changing order clears draft picks. Continue?")) return;
+      if (state.picks.length) invalidateFrom(2);
+      const arr = state.pickOrder.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = arr[i];
+        arr[i] = arr[j];
+        arr[j] = t;
+      }
+      state.pickOrder = arr;
+      save();
+      render();
+    });
+    panel.appendChild(shuffle);
+
+    navButtons(panel, {
+      back: function () { goPhase(1); },
+      nextLabel: "Start draft →",
+      nextDisabled: !orderComplete(),
+      next: function () {
+        if (!orderComplete()) return;
+        goPhase(3, true);
+      },
+    });
+    app.appendChild(panel);
+  }
+
+  function filterPlayers() {
+    const taken = draftedIds();
+    const q = (draftFilter.q || "").toLowerCase().trim();
+    const pos = draftFilter.pos;
+    const type = draftFilter.type;
+    const minOvr = draftFilter.minOvr === "" ? null : Number(draftFilter.minOvr);
+    const maxOvr = draftFilter.maxOvr === "" ? null : Number(draftFilter.maxOvr);
+    const out = [];
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      if (taken.has(p.id)) continue;
+      if (q && p.search.indexOf(q) === -1) continue;
+      if (pos && (!p.position || p.position.shortLabel !== pos)) continue;
+      if (type && p.posType !== type) continue;
+      if (minOvr != null && Number.isFinite(minOvr) && p.overallRating < minOvr) continue;
+      if (maxOvr != null && Number.isFinite(maxOvr) && p.overallRating > maxOvr) continue;
+      out.push(p);
+      if (out.length >= 120) break;
+    }
+    return out;
+  }
+
+  function renderDraft(app) {
+    const panel = document.createElement("section");
+    panel.className = "panel";
+    panel.innerHTML = "<h2>Phase 3 — Snake draft</h2><p class=\"hint\">Order snakes each round: 1→N then N→1. Each manager picks " + PICKS_PER_TEAM + " players.</p>";
+
+    const info = currentPickInfo();
+    const done = draftComplete();
+
+    const banner = document.createElement("div");
+    banner.className = "now-banner";
+    if (done) {
+      banner.textContent = "Draft complete — all " + state.picks.length + " picks locked in.";
+    } else if (info && info.manager) {
+      banner.textContent =
+        "NOW PICKING: " + info.manager.name +
+        " — pick " + info.pickNumber + " of " + PICKS_PER_TEAM +
+        " (overall " + (info.globalIndex + 1) + "/" + info.total + ")";
+    } else {
+      banner.textContent = "No active pick";
+    }
+    panel.appendChild(banner);
+
+    const actions = document.createElement("div");
+    actions.className = "row";
+    const undo = document.createElement("button");
+    undo.type = "button";
+    undo.textContent = "Undo last pick";
+    undo.disabled = state.picks.length === 0;
+    undo.addEventListener("click", function () {
+      state.picks.pop();
+      save();
+      render();
+    });
+    actions.appendChild(undo);
+    panel.appendChild(actions);
+
+    const layout = document.createElement("div");
+    layout.className = "draft-layout";
+
+    // Left: search
+    const left = document.createElement("div");
+    const filters = document.createElement("div");
+    filters.className = "filters";
+
+    const q = document.createElement("input");
+    q.type = "search";
+    q.placeholder = "Search name / club…";
+    q.value = draftFilter.q;
+    q.addEventListener("input", function () {
+      draftFilter.q = q.value;
+      refreshPlayerList();
+    });
+
+    const pos = document.createElement("select");
+    ["", "GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"].forEach(function (v) {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = v || "Pos";
+      pos.appendChild(o);
+    });
+    pos.value = draftFilter.pos;
+    pos.addEventListener("change", function () {
+      draftFilter.pos = pos.value;
+      refreshPlayerList();
+    });
+
+    const type = document.createElement("select");
+    [
+      ["", "Type"],
+      ["goalkeeper", "GK type"],
+      ["defender", "Def"],
+      ["midfielder", "Mid"],
+      ["forward", "Fwd"],
+    ].forEach(function (pair) {
+      const o = document.createElement("option");
+      o.value = pair[0];
+      o.textContent = pair[1];
+      type.appendChild(o);
+    });
+    type.value = draftFilter.type;
+    type.addEventListener("change", function () {
+      draftFilter.type = type.value;
+      refreshPlayerList();
+    });
+
+    const minOvr = document.createElement("input");
+    minOvr.type = "number";
+    minOvr.placeholder = "Min OVR";
+    minOvr.value = draftFilter.minOvr;
+    minOvr.addEventListener("input", function () {
+      draftFilter.minOvr = minOvr.value;
+      refreshPlayerList();
+    });
+
+    const maxOvr = document.createElement("input");
+    maxOvr.type = "number";
+    maxOvr.placeholder = "Max OVR";
+    maxOvr.value = draftFilter.maxOvr;
+    maxOvr.addEventListener("input", function () {
+      draftFilter.maxOvr = maxOvr.value;
+      refreshPlayerList();
+    });
+
+    filters.appendChild(q);
+    filters.appendChild(pos);
+    filters.appendChild(type);
+    filters.appendChild(minOvr);
+    filters.appendChild(maxOvr);
+    left.appendChild(filters);
+
+    const list = document.createElement("div");
+    list.className = "player-list";
+    left.appendChild(list);
+
+    function refreshPlayerList() {
+      list.innerHTML = "";
+      if (done) {
+        list.innerHTML = "<div class=\"empty\">Draft finished.</div>";
+        return;
+      }
+      const rows = filterPlayers();
+      if (!rows.length) {
+        list.innerHTML = "<div class=\"empty\">No players match filters.</div>";
+        return;
+      }
+      rows.forEach(function (p) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "player-row";
+        const ovr = document.createElement("div");
+        ovr.className = "ovr";
+        ovr.textContent = String(p.overallRating);
+        const mid = document.createElement("div");
+        mid.innerHTML =
+          "<div><strong>" + escapeHtml(p.displayName) + "</strong></div>" +
+          "<div class=\"player-meta\">" +
+          escapeHtml((p.team && p.team.label) || "") + " · " +
+          escapeHtml(p.leagueName || "") +
+          "</div>";
+        const badge = document.createElement("span");
+        badge.className = "pos-badge";
+        badge.textContent = (p.position && p.position.shortLabel) || "?";
+        btn.appendChild(ovr);
+        btn.appendChild(mid);
+        btn.appendChild(badge);
+        btn.addEventListener("click", function () {
+          const cur = currentPickInfo();
+          if (!cur) return;
+          if (draftedIds().has(p.id)) return;
+          state.picks.push({
+            managerId: cur.managerId,
+            playerId: p.id,
+            pickIndex: state.picks.length,
+          });
+          save();
+          render();
+        });
+        list.appendChild(btn);
+      });
+    }
+
+    // Right: squads
+    const right = document.createElement("div");
+    right.className = "squads";
+    const order = state.pickOrder.slice();
+    order.forEach(function (mid) {
+      const m = managerById(mid);
+      const squad = document.createElement("div");
+      squad.className = "squad" + (info && info.managerId === mid && !done ? " current" : "");
+      const kit = kitClub(m);
+      const h = document.createElement("h3");
+      if (kit && kit.imageUrl) {
+        const img = document.createElement("img");
+        img.src = kit.imageUrl;
+        img.alt = "";
+        img.className = "crest";
+        h.appendChild(img);
+      }
+      const title = document.createElement("span");
+      title.textContent = (m ? m.name : mid) + " (" + picksForManager(mid).length + "/" + PICKS_PER_TEAM + ")";
+      h.appendChild(title);
+      squad.appendChild(h);
+      const ul = document.createElement("ul");
+      const picks = picksForManager(mid);
+      for (let i = 0; i < PICKS_PER_TEAM; i++) {
+        const li = document.createElement("li");
+        const slot = document.createElement("span");
+        slot.className = "slot";
+        slot.textContent = String(i + 1) + ".";
+        li.appendChild(slot);
+        if (picks[i]) {
+          const pl = playersById.get(picks[i].playerId);
+          li.appendChild(document.createTextNode(
+            pl
+              ? pl.overallRating + " " + pl.displayName + " (" + ((pl.position && pl.position.shortLabel) || "?") + ")"
+              : picks[i].playerId
+          ));
+        } else {
+          const empty = document.createElement("span");
+          empty.className = "player-meta";
+          empty.textContent = "—";
+          li.appendChild(empty);
+        }
+        ul.appendChild(li);
+      }
+      squad.appendChild(ul);
+      right.appendChild(squad);
+    });
+
+    layout.appendChild(left);
+    layout.appendChild(right);
+    panel.appendChild(layout);
+    refreshPlayerList();
+
+    navButtons(panel, {
+      back: function () { goPhase(2); },
+      nextLabel: "Continue to transfers →",
+      nextDisabled: !done,
+      next: function () {
+        if (!done) return;
+        goPhase(4, true);
+      },
+    });
+    app.appendChild(panel);
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function buildTransferBySourceClub() {
+    // clubId -> { club, total, byManager: { managerId -> [{player, manager, kit}] } }
+    const byClub = new Map();
+
+    state.picks.forEach(function (pick) {
+      const pl = playersById.get(pick.playerId);
+      if (!pl || !pl.team) return;
+      const m = managerById(pick.managerId);
+      if (!m) return;
+      const kit = kitClub(m);
+      // Already on destination kit — no transfer needed
+      if (kit && String(pl.team.id) === String(kit.id)) return;
+
+      const clubId = pl.team.id;
+      if (!byClub.has(clubId)) {
+        byClub.set(clubId, {
+          club: {
+            id: pl.team.id,
+            label: pl.team.label || String(pl.team.id),
+            imageUrl: pl.team.imageUrl || "",
+          },
+          total: 0,
+          byManager: new Map(),
+        });
+      }
+      const entry = byClub.get(clubId);
+      entry.total++;
+      if (!entry.byManager.has(m.id)) entry.byManager.set(m.id, []);
+      entry.byManager.get(m.id).push({ player: pl, manager: m, kit: kit });
+    });
+
+    return Array.from(byClub.values()).sort(function (a, b) {
+      if (b.total !== a.total) return b.total - a.total;
+      return a.club.label.localeCompare(b.club.label);
+    });
+  }
+
+  function renderTransfers(app) {
+    const panel = document.createElement("section");
+    panel.className = "panel";
+    panel.innerHTML = "<h2>Phase 4 — Transfer summary</h2><p class=\"hint\">Grouped by source club: who leaves that club, and which manager they go to.</p>";
+
+    const groups = buildTransferBySourceClub();
+
+    if (!groups.length) {
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No transfers needed — every drafted player is already on their manager’s kit club.";
+      panel.appendChild(empty);
+    }
+
+    const fullCopyLines = [];
+
+    groups.forEach(function (group) {
+      const block = document.createElement("div");
+      block.className = "transfer-block";
+
+      const h = document.createElement("h3");
+      if (group.club.imageUrl) {
+        const img = document.createElement("img");
+        img.src = group.club.imageUrl;
+        img.alt = "";
+        img.className = "crest";
+        h.appendChild(img);
+      }
+      h.appendChild(document.createTextNode(
+        "From " + group.club.label + " — " + group.total + " player" + (group.total === 1 ? "" : "s")
+      ));
+      block.appendChild(h);
+
+      const blockLines = ["From " + group.club.label + " — " + group.total + " players"];
+
+      // Preserve pick-order / manager setup order
+      const managerIds = state.pickOrder.length
+        ? state.pickOrder
+        : state.managers.map(function (m) { return m.id; });
+
+      managerIds.forEach(function (mid) {
+        const rows = group.byManager.get(mid);
+        if (!rows || !rows.length) return;
+        const m = rows[0].manager;
+        const kit = rows[0].kit;
+        const destLabel = m.name + (kit ? " (" + kit.label + ")" : "");
+
+        const h4 = document.createElement("h4");
+        h4.textContent = "→ " + destLabel + " — " + rows.length + " player" + (rows.length === 1 ? "" : "s");
+        block.appendChild(h4);
+
+        const ul = document.createElement("ul");
+        const lines = [];
+        rows
+          .slice()
+          .sort(function (a, b) { return b.player.overallRating - a.player.overallRating; })
+          .forEach(function (row) {
+            const pl = row.player;
+            const line =
+              pl.displayName +
+              " · " + pl.overallRating +
+              " · " + ((pl.position && pl.position.shortLabel) || "?");
+            const li = document.createElement("li");
+            li.textContent = line;
+            ul.appendChild(li);
+            lines.push("- " + line);
+          });
+        block.appendChild(ul);
+        blockLines.push("→ " + destLabel + " (" + rows.length + ")");
+        blockLines.push.apply(blockLines, lines);
+      });
+
+      fullCopyLines.push(blockLines.join("\n"));
+      fullCopyLines.push("");
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.textContent = "Copy this club";
+      copyBtn.style.marginTop = "8px";
+      copyBtn.addEventListener("click", function () {
+        const text = blockLines.join("\n");
+        navigator.clipboard.writeText(text).then(function () {
+          copyBtn.textContent = "Copied";
+          setTimeout(function () { copyBtn.textContent = "Copy this club"; }, 1200);
+        }).catch(function () {
+          prompt("Copy:", text);
+        });
+      });
+      block.appendChild(copyBtn);
+      panel.appendChild(block);
+    });
+
+    if (groups.length) {
+      const copyAll = document.createElement("button");
+      copyAll.type = "button";
+      copyAll.className = "primary";
+      copyAll.textContent = "Copy all transfers";
+      copyAll.addEventListener("click", function () {
+        const text = fullCopyLines.join("\n").trim();
+        navigator.clipboard.writeText(text).then(function () {
+          copyAll.textContent = "Copied";
+          setTimeout(function () { copyAll.textContent = "Copy all transfers"; }, 1200);
+        }).catch(function () {
+          prompt("Copy:", text);
+        });
+      });
+      panel.appendChild(copyAll);
+    }
+
+    navButtons(panel, {
+      back: function () { goPhase(3); },
+      nextLabel: "Continue to fixtures →",
+      next: function () {
+        if (!state.fixtures.length) generateFixtures();
+        save();
+        goPhase(5, true);
+      },
+    });
+    app.appendChild(panel);
+  }
+
+  function renderFixtures(app) {
+    const panel = document.createElement("section");
+    panel.className = "panel";
+    panel.innerHTML = "<h2>Phase 5 — Fixtures</h2><p class=\"hint\">Double round-robin (home and away). Generate once, then enter results in phase 6.</p>";
+
+    const row = document.createElement("div");
+    row.className = "row";
+    const gen = document.createElement("button");
+    gen.type = "button";
+    gen.className = "primary";
+    gen.textContent = state.fixtures.length ? "Regenerate fixtures" : "Generate fixtures";
+    gen.addEventListener("click", function () {
+      const hasResults = state.fixtures.some(function (f) {
+        return f.homeGoals != null && f.homeGoals !== "" && f.awayGoals != null && f.awayGoals !== "";
+      });
+      if (state.fixtures.length && !confirm(hasResults
+        ? "This wipes all fixtures and results. Continue?"
+        : "Regenerate fixtures? Continue?")) return;
+      generateFixtures();
+      save();
+      render();
+    });
+    row.appendChild(gen);
+    panel.appendChild(row);
+
+    if (!state.fixtures.length) {
+      panel.appendChild(Object.assign(document.createElement("p"), {
+        className: "empty",
+        textContent: "No fixtures yet. Click Generate.",
+      }));
+    } else {
+      const byMd = {};
+      state.fixtures.forEach(function (f) {
+        if (!byMd[f.matchday]) byMd[f.matchday] = [];
+        byMd[f.matchday].push(f);
+      });
+      Object.keys(byMd).map(Number).sort(function (a, b) { return a - b; }).forEach(function (md) {
+        const block = document.createElement("div");
+        block.className = "matchday";
+        const h = document.createElement("h3");
+        h.textContent = "Matchday " + md;
+        block.appendChild(h);
+        byMd[md].forEach(function (f) {
+          const home = managerById(f.homeId);
+          const away = managerById(f.awayId);
+          const fr = document.createElement("div");
+          fr.className = "fixture-row";
+          fr.innerHTML =
+            "<div class=\"home\">" + escapeHtml(home ? home.name : "?") + "</div>" +
+            "<div class=\"vs\">vs</div>" +
+            "<div class=\"away\">" + escapeHtml(away ? away.name : "?") + "</div>";
+          block.appendChild(fr);
+        });
+        panel.appendChild(block);
+      });
+    }
+
+    navButtons(panel, {
+      back: function () { goPhase(4); },
+      nextLabel: "Enter results →",
+      nextDisabled: !state.fixtures.length,
+      next: function () {
+        if (!state.fixtures.length) return;
+        goPhase(6, true);
+      },
+    });
+    app.appendChild(panel);
+  }
+
+  function renderResults(app) {
+    const panel = document.createElement("section");
+    panel.className = "panel";
+    panel.innerHTML = "<h2>Phase 6 — Results & standings</h2><p class=\"hint\">Enter scores. Standings update automatically (3 pts win, 1 draw).</p>";
+
+    // Standings first for visibility
+    const tableWrap = document.createElement("div");
+    tableWrap.style.marginBottom = "14px";
+    const table = document.createElement("table");
+    table.innerHTML =
+      "<thead><tr>" +
+      "<th>#</th><th>Manager</th>" +
+      "<th class=\"num\">P</th><th class=\"num\">W</th><th class=\"num\">D</th><th class=\"num\">L</th>" +
+      "<th class=\"num\">GF</th><th class=\"num\">GA</th><th class=\"num\">GD</th><th class=\"num\">Pts</th>" +
+      "</tr></thead>";
+    const tbody = document.createElement("tbody");
+    standings().forEach(function (r, i) {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + (i + 1) + "</td>" +
+        "<td>" + escapeHtml(r.name) + "</td>" +
+        "<td class=\"num\">" + r.played + "</td>" +
+        "<td class=\"num\">" + r.won + "</td>" +
+        "<td class=\"num\">" + r.drawn + "</td>" +
+        "<td class=\"num\">" + r.lost + "</td>" +
+        "<td class=\"num\">" + r.gf + "</td>" +
+        "<td class=\"num\">" + r.ga + "</td>" +
+        "<td class=\"num\">" + r.gd + "</td>" +
+        "<td class=\"num\"><strong>" + r.pts + "</strong></td>";
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+    panel.appendChild(tableWrap);
+
+    const byMd = {};
+    state.fixtures.forEach(function (f) {
+      if (!byMd[f.matchday]) byMd[f.matchday] = [];
+      byMd[f.matchday].push(f);
+    });
+
+    Object.keys(byMd).map(Number).sort(function (a, b) { return a - b; }).forEach(function (md) {
+      const block = document.createElement("div");
+      block.className = "matchday";
+      const h = document.createElement("h3");
+      h.textContent = "Matchday " + md;
+      block.appendChild(h);
+
+      byMd[md].forEach(function (f) {
+        const home = managerById(f.homeId);
+        const away = managerById(f.awayId);
+        const fr = document.createElement("div");
+        fr.className = "fixture-row";
+        fr.style.gridTemplateColumns = "1fr auto 1fr";
+
+        const homeEl = document.createElement("div");
+        homeEl.className = "home";
+        homeEl.textContent = home ? home.name : "?";
+
+        const mid = document.createElement("div");
+        mid.className = "score-inputs";
+        const hi = document.createElement("input");
+        hi.type = "number";
+        hi.min = 0;
+        hi.placeholder = "H";
+        hi.value = f.homeGoals == null ? "" : f.homeGoals;
+        const sep = document.createElement("span");
+        sep.textContent = "–";
+        const ai = document.createElement("input");
+        ai.type = "number";
+        ai.min = 0;
+        ai.placeholder = "A";
+        ai.value = f.awayGoals == null ? "" : f.awayGoals;
+
+        function sync() {
+          const hv = hi.value === "" ? null : Number(hi.value);
+          const av = ai.value === "" ? null : Number(ai.value);
+          f.homeGoals = Number.isFinite(hv) ? hv : null;
+          f.awayGoals = Number.isFinite(av) ? av : null;
+          save();
+          render();
+        }
+        hi.addEventListener("change", sync);
+        ai.addEventListener("change", sync);
+        hi.addEventListener("keydown", function (ev) {
+          if (ev.key === "Enter") { sync(); hi.blur(); }
+        });
+        ai.addEventListener("keydown", function (ev) {
+          if (ev.key === "Enter") { sync(); ai.blur(); }
+        });
+
+        mid.appendChild(hi);
+        mid.appendChild(sep);
+        mid.appendChild(ai);
+
+        const awayEl = document.createElement("div");
+        awayEl.className = "away";
+        awayEl.textContent = away ? away.name : "?";
+
+        fr.appendChild(homeEl);
+        fr.appendChild(mid);
+        fr.appendChild(awayEl);
+        block.appendChild(fr);
+      });
+      panel.appendChild(block);
+    });
+
+    navButtons(panel, {
+      back: function () { goPhase(5); },
+    });
+    app.appendChild(panel);
+  }
+
+  // ——— Toolbar ———
+
+  document.getElementById("btnExport").addEventListener("click", function () {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "draft-tournament.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById("btnImport").addEventListener("click", function () {
+    document.getElementById("fileImport").click();
+  });
+
+  document.getElementById("fileImport").addEventListener("change", function (e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.managers)) {
+          throw new Error("Invalid tournament file");
+        }
+        if (!confirm("Replace current tournament with imported file?")) return;
+        state = Object.assign(defaultState(), parsed);
+        save();
+        render();
+        setStatus("Imported tournament (" + state.managers.length + " managers).", "ok");
+      } catch (err) {
+        alert("Import failed: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById("btnReset").addEventListener("click", function () {
+    if (!confirm("Reset the entire tournament? This cannot be undone (unless you exported).")) return;
+    state = defaultState();
+    save();
+    render();
+    setStatus("Tournament reset. " + players.length.toLocaleString() + " players loaded.", "ok");
+  });
+
+  // ——— Boot ———
+
+  async function boot() {
+    loadSaved();
+    setStatus("Loading & decrypting player database… this may take a few seconds.");
+    try {
+      const [keyRes, encRes] = await Promise.all([
+        fetch("data-key.txt"),
+        fetch("players-web.enc.json"),
+      ]);
+      if (!keyRes.ok) throw new Error("Could not load data-key.txt (" + keyRes.status + ")");
+      if (!encRes.ok) throw new Error("Could not load players-web.enc.json (" + encRes.status + ")");
+      const password = (await keyRes.text()).trim();
+      const payload = await encRes.json();
+      const raw = await decryptPlayers(payload, password);
+      indexPlayers(raw);
+      setStatus(
+        players.length.toLocaleString() + " players · " + clubs.length.toLocaleString() + " clubs loaded.",
+        "ok"
+      );
+      document.getElementById("app").classList.remove("hidden");
+      render();
+    } catch (err) {
+      console.error(err);
+      setStatus("Failed to load players: " + err.message, "error");
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
