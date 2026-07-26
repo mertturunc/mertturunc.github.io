@@ -205,26 +205,68 @@
     border-radius: 6px;
     padding: 8px;
     background: #fafafa;
+    overflow: hidden;
+    color: var(--text);
+  }
+
+  .kit-card.themed {
+    background: linear-gradient(45deg, var(--c1) 50%, var(--c2) 50%);
   }
 
   .kit-card h3 {
     margin: 0 0 6px;
     font-size: 0.88rem;
+    color: var(--text);
+  }
+
+  .kit-card.themed h3,
+  .kit-card.themed .kit-picked {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    padding: 6px 8px;
   }
 
   .kit-picked {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
     margin-top: 6px;
     font-size: 0.82rem;
+    color: var(--text);
   }
 
-  .kit-picked img,
-  .club-opt img,
+  .kit-picked-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .kit-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .kit-strip img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    background: rgba(0,0,0,0.04);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .kit-picked img.crest,
+  .club-opt img.crest,
   .crest {
     width: 28px;
     height: 28px;
+    object-fit: contain;
+  }
+
+  .club-opt img.kit-thumb {
+    width: 36px;
+    height: 36px;
     object-fit: contain;
   }
 
@@ -253,7 +295,7 @@
   }
 
   .club-list {
-    max-height: 220px;
+    max-height: 280px;
     overflow: auto;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -273,8 +315,34 @@
     background: #fff;
   }
 
+  .club-opt .club-opt-meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .club-opt .club-opt-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .club-opt .club-opt-sub {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+
   .club-opt:hover { background: #f3f4f6; }
   .club-opt:disabled { opacity: 0.4; }
+
+  .order-list li.themed {
+    background: linear-gradient(45deg, var(--c1) 50%, var(--c2) 50%);
+    color: var(--text);
+  }
+
+  .order-list li.themed .name {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
 
   .order-list {
     list-style: none;
@@ -305,16 +373,37 @@
     font-weight: 700;
   }
 
-  .order-list .name { flex: 1; font-weight: 600; }
+  .order-list .name {
+    flex: 1;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
 
   .now-banner {
-    background: var(--now);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    background: #fffbeb;
     border: 1px solid #f59e0b;
     border-radius: 6px;
     padding: 10px 12px;
     margin-bottom: 10px;
     font-size: 1rem;
     font-weight: 700;
+    color: #111827;
+  }
+
+  .now-banner .now-label {
+    color: #92400e;
+  }
+
+  .now-banner .now-text {
+    flex: 1;
+    min-width: 0;
   }
 
   .draft-layout {
@@ -399,6 +488,19 @@
   .squad.current {
     border-color: #f59e0b;
     background: #fffbeb;
+    order: -1;
+  }
+
+  .squad-now {
+    margin-left: auto;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #92400e;
+    background: #fde68a;
+    border-radius: 3px;
+    padding: 2px 6px;
   }
 
   .squad h3 {
@@ -540,6 +642,20 @@
 
   td.num, th.num { text-align: center; }
 
+  .mgr-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .mgr-cell .team-id-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .score-inputs {
     display: flex;
     align-items: center;
@@ -572,8 +688,24 @@
     background: #fff;
   }
 
-  .fixture-row .home { text-align: right; }
-  .fixture-row .away { text-align: left; }
+  .team-id {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .team-id-home { justify-content: flex-end; }
+  .team-id-away { justify-content: flex-start; }
+
+  .team-id-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .fixture-row .vs { font-size: 0.75rem; color: var(--muted); text-align: center; }
 
   .hidden { display: none !important; }
@@ -642,8 +774,243 @@
   let rosterByClubId = new Map();
   /** @type {Array<{name:string, type:string, clubHints:string[], players:Array<{pos:string, name:string}>}>} */
   let sidePack = [];
+  /** @type {Map<string, {id:number|string, label:string, kits:number, c1:number[]|null, c2:number[]|null, imageUrl:string, kitUrl:string}>} */
+  let teamsById = new Map();
+  /** @type {Array<{id:number|string, label:string, kits:number, c1:number[]|null, c2:number[]|null, imageUrl:string, kitUrl:string}>} */
+  let kitClubs = [];
+
+  let teamAliases = {};
+  let assetBase = "";
+  let pathCrest = "";
+  let pathKit = "";
 
   const MIN_CLUB_ROSTER = 17;
+
+  function applyAssetPath(tpl, id, variant) {
+    if (!tpl) return "";
+    return String(tpl)
+      .replace(/\{id\}/g, String(id))
+      .replace(/\{v\}/g, String(variant == null ? 0 : variant));
+  }
+
+  function crestUrl(teamId) {
+    if (!assetBase || !pathCrest || teamId == null || teamId === "") return "";
+    return assetBase + applyAssetPath(pathCrest, teamId, 0);
+  }
+
+  function kitUrl(teamId, variant) {
+    if (!assetBase || !pathKit || teamId == null || teamId === "") return "";
+    return assetBase + applyAssetPath(pathKit, teamId, variant);
+  }
+
+  function rgbCss(arr) {
+    if (!arr || arr.length < 3) return null;
+    return "rgb(" + arr[0] + "," + arr[1] + "," + arr[2] + ")";
+  }
+
+  function softRgb(arr, alpha) {
+    if (!arr || arr.length < 3) return null;
+    const a = alpha == null ? 0.18 : alpha;
+    return "rgba(" + arr[0] + "," + arr[1] + "," + arr[2] + "," + a + ")";
+  }
+
+  function contrastText(arr) {
+    if (!arr || arr.length < 3) return "#111";
+    const r = arr[0] / 255;
+    const g = arr[1] / 255;
+    const b = arr[2] / 255;
+    const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return L > 0.55 ? "#111827" : "#ffffff";
+  }
+
+  function teamTheme(teamId) {
+    const t = teamsById.get(String(teamId));
+    if (!t) return null;
+    return t;
+  }
+
+  function applyTeamTheme(el, teamId) {
+    const t = teamTheme(teamId);
+    if (!t || !t.c1) {
+      el.classList.remove("themed");
+      el.style.removeProperty("--c1");
+      el.style.removeProperty("--c2");
+      el.style.removeProperty("--c1-soft");
+      el.style.removeProperty("--c2-soft");
+      el.style.removeProperty("--c-text");
+      return;
+    }
+    const c2 = t.c2 || t.c1;
+    el.classList.add("themed");
+    el.style.setProperty("--c1", rgbCss(t.c1));
+    el.style.setProperty("--c2", rgbCss(c2));
+    el.style.setProperty("--c1-soft", softRgb(t.c1, 0.24));
+    el.style.setProperty("--c2-soft", softRgb(c2, 0.24));
+    el.style.setProperty("--c-text", "#111827");
+  }
+
+  function crestImgEl(url) {
+    if (!url) return null;
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "";
+    img.className = "crest";
+    img.loading = "lazy";
+    img.onerror = function () { img.style.display = "none"; };
+    return img;
+  }
+
+  function fillManagerIdentity(el, manager, side) {
+    el.classList.add("team-id");
+    if (side) el.classList.add("team-id-" + side);
+    el.textContent = "";
+    const kit = manager ? kitClub(manager) : null;
+    const name = document.createElement("span");
+    name.className = "team-id-name";
+    name.textContent = manager ? manager.name : "?";
+    const crest = kit ? crestImgEl(kit.imageUrl) : null;
+
+    if (side === "home") {
+      el.appendChild(name);
+      if (crest) el.appendChild(crest);
+    } else {
+      if (crest) el.appendChild(crest);
+      el.appendChild(name);
+    }
+    return kit;
+  }
+
+  // Asset pack order: 0 home, 1 away, 2 keeper, 3 third, 4+ extras.
+  function outfieldKitVariants(kitCount) {
+    const n = Math.max(1, Math.min(6, Number(kitCount) || 1));
+    const variants = [];
+    if (n >= 1) variants.push(0);
+    if (n >= 2) variants.push(1);
+    if (n >= 4) variants.push(3);
+    return variants;
+  }
+
+  function outfieldKitCount(kitCount) {
+    return outfieldKitVariants(kitCount).length;
+  }
+
+  function appendKitImgs(strip, teamId, kitCount) {
+    outfieldKitVariants(kitCount).forEach(function (variant, idx) {
+      const img = document.createElement("img");
+      img.src = kitUrl(teamId, variant);
+      img.alt = "kit " + (idx + 1);
+      img.loading = "lazy";
+      img.onerror = function () { img.style.display = "none"; };
+      strip.appendChild(img);
+    });
+  }
+
+  function kitStripEl(team) {
+    const strip = document.createElement("div");
+    strip.className = "kit-strip";
+    appendKitImgs(strip, team.id, team.kits || 3);
+    return strip;
+  }
+
+  function decodeAssetBase(raw) {
+    const s = String(raw || "");
+    if (!s) return "";
+    try {
+      const decoded = atob(s);
+      if (/^https?:\/\//i.test(decoded)) return decoded.replace(/\/$/, "");
+    } catch (e) { /* plain url fallback */ }
+    return s.replace(/\/$/, "");
+  }
+
+  function normalizeClubLabel(s) {
+    return String(s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function isWomenLabel(label) {
+    const n = normalizeClubLabel(label);
+    if (/\bwomen\b|\bladies\b|femin|\bwfc\b|lionesses\b/.test(n)) return true;
+    // Women's-only clubs that share no men's twin name in the pack
+    return /\b(sgs essen|ol lyonnes|fleury 91|seattle reign|portland thorns|north carolina courage|washington spirit|chicago stars|houston dash|orlando pride|racing louisville|kansas city current|gotham fc|angel city|san diego wave|costa adeje|madrid cff|alhama|rosengard|glasgow city|bay fc|utah royals|dux logrono)\b/.test(n);
+  }
+
+  function isHistoricLabel(label) {
+    return /\bhistoric\b/i.test(String(label || ""));
+  }
+
+  function teamOnRoster(id) {
+    return rosterByClubId.has(id) || rosterByClubId.has(String(id)) || rosterByClubId.has(Number(id));
+  }
+
+  function preferClub(a, b) {
+    const aRoster = teamOnRoster(a.id);
+    const bRoster = teamOnRoster(b.id);
+    if (aRoster !== bRoster) return aRoster ? a : b;
+    const aKits = Number(a.kits) || 0;
+    const bKits = Number(b.kits) || 0;
+    if (aKits !== bKits) return aKits > bKits ? a : b;
+    return Number(a.id) <= Number(b.id) ? a : b;
+  }
+
+  function rebuildKitClubs() {
+    if (!teamsById.size) {
+      kitClubs = [];
+      return;
+    }
+    const bestByName = new Map();
+    teamsById.forEach(function (t) {
+      if (isWomenLabel(t.label)) return;
+      if (isHistoricLabel(t.label)) return;
+      const key = normalizeClubLabel(t.label);
+      if (!key) return;
+      const prev = bestByName.get(key);
+      bestByName.set(key, prev ? preferClub(prev, t) : t);
+    });
+
+    kitClubs = Array.from(bestByName.values()).map(function (t) {
+      return {
+        id: t.id,
+        label: t.label,
+        kits: t.kits,
+        c1: t.c1,
+        c2: t.c2,
+        imageUrl: t.imageUrl,
+        kitUrl: t.kitUrl,
+      };
+    }).sort(function (a, b) {
+      return a.label.localeCompare(b.label);
+    });
+  }
+
+  function indexTeamsCdn(pack) {
+    const rawList = Array.isArray(pack) ? pack : ((pack && pack.teams) || []);
+    if (pack && pack.u) assetBase = decodeAssetBase(pack.u);
+    else if (pack && pack.cdn) assetBase = decodeAssetBase(pack.cdn);
+    if (pack && pack.p) {
+      pathCrest = pack.p.c || "";
+      pathKit = pack.p.k || "";
+    }
+    if (pack && pack.aliases && typeof pack.aliases === "object") {
+      teamAliases = pack.aliases;
+    }
+    const all = rawList.map(function (t) {
+      return {
+        id: t.id,
+        label: t.n || String(t.id),
+        kits: Number(t.k) || 0,
+        c1: t.c1 || null,
+        c2: t.c2 || null,
+        imageUrl: crestUrl(t.id),
+        kitUrl: kitUrl(t.id, 0),
+      };
+    });
+    teamsById = new Map(all.map(function (t) { return [String(t.id), t]; }));
+    rebuildKitClubs();
+  }
 
   let state = defaultState();
   let draftFilter = { q: "", pos: "", type: "", minOvr: "", maxOvr: "" };
@@ -751,7 +1118,8 @@
         map.set(p.team.id, {
           id: p.team.id,
           label: p.team.label || String(p.team.id),
-          imageUrl: p.team.imageUrl || "",
+          imageUrl: crestUrl(p.team.id) || p.team.imageUrl || "",
+          kitUrl: kitUrl(p.team.id, 0),
         });
       }
     });
@@ -766,6 +1134,7 @@
       roster.set(p.team.id, (roster.get(p.team.id) || 0) + 1);
     });
     rosterByClubId = roster;
+    rebuildKitClubs();
   }
 
   function save() {
@@ -800,12 +1169,19 @@
 
   function kitClub(m) {
     if (!m || m.kitTeamId == null) return null;
-    return clubsById.get(m.kitTeamId) || null;
+    const id = String(m.kitTeamId);
+    for (let i = 0; i < kitClubs.length; i++) {
+      if (String(kitClubs[i].id) === id) return kitClubs[i];
+    }
+    return teamsById.get(id) || clubsById.get(m.kitTeamId) || null;
   }
 
   function takenKits() {
     return new Set(
-      state.managers.map(function (m) { return m.kitTeamId; }).filter(function (x) { return x != null; })
+      state.managers
+        .map(function (m) { return m.kitTeamId; })
+        .filter(function (x) { return x != null; })
+        .map(String)
     );
   }
 
@@ -1209,11 +1585,12 @@
   function renderKits(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
-    panel.innerHTML = "<h2>Phase 1 — Kit clubs</h2><p class=\"hint\">Each manager picks a unique club kit. Search and click a club.</p>";
+    panel.innerHTML = "<h2>Phase 1 — Kit clubs</h2><p class=\"hint\">Each manager picks a unique men's club. Crests and kits load after decrypt.</p>";
 
     const grid = document.createElement("div");
     grid.className = "kit-grid";
     const taken = takenKits();
+    const catalog = kitClubs.length ? kitClubs : clubs;
 
     state.managers.forEach(function (m) {
       const card = document.createElement("div");
@@ -1224,18 +1601,26 @@
 
       const picked = kitClub(m);
       if (picked) {
-        const row = document.createElement("div");
-        row.className = "kit-picked";
+        applyTeamTheme(card, picked.id);
+        const block = document.createElement("div");
+        block.className = "kit-picked";
+
+        const top = document.createElement("div");
+        top.className = "kit-picked-top";
         if (picked.imageUrl) {
           const img = document.createElement("img");
           img.src = picked.imageUrl;
           img.alt = "";
           img.className = "crest";
-          row.appendChild(img);
+          top.appendChild(img);
         }
         const span = document.createElement("span");
         span.textContent = picked.label;
-        row.appendChild(span);
+        top.appendChild(span);
+        block.appendChild(top);
+
+        block.appendChild(kitStripEl(picked));
+
         const clear = document.createElement("button");
         clear.type = "button";
         clear.textContent = "Change";
@@ -1246,8 +1631,8 @@
           save();
           render();
         });
-        row.appendChild(clear);
-        card.appendChild(row);
+        block.appendChild(clear);
+        card.appendChild(block);
       } else {
         const search = document.createElement("input");
         search.type = "search";
@@ -1260,22 +1645,40 @@
           const q = (kitSearchByManager[m.id] || "").toLowerCase().trim();
           list.innerHTML = "";
           let shown = 0;
-          for (let i = 0; i < clubs.length && shown < 80; i++) {
-            const c = clubs[i];
+          for (let i = 0; i < catalog.length && shown < 80; i++) {
+            const c = catalog[i];
             if (q && c.label.toLowerCase().indexOf(q) === -1) continue;
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "club-opt";
-            btn.disabled = taken.has(c.id);
-            if (c.imageUrl) {
+            btn.disabled = taken.has(c.id) || taken.has(String(c.id));
+            if (c.kitUrl) {
+              const kitImg = document.createElement("img");
+              kitImg.src = c.kitUrl;
+              kitImg.alt = "";
+              kitImg.className = "kit-thumb";
+              kitImg.loading = "lazy";
+              kitImg.onerror = function () { kitImg.style.display = "none"; };
+              btn.appendChild(kitImg);
+            } else if (c.imageUrl) {
               const img = document.createElement("img");
               img.src = c.imageUrl;
               img.alt = "";
+              img.className = "crest";
               btn.appendChild(img);
             }
-            const lab = document.createElement("span");
-            lab.textContent = c.label + (taken.has(c.id) ? " (taken)" : "");
-            btn.appendChild(lab);
+            const meta = document.createElement("div");
+            meta.className = "club-opt-meta";
+            const name = document.createElement("div");
+            name.className = "club-opt-name";
+            name.textContent = c.label + (taken.has(c.id) || taken.has(String(c.id)) ? " (taken)" : "");
+            meta.appendChild(name);
+            const sub = document.createElement("div");
+            sub.className = "club-opt-sub";
+            const shownKits = outfieldKitCount(c.kits || 0);
+            sub.textContent = shownKits ? shownKits + " kits" : "kit";
+            meta.appendChild(sub);
+            btn.appendChild(meta);
             btn.addEventListener("click", function () {
               if (state.picks.length && !confirm("Changing kits clears draft picks and fixtures. Continue?")) return;
               if (state.picks.length) invalidateFrom(1);
@@ -1336,7 +1739,17 @@
       name.className = "name";
       name.textContent = m ? m.name : mid;
       const kit = m && kitClub(m);
-      if (kit) name.textContent += " — " + kit.label;
+      if (kit) {
+        applyTeamTheme(li, kit.id);
+        name.textContent += " — " + kit.label;
+        if (kit.imageUrl) {
+          const crest = document.createElement("img");
+          crest.src = kit.imageUrl;
+          crest.alt = "";
+          crest.className = "crest";
+          name.prepend(crest);
+        }
+      }
       li.appendChild(name);
 
       const up = document.createElement("button");
@@ -1524,10 +1937,23 @@
     if (done) {
       banner.textContent = "Draft complete — all " + state.picks.length + " picks locked in.";
     } else if (info && info.manager) {
-      banner.textContent =
-        "NOW PICKING: " + info.manager.name +
+      const kit = kitClub(info.manager);
+      const label = document.createElement("span");
+      label.className = "now-label";
+      label.textContent = "NOW PICKING:";
+      banner.appendChild(label);
+      if (kit && kit.imageUrl) {
+        const crest = crestImgEl(kit.imageUrl);
+        if (crest) banner.appendChild(crest);
+      }
+      const text = document.createElement("span");
+      text.className = "now-text";
+      text.textContent =
+        info.manager.name +
+        (kit ? " (" + kit.label + ")" : "") +
         " — pick " + info.pickNumber + " of " + PICKS_PER_TEAM +
         " (overall " + (info.globalIndex + 1) + "/" + info.total + ")";
+      banner.appendChild(text);
     } else {
       banner.textContent = "No active pick";
     }
@@ -1672,14 +2098,17 @@
       });
     }
 
-    // Right: squads
+    // Right: current manager pinned on top, others below
     const right = document.createElement("div");
     right.className = "squads";
     const order = state.pickOrder.slice();
-    order.forEach(function (mid) {
+    const currentId = !done && info ? info.managerId : null;
+
+    function buildSquadCard(mid, isCurrent) {
       const m = managerById(mid);
       const squad = document.createElement("div");
-      squad.className = "squad" + (info && info.managerId === mid && !done ? " current" : "");
+      squad.className = "squad" + (isCurrent ? " current" : "");
+      squad.dataset.managerId = mid;
       const kit = kitClub(m);
       const h = document.createElement("h3");
       if (kit && kit.imageUrl) {
@@ -1692,9 +2121,23 @@
       const title = document.createElement("span");
       title.textContent = (m ? m.name : mid) + " (" + picksForManager(mid).length + "/" + PICKS_PER_TEAM + ")";
       h.appendChild(title);
+      if (isCurrent) {
+        const tag = document.createElement("span");
+        tag.className = "squad-now";
+        tag.textContent = "picking";
+        h.appendChild(tag);
+      }
       squad.appendChild(h);
       renderSquadByPosition(squad, mid);
-      right.appendChild(squad);
+      return squad;
+    }
+
+    if (currentId) {
+      right.appendChild(buildSquadCard(currentId, true));
+    }
+    order.forEach(function (mid) {
+      if (mid === currentId) return;
+      right.appendChild(buildSquadCard(mid, false));
     });
 
     layout.appendChild(left);
@@ -1741,7 +2184,7 @@
           club: {
             id: pl.team.id,
             label: pl.team.label || String(pl.team.id),
-            imageUrl: pl.team.imageUrl || "",
+            imageUrl: crestUrl(pl.team.id) || pl.team.imageUrl || "",
           },
           total: 0,
           byManager: new Map(),
@@ -1808,21 +2251,21 @@
     const hits = [];
     const seen = new Set();
 
-    sidePack.forEach(function (xi) {
-      if (xi.type === "club" && !clubMatchesHints(club.label, xi.clubHints || [])) return;
+    sidePack.forEach(function (entry) {
+      if (entry.type === "club" && !clubMatchesHints(club.label, entry.clubHints || [])) return;
 
       outgoingPlayers.forEach(function (pl) {
-        (xi.players || []).forEach(function (cp) {
+        (entry.players || []).forEach(function (cp) {
           if (!playerMatchesPackName(pl, cp.name)) return;
-          const key = pl.id + "|" + xi.name + "|" + cp.name;
+          const key = pl.id + "|" + entry.name + "|" + cp.name;
           if (seen.has(key)) return;
           seen.add(key);
           hits.push({
             player: pl,
             packName: cp.name,
             packPos: cp.pos,
-            squadName: xi.name,
-            squadType: xi.type,
+            squadName: entry.name,
+            squadType: entry.type,
           });
         });
       });
@@ -1833,10 +2276,9 @@
 
   function squadInitials(label) {
     const words = String(label || "")
-      .replace(/\bXI\b/gi, "")
       .trim()
       .split(/\s+/)
-      .filter(Boolean);
+      .filter(function (w) { return w && !/^xi$/i.test(w); });
     if (!words.length) return "?";
     if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
     return words
@@ -1849,9 +2291,19 @@
   function findClubByName(name) {
     const target = normalizePersonName(name);
     if (!target) return null;
+
+    const extras = teamAliases || {};
+    if (extras[target] != null) {
+      const id = extras[target];
+      const known = teamsById.get(String(id));
+      if (known) return known;
+      return { id: id, label: name, kits: 3, c1: null, c2: null, imageUrl: crestUrl(id), kitUrl: kitUrl(id, 0) };
+    }
+
+    const pool = kitClubs.length ? kitClubs : clubs;
     let best = null;
     let bestScore = 0;
-    clubs.forEach(function (c) {
+    pool.forEach(function (c) {
       const lab = normalizePersonName(c.label);
       if (!lab) return;
       let score = 0;
@@ -1869,7 +2321,6 @@
         const ratio = hits.length / tParts.length;
         if (ratio >= 1) score = 70;
         else if (ratio >= 0.5) score = 55;
-        // distinctive single token (bayern, chelsea, liverpool, juventus)
         else if (hits.length === 1 && hits[0].length >= 5) score = 52;
       }
       if (score > bestScore) {
@@ -1877,7 +2328,16 @@
         best = c;
       }
     });
-    return bestScore >= 50 ? best : null;
+    if (bestScore < 50 || !best) return null;
+    return teamsById.get(String(best.id)) || {
+      id: best.id,
+      label: best.label,
+      kits: best.kits || 0,
+      c1: best.c1 || null,
+      c2: best.c2 || null,
+      imageUrl: best.imageUrl || crestUrl(best.id),
+      kitUrl: best.kitUrl || kitUrl(best.id, 0),
+    };
   }
 
   function appendCrestOrInitial(parent, imageUrl, label) {
@@ -1916,7 +2376,7 @@
         });
       }
 
-      // Locked-list / XI: separate line per matched squad name
+      // Protected / special squad leavers: separate line per matched pack name
       const bySquad = new Map();
       packHits.forEach(function (hit) {
         if (!bySquad.has(hit.squadName)) bySquad.set(hit.squadName, new Set());
@@ -1930,6 +2390,7 @@
           kind: "locked",
           label: squadName,
           imageUrl: matched && matched.imageUrl ? matched.imageUrl : "",
+          kitUrl: matched && matched.kitUrl ? matched.kitUrl : "",
         });
       });
     });
@@ -2172,10 +2633,22 @@
           const away = managerById(f.awayId);
           const fr = document.createElement("div");
           fr.className = "fixture-row";
-          fr.innerHTML =
-            "<div class=\"home\">" + escapeHtml(home ? home.name : "?") + "</div>" +
-            "<div class=\"vs\">vs</div>" +
-            "<div class=\"away\">" + escapeHtml(away ? away.name : "?") + "</div>";
+
+          const homeEl = document.createElement("div");
+          homeEl.className = "home";
+          fillManagerIdentity(homeEl, home, "home");
+
+          const vs = document.createElement("div");
+          vs.className = "vs";
+          vs.textContent = "vs";
+
+          const awayEl = document.createElement("div");
+          awayEl.className = "away";
+          fillManagerIdentity(awayEl, away, "away");
+
+          fr.appendChild(homeEl);
+          fr.appendChild(vs);
+          fr.appendChild(awayEl);
           block.appendChild(fr);
         });
         panel.appendChild(block);
@@ -2212,17 +2685,39 @@
     const tbody = document.createElement("tbody");
     standings().forEach(function (r, i) {
       const tr = document.createElement("tr");
-      tr.innerHTML =
-        "<td>" + (i + 1) + "</td>" +
-        "<td>" + escapeHtml(r.name) + "</td>" +
-        "<td class=\"num\">" + r.played + "</td>" +
-        "<td class=\"num\">" + r.won + "</td>" +
-        "<td class=\"num\">" + r.drawn + "</td>" +
-        "<td class=\"num\">" + r.lost + "</td>" +
-        "<td class=\"num\">" + r.gf + "</td>" +
-        "<td class=\"num\">" + r.ga + "</td>" +
-        "<td class=\"num\">" + r.gd + "</td>" +
-        "<td class=\"num\"><strong>" + r.pts + "</strong></td>";
+      const m = managerById(r.id);
+      const kit = m ? kitClub(m) : null;
+
+      const rankTd = document.createElement("td");
+      rankTd.textContent = String(i + 1);
+
+      const nameTd = document.createElement("td");
+      const cell = document.createElement("div");
+      cell.className = "mgr-cell";
+      const crest = kit ? crestImgEl(kit.imageUrl) : null;
+      if (crest) cell.appendChild(crest);
+      const name = document.createElement("span");
+      name.className = "team-id-name";
+      name.textContent = r.name;
+      cell.appendChild(name);
+      nameTd.appendChild(cell);
+
+      tr.appendChild(rankTd);
+      tr.appendChild(nameTd);
+      [
+        r.played, r.won, r.drawn, r.lost, r.gf, r.ga, r.gd
+      ].forEach(function (v) {
+        const td = document.createElement("td");
+        td.className = "num";
+        td.textContent = String(v);
+        tr.appendChild(td);
+      });
+      const ptsTd = document.createElement("td");
+      ptsTd.className = "num";
+      const strong = document.createElement("strong");
+      strong.textContent = String(r.pts);
+      ptsTd.appendChild(strong);
+      tr.appendChild(ptsTd);
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -2247,11 +2742,10 @@
         const away = managerById(f.awayId);
         const fr = document.createElement("div");
         fr.className = "fixture-row";
-        fr.style.gridTemplateColumns = "1fr auto 1fr";
 
         const homeEl = document.createElement("div");
         homeEl.className = "home";
-        homeEl.textContent = home ? home.name : "?";
+        fillManagerIdentity(homeEl, home, "home");
 
         const mid = document.createElement("div");
         mid.className = "score-inputs";
@@ -2291,7 +2785,7 @@
 
         const awayEl = document.createElement("div");
         awayEl.className = "away";
-        awayEl.textContent = away ? away.name : "?";
+        fillManagerIdentity(awayEl, away, "away");
 
         fr.appendChild(homeEl);
         fr.appendChild(mid);
@@ -2359,23 +2853,28 @@
     loadSaved();
     setStatus("Loading & decrypting player database… this may take a few seconds.");
     try {
-      const [keyRes, encRes, packRes] = await Promise.all([
-        fetch("data-key.txt"),
-        fetch("players-web.enc.json"),
+      const [keyRes, encRes, packRes, teamsRes] = await Promise.all([
+        fetch("k.txt"),
+        fetch("pack-a.enc.json"),
         fetch("pack-b.enc.json"),
+        fetch("pack-c.enc.json"),
       ]);
-      if (!keyRes.ok) throw new Error("Could not load data-key.txt (" + keyRes.status + ")");
-      if (!encRes.ok) throw new Error("Could not load players-web.enc.json (" + encRes.status + ")");
+      if (!keyRes.ok) throw new Error("Could not load k.txt (" + keyRes.status + ")");
+      if (!encRes.ok) throw new Error("Could not load pack-a.enc.json (" + encRes.status + ")");
       if (!packRes.ok) throw new Error("Could not load pack-b.enc.json (" + packRes.status + ")");
+      if (!teamsRes.ok) throw new Error("Could not load pack-c.enc.json (" + teamsRes.status + ")");
       const password = (await keyRes.text()).trim();
       const payload = await encRes.json();
       const packPayload = await packRes.json();
+      const teamsPayload = await teamsRes.json();
       const raw = await decryptPayload(payload, password);
       sidePack = await decryptPayload(packPayload, password);
+      const teamsPack = await decryptPayload(teamsPayload, password);
+      indexTeamsCdn(teamsPack);
       indexPlayers(raw);
       setStatus(
         players.length.toLocaleString() + " players · " +
-          clubs.length.toLocaleString() + " clubs loaded.",
+          kitClubs.length.toLocaleString() + " clubs loaded.",
         "ok"
       );
       document.getElementById("app").classList.remove("hidden");
