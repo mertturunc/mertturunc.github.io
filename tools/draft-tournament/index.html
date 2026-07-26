@@ -228,6 +228,30 @@
     object-fit: contain;
   }
 
+  .crest-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #1e3a8a;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  .adds-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    margin: 0 0 6px;
+  }
+
   .club-list {
     max-height: 220px;
     overflow: auto;
@@ -1807,6 +1831,71 @@
     return hits;
   }
 
+  function squadInitials(label) {
+    const words = String(label || "")
+      .replace(/\bXI\b/gi, "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (!words.length) return "?";
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return words
+      .slice(0, 3)
+      .map(function (w) { return w[0]; })
+      .join("")
+      .toUpperCase();
+  }
+
+  function findClubByName(name) {
+    const target = normalizePersonName(name);
+    if (!target) return null;
+    let best = null;
+    let bestScore = 0;
+    clubs.forEach(function (c) {
+      const lab = normalizePersonName(c.label);
+      if (!lab) return;
+      let score = 0;
+      if (lab === target) score = 100;
+      else if (lab.indexOf(target) !== -1 || target.indexOf(lab) !== -1) score = 80;
+      else {
+        const tParts = target.split(" ").filter(function (p) { return p.length > 2; });
+        const lParts = lab.split(" ").filter(function (p) { return p.length > 2; });
+        const hits = tParts.filter(function (p) {
+          return lParts.some(function (lp) {
+            return lp === p || lp.indexOf(p) !== -1 || p.indexOf(lp) !== -1;
+          });
+        });
+        if (!tParts.length) return;
+        const ratio = hits.length / tParts.length;
+        if (ratio >= 1) score = 70;
+        else if (ratio >= 0.5) score = 55;
+        // distinctive single token (bayern, chelsea, liverpool, juventus)
+        else if (hits.length === 1 && hits[0].length >= 5) score = 52;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = c;
+      }
+    });
+    return bestScore >= 50 ? best : null;
+  }
+
+  function appendCrestOrInitial(parent, imageUrl, label) {
+    if (imageUrl) {
+      const img = document.createElement("img");
+      img.src = imageUrl;
+      img.alt = "";
+      img.className = "crest";
+      parent.appendChild(img);
+      return;
+    }
+    const badge = document.createElement("span");
+    badge.className = "crest-initial";
+    badge.textContent = squadInitials(label);
+    badge.title = label || "";
+    parent.appendChild(badge);
+  }
+
   function buildClubsNeedingAdds(transferGroups) {
     const rows = [];
 
@@ -1816,21 +1905,38 @@
       const after = roster - group.total;
       const floorAdds = Math.max(0, MIN_CLUB_ROSTER - after);
       const packHits = packHitsForClub(group.club, outgoing);
-      const packPlayerIds = new Set(packHits.map(function (h) { return h.player.id; }));
-      const packCount = packPlayerIds.size;
-      const addCount = Math.max(floorAdds, packCount);
 
-      if (addCount <= 0) return;
+      if (floorAdds > 0) {
+        rows.push({
+          club: group.club,
+          addCount: floorAdds,
+          kind: "roster",
+          label: group.club.label,
+          imageUrl: group.club.imageUrl || "",
+        });
+      }
 
-      rows.push({
-        club: group.club,
-        addCount: addCount,
+      // Locked-list / XI: separate line per matched squad name
+      const bySquad = new Map();
+      packHits.forEach(function (hit) {
+        if (!bySquad.has(hit.squadName)) bySquad.set(hit.squadName, new Set());
+        bySquad.get(hit.squadName).add(hit.player.id);
+      });
+      bySquad.forEach(function (playerIds, squadName) {
+        const matched = findClubByName(squadName);
+        rows.push({
+          club: group.club,
+          addCount: playerIds.size,
+          kind: "locked",
+          label: squadName,
+          imageUrl: matched && matched.imageUrl ? matched.imageUrl : "",
+        });
       });
     });
 
     return rows.sort(function (a, b) {
       if (b.addCount !== a.addCount) return b.addCount - a.addCount;
-      return a.club.label.localeCompare(b.club.label);
+      return String(a.label).localeCompare(String(b.label));
     });
   }
 
@@ -1847,25 +1953,20 @@
 
     const ul = document.createElement("ul");
     ul.style.margin = "0";
-    ul.style.paddingLeft = "18px";
+    ul.style.padding = "0";
+    ul.style.listStyle = "none";
     ul.style.fontSize = "0.9rem";
 
     const copyLines = [];
     needing.forEach(function (row) {
+      const target =
+        row.kind === "locked" ? row.label + " XI" : row.label;
       const line =
         "Add " + row.addCount + " player" + (row.addCount === 1 ? "" : "s") +
-        " to " + row.club.label;
+        " to " + target;
       const li = document.createElement("li");
-      li.style.marginBottom = "4px";
-      if (row.club.imageUrl) {
-        const img = document.createElement("img");
-        img.src = row.club.imageUrl;
-        img.alt = "";
-        img.className = "crest";
-        img.style.verticalAlign = "middle";
-        img.style.marginRight = "6px";
-        li.appendChild(img);
-      }
+      li.className = "adds-line";
+      appendCrestOrInitial(li, row.imageUrl, target);
       li.appendChild(document.createTextNode(line));
       ul.appendChild(li);
       copyLines.push(line);
