@@ -395,11 +395,66 @@
   .squad li {
     display: flex;
     gap: 6px;
+    align-items: baseline;
     padding: 2px 0;
     border-bottom: 1px solid #eee;
   }
 
   .squad li .slot { color: var(--muted); width: 18px; }
+
+  .squad-pos-group {
+    margin-top: 6px;
+  }
+
+  .squad-pos-group:first-of-type {
+    margin-top: 2px;
+  }
+
+  .squad-pos-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2px;
+    margin-bottom: 2px;
+  }
+
+  .squad-pos-label .count {
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .squad li .pos-tag {
+    flex: 0 0 28px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #374151;
+  }
+
+  .squad li .ovr-tag {
+    flex: 0 0 22px;
+    font-weight: 700;
+  }
+
+  .squad li .name-tag {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .squad-empty {
+    color: var(--muted);
+    font-size: 0.72rem;
+    padding: 2px 0 4px;
+  }
 
   .transfer-block {
     border: 1px solid var(--border);
@@ -407,6 +462,11 @@
     padding: 10px;
     margin-bottom: 10px;
     background: #fafafa;
+  }
+
+  .transfer-block.warn {
+    border-color: #f59e0b;
+    background: #fffbeb;
   }
 
   .transfer-block h3 {
@@ -421,6 +481,16 @@
     margin: 10px 0 4px;
     font-size: 0.78rem;
     color: var(--muted);
+  }
+
+  .adds-meta {
+    font-size: 0.78rem;
+    margin: 0 0 6px;
+    color: var(--text);
+  }
+
+  .adds-meta strong {
+    color: var(--warn);
   }
 
   .transfer-block ul {
@@ -544,6 +614,12 @@
   let clubs = [];
   /** @type {Map<string, typeof players[0]>} */
   let playersById = new Map();
+  /** @type {Map<string|number, number>} */
+  let rosterByClubId = new Map();
+  /** @type {Array<{name:string, type:string, clubHints:string[], players:Array<{pos:string, name:string}>}>} */
+  let sidePack = [];
+
+  const MIN_CLUB_ROSTER = 17;
 
   let state = defaultState();
   let draftFilter = { q: "", pos: "", type: "", minOvr: "", maxOvr: "" };
@@ -586,7 +662,7 @@
     return out;
   }
 
-  async function decryptPlayers(payload, password) {
+  async function decryptPayload(payload, password) {
     if (payload.v !== 1) throw new Error("Unsupported payload version");
     if (payload.alg !== "aes-256-gcm") throw new Error("Unsupported algorithm");
 
@@ -659,6 +735,13 @@
     clubs = Array.from(map.values()).sort(function (a, b) {
       return a.label.localeCompare(b.label);
     });
+
+    const roster = new Map();
+    players.forEach(function (p) {
+      if (!p.team || p.team.id == null) return;
+      roster.set(p.team.id, (roster.get(p.team.id) || 0) + 1);
+    });
+    rosterByClubId = roster;
   }
 
   function save() {
@@ -802,6 +885,17 @@
     }
   }
 
+  function shuffleIds(ids) {
+    const arr = ids.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = arr[i];
+      arr[i] = arr[j];
+      arr[j] = t;
+    }
+    return arr;
+  }
+
   function circleRoundRobin(ids) {
     // Circle method for single round-robin; returns rounds of [home, away]
     const n = ids.length;
@@ -826,14 +920,20 @@
       // rotate: keep first fixed
       const fixed = arr[0];
       const rest = arr.slice(1);
-      rest.unshift(rest.pop());
-      arr.splice(0, arr.length, fixed, ...rest);
+      const moved = rest.pop();
+      if (moved !== undefined) rest.unshift(moved);
+      arr.length = 0;
+      arr.push(fixed);
+      for (let i = 0; i < rest.length; i++) arr.push(rest[i]);
     }
     return result;
   }
 
-  function generateFixtures() {
-    const ids = state.managers.map(function (m) { return m.id; });
+  function generateFixtures(options) {
+    const opts = options || {};
+    let ids = state.managers.map(function (m) { return m.id; });
+    // Reshuffle so regenerate produces a new schedule (deterministic order looked broken)
+    if (opts.reshuffle !== false) ids = shuffleIds(ids);
     const single = circleRoundRobin(ids);
     const fixtures = [];
     let mid = 1;
@@ -1302,6 +1402,91 @@
     return out;
   }
 
+  const SQUAD_GROUPS = [
+    { id: "gk", label: "GK", shorts: ["GK"] },
+    { id: "def", label: "DEF", shorts: ["CB", "LB", "RB", "LWB", "RWB"] },
+    { id: "mid", label: "MID", shorts: ["CDM", "CM", "CAM", "LM", "RM"] },
+    { id: "att", label: "ATT", shorts: ["LW", "RW", "CF", "ST"] },
+  ];
+
+  const POS_SORT = {};
+  SQUAD_GROUPS.forEach(function (g, gi) {
+    g.shorts.forEach(function (s, si) {
+      POS_SORT[s] = gi * 20 + si;
+    });
+  });
+
+  function squadGroupId(pl) {
+    const short = (pl && pl.position && pl.position.shortLabel) || "";
+    if (short === "GK") return "gk";
+    for (let i = 0; i < SQUAD_GROUPS.length; i++) {
+      if (SQUAD_GROUPS[i].shorts.indexOf(short) !== -1) return SQUAD_GROUPS[i].id;
+    }
+    // Fallback by broad type (data marks GK as defense)
+    const type = (pl && pl.posType) || "";
+    if (type === "defense") return "def";
+    if (type === "midfielder") return "mid";
+    if (type === "attack" || type === "forward") return "att";
+    return "mid";
+  }
+
+  function renderSquadByPosition(container, managerId) {
+    const picks = picksForManager(managerId);
+    const grouped = { gk: [], def: [], mid: [], att: [] };
+
+    picks.forEach(function (pick) {
+      const pl = playersById.get(pick.playerId);
+      if (!pl) return;
+      const gid = squadGroupId(pl);
+      grouped[gid].push(pl);
+    });
+
+    SQUAD_GROUPS.forEach(function (g) {
+      const list = grouped[g.id].slice().sort(function (a, b) {
+        const pa = POS_SORT[a.position && a.position.shortLabel] ?? 999;
+        const pb = POS_SORT[b.position && b.position.shortLabel] ?? 999;
+        if (pa !== pb) return pa - pb;
+        return b.overallRating - a.overallRating;
+      });
+
+      const block = document.createElement("div");
+      block.className = "squad-pos-group";
+
+      const lab = document.createElement("div");
+      lab.className = "squad-pos-label";
+      lab.innerHTML = "<span>" + g.label + "</span><span class=\"count\">" + list.length + "</span>";
+      block.appendChild(lab);
+
+      if (!list.length) {
+        const empty = document.createElement("div");
+        empty.className = "squad-empty";
+        empty.textContent = "—";
+        block.appendChild(empty);
+      } else {
+        const ul = document.createElement("ul");
+        list.forEach(function (pl) {
+          const li = document.createElement("li");
+          const pos = document.createElement("span");
+          pos.className = "pos-tag";
+          pos.textContent = (pl.position && pl.position.shortLabel) || "?";
+          const ovr = document.createElement("span");
+          ovr.className = "ovr-tag";
+          ovr.textContent = String(pl.overallRating);
+          const name = document.createElement("span");
+          name.className = "name-tag";
+          name.textContent = pl.displayName;
+          name.title = pl.displayName;
+          li.appendChild(pos);
+          li.appendChild(ovr);
+          li.appendChild(name);
+          ul.appendChild(li);
+        });
+        block.appendChild(ul);
+      }
+      container.appendChild(block);
+    });
+  }
+
   function renderDraft(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
@@ -1484,30 +1669,7 @@
       title.textContent = (m ? m.name : mid) + " (" + picksForManager(mid).length + "/" + PICKS_PER_TEAM + ")";
       h.appendChild(title);
       squad.appendChild(h);
-      const ul = document.createElement("ul");
-      const picks = picksForManager(mid);
-      for (let i = 0; i < PICKS_PER_TEAM; i++) {
-        const li = document.createElement("li");
-        const slot = document.createElement("span");
-        slot.className = "slot";
-        slot.textContent = String(i + 1) + ".";
-        li.appendChild(slot);
-        if (picks[i]) {
-          const pl = playersById.get(picks[i].playerId);
-          li.appendChild(document.createTextNode(
-            pl
-              ? pl.overallRating + " " + pl.displayName + " (" + ((pl.position && pl.position.shortLabel) || "?") + ")"
-              : picks[i].playerId
-          ));
-        } else {
-          const empty = document.createElement("span");
-          empty.className = "player-meta";
-          empty.textContent = "—";
-          li.appendChild(empty);
-        }
-        ul.appendChild(li);
-      }
-      squad.appendChild(ul);
+      renderSquadByPosition(squad, mid);
       right.appendChild(squad);
     });
 
@@ -1573,12 +1735,168 @@
     });
   }
 
+  function normalizePersonName(s) {
+    return String(s || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function playerMatchesPackName(pl, packName) {
+    const target = normalizePersonName(packName);
+    if (!target) return false;
+    const last = normalizePersonName(pl.lastName);
+    const common = normalizePersonName(pl.commonName);
+    const full = normalizePersonName(pl.displayName);
+    const firstLast = normalizePersonName([pl.firstName, pl.lastName].filter(Boolean).join(" "));
+
+    if (last === target || common === target || full === target || firstLast === target) return true;
+    if (target.indexOf(" ") !== -1) {
+      if (full.indexOf(target) !== -1 || last === target || common === target) return true;
+    }
+    if (target.indexOf(" ") === -1) {
+      if (full.endsWith(" " + target)) return true;
+      if (firstLast.indexOf(target) === 0 || firstLast.endsWith(" " + target)) return true;
+    }
+    return false;
+  }
+
+  function clubMatchesHints(clubLabel, hints) {
+    if (!hints || !hints.length) return false;
+    const lab = normalizePersonName(clubLabel);
+    return hints.some(function (h) {
+      return lab.indexOf(normalizePersonName(h)) !== -1;
+    });
+  }
+
+  function flattenOutgoing(group) {
+    const out = [];
+    group.byManager.forEach(function (rows) {
+      rows.forEach(function (row) { out.push(row.player); });
+    });
+    return out;
+  }
+
+  function packHitsForClub(club, outgoingPlayers) {
+    const hits = [];
+    const seen = new Set();
+
+    sidePack.forEach(function (xi) {
+      if (xi.type === "club" && !clubMatchesHints(club.label, xi.clubHints || [])) return;
+
+      outgoingPlayers.forEach(function (pl) {
+        (xi.players || []).forEach(function (cp) {
+          if (!playerMatchesPackName(pl, cp.name)) return;
+          const key = pl.id + "|" + xi.name + "|" + cp.name;
+          if (seen.has(key)) return;
+          seen.add(key);
+          hits.push({
+            player: pl,
+            packName: cp.name,
+            packPos: cp.pos,
+            squadName: xi.name,
+            squadType: xi.type,
+          });
+        });
+      });
+    });
+
+    return hits;
+  }
+
+  function buildClubsNeedingAdds(transferGroups) {
+    const rows = [];
+
+    transferGroups.forEach(function (group) {
+      const outgoing = flattenOutgoing(group);
+      const roster = rosterByClubId.get(group.club.id) || 0;
+      const after = roster - group.total;
+      const floorAdds = Math.max(0, MIN_CLUB_ROSTER - after);
+      const packHits = packHitsForClub(group.club, outgoing);
+      const packPlayerIds = new Set(packHits.map(function (h) { return h.player.id; }));
+      const packCount = packPlayerIds.size;
+      const addCount = Math.max(floorAdds, packCount);
+
+      if (addCount <= 0) return;
+
+      rows.push({
+        club: group.club,
+        addCount: addCount,
+      });
+    });
+
+    return rows.sort(function (a, b) {
+      if (b.addCount !== a.addCount) return b.addCount - a.addCount;
+      return a.club.label.localeCompare(b.club.label);
+    });
+  }
+
+  function renderClubsNeedingAdds(panel, transferGroups) {
+    const needing = buildClubsNeedingAdds(transferGroups);
+    if (!needing.length) return needing;
+
+    const section = document.createElement("div");
+    section.className = "transfer-block warn";
+
+    const h = document.createElement("h3");
+    h.textContent = "Clubs that need players added";
+    section.appendChild(h);
+
+    const ul = document.createElement("ul");
+    ul.style.margin = "0";
+    ul.style.paddingLeft = "18px";
+    ul.style.fontSize = "0.9rem";
+
+    const copyLines = [];
+    needing.forEach(function (row) {
+      const line =
+        "Add " + row.addCount + " player" + (row.addCount === 1 ? "" : "s") +
+        " to " + row.club.label;
+      const li = document.createElement("li");
+      li.style.marginBottom = "4px";
+      if (row.club.imageUrl) {
+        const img = document.createElement("img");
+        img.src = row.club.imageUrl;
+        img.alt = "";
+        img.className = "crest";
+        img.style.verticalAlign = "middle";
+        img.style.marginRight = "6px";
+        li.appendChild(img);
+      }
+      li.appendChild(document.createTextNode(line));
+      ul.appendChild(li);
+      copyLines.push(line);
+    });
+    section.appendChild(ul);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.textContent = "Copy";
+    copyBtn.style.marginTop = "8px";
+    copyBtn.addEventListener("click", function () {
+      const text = copyLines.join("\n");
+      navigator.clipboard.writeText(text).then(function () {
+        copyBtn.textContent = "Copied";
+        setTimeout(function () { copyBtn.textContent = "Copy"; }, 1200);
+      }).catch(function () {
+        prompt("Copy:", text);
+      });
+    });
+    section.appendChild(copyBtn);
+    panel.appendChild(section);
+    return needing;
+  }
+
   function renderTransfers(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
     panel.innerHTML = "<h2>Phase 4 — Transfer summary</h2><p class=\"hint\">Grouped by source club: who leaves that club, and which manager they go to.</p>";
 
     const groups = buildTransferBySourceClub();
+    renderClubsNeedingAdds(panel, groups);
 
     if (!groups.length) {
       const empty = document.createElement("p");
@@ -1706,14 +2024,26 @@
     gen.className = "primary";
     gen.textContent = state.fixtures.length ? "Regenerate fixtures" : "Generate fixtures";
     gen.addEventListener("click", function () {
+      const hadFixtures = state.fixtures.length > 0;
       const hasResults = state.fixtures.some(function (f) {
-        return f.homeGoals != null && f.homeGoals !== "" && f.awayGoals != null && f.awayGoals !== "";
+        return f.homeGoals != null && f.awayGoals != null &&
+          f.homeGoals !== "" && f.awayGoals !== "";
       });
-      if (state.fixtures.length && !confirm(hasResults
-        ? "This wipes all fixtures and results. Continue?"
-        : "Regenerate fixtures? Continue?")) return;
-      generateFixtures();
+      if (hadFixtures) {
+        const msg = hasResults
+          ? "This wipes all fixtures and results, then draws a new schedule. Continue?"
+          : "Draw a new fixture schedule? Current fixtures will be replaced.";
+        if (!confirm(msg)) return;
+      }
+      generateFixtures({ reshuffle: true });
       save();
+      setStatus(
+        "Fixtures " + (hadFixtures ? "regenerated" : "generated") +
+          " — " + state.fixtures.length + " matches across " +
+          (state.fixtures.length ? state.fixtures[state.fixtures.length - 1].matchday : 0) +
+          " matchdays.",
+        "ok"
+      );
       render();
     });
     row.appendChild(gen);
@@ -1928,18 +2258,23 @@
     loadSaved();
     setStatus("Loading & decrypting player database… this may take a few seconds.");
     try {
-      const [keyRes, encRes] = await Promise.all([
+      const [keyRes, encRes, packRes] = await Promise.all([
         fetch("data-key.txt"),
         fetch("players-web.enc.json"),
+        fetch("pack-b.enc.json"),
       ]);
       if (!keyRes.ok) throw new Error("Could not load data-key.txt (" + keyRes.status + ")");
       if (!encRes.ok) throw new Error("Could not load players-web.enc.json (" + encRes.status + ")");
+      if (!packRes.ok) throw new Error("Could not load pack-b.enc.json (" + packRes.status + ")");
       const password = (await keyRes.text()).trim();
       const payload = await encRes.json();
-      const raw = await decryptPlayers(payload, password);
+      const packPayload = await packRes.json();
+      const raw = await decryptPayload(payload, password);
+      sidePack = await decryptPayload(packPayload, password);
       indexPlayers(raw);
       setStatus(
-        players.length.toLocaleString() + " players · " + clubs.length.toLocaleString() + " clubs loaded.",
+        players.length.toLocaleString() + " players · " +
+          clubs.length.toLocaleString() + " clubs loaded.",
         "ok"
       );
       document.getElementById("app").classList.remove("hidden");
