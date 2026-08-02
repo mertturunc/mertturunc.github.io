@@ -1,26 +1,42 @@
+# AI / training crawlers — block entire site
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: OAI-SearchBot
+User-agent: Google-Extended
+User-agent: anthropic-ai
+User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: Applebot-Extended
+User-agent: Bytespider
+User-agent: CCBot
+User-agent: cohere-ai
+User-agent: Diffbot
+User-agent: FacebookBot
+User-agent: meta-externalagent
+User-agent: PerplexityBot
+User-agent: YouBot
+User-agent: Amazonbot
+User-agent: AI2Bot
+User-agent: ImagesiftBot
+Disallow: /
+
+# Default crawlers
 User-agent: *
 Allow: /
 
-# Block development and build directories
+# Build / vendor / scripts
 Disallow: /_site/
 Disallow: /vendor/
 Disallow: /.bundle/
 Disallow: /script/
+
+# Resume (TR + EN) — personal, not for indexing or training
 Disallow: /resume/
+Disallow: /en/resume/
 
-# Block test directories
+# Test / draft
 Disallow: /maptest/
-
-# Allow important content
-Allow: /blog/
-Allow: /projects/
-Allow: /en/
-Allow: /_posts/
-Allow: /_projects/
-
-# Block hidden or draft content (if any)
 Disallow: /*?draft=*
 Disallow: /*?hidden=*
 
-# Sitemap location
-Sitemap: https://blog.atr0p.dev/sitemap.xml 
+Sitemap: https://blog.atr0p.dev/sitemap.xml

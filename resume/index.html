@@ -3,6 +3,7 @@ layout: default
 title: özgeçmiş
 summary: Mert Turunç | Harita Mühendisliği | CBS Uzmanı
 sitemap: false
+noindex: true
 ---
 {% include language-utils.html %}
 
@@ -15,23 +16,12 @@ sitemap: false
   }
 
   .header-section {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
     margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border-color);
   }
 
-  .profile-image {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
-
   .header-info {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -65,12 +55,6 @@ sitemap: false
     color: var(--accent-color);
     text-decoration: none;
     border-bottom: 1px solid var(--accent-color);
-  }
-
-  .download-link {
-    display: inline-block;
-    font-size: 12px;
-    margin-left: auto;
   }
 
   /* Section styling */
@@ -200,33 +184,9 @@ sitemap: false
 
   /* Responsive design */
   @media (max-width: 768px) {
-    .header-section {
-      flex-direction: column;
-      text-align: center;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .profile-image {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-    }
-
-    .header-info {
-      align-items: center;
-      text-align: center;
-    }
-
     .contact-info {
-      justify-content: center;
       flex-wrap: wrap;
       gap: 8px;
-    }
-
-    .download-link {
-      margin-left: 0;
-      margin-top: 4px;
     }
 
     .skills-grid {
@@ -275,18 +235,17 @@ sitemap: false
   <div class="spacer"></div>
 </ul>
 
+{% include readme.html %}
+
 <div class="resume-container">
   <!-- Header Section -->
   <div class="header-section">
-    <img src="/i/vesikalık.jpg" alt="Mert Turunç" class="profile-image">
     <div class="header-info">
       <h1 class="name">Mert Turunç</h1>
       <div class="title">Mekansal Veri Analisti | Harita Mühendisi</div>
       <div class="contact-info">
-        <a href="mailto:mertturunc@gmail.com">mertturunc[at]gmail[dot]com</a>
-        <span>+90 (530) 922-5429</span>
+        <a href="mailto:info@atr0p.dev">info[at]atr0p[dot]dev</a>
         <span>İstanbul, Türkiye</span>
-        <a href="/resume/cv.pdf" class="download-link">📄 PDF</a>
       </div>
     </div>
   </div>
