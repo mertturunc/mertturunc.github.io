@@ -1,0 +1,15 @@
+{
+  "name": "Jekyll (Ruby 2.7.8)",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [4000],
+  "postCreateCommand": "bundle _2.3.15_ install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rebornix.Ruby"
+      ]
+    }
+  }
+}
