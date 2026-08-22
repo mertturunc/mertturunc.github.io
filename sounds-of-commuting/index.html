@@ -1,0 +1,64 @@
+<!-- Drop this folder into a Jekyll site as /sound-of-commuting/
+     Clock: realtime by default. Fast preview: ?speed=20  Frozen: ?day=thu&time=12:00 -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <title>Sound of commuting</title>
+    <script>window.__packP=Promise.all([fetch("assets/gtfs/week.json").then(function(r){return r.arrayBuffer()}),fetch("assets/gtfs/lines.json").then(function(r){return r.arrayBuffer()})]);</script>
+    <style>@property --bg{syntax:"<color>";inherits:true;initial-value:#eef0f2}@property --ink{syntax:"<color>";inherits:true;initial-value:#171717}@property --mute{syntax:"<color>";inherits:true;initial-value:#4a4a4a}@property --track{syntax:"<color>";inherits:true;initial-value:#c5c9ce}@property --track-quiet{syntax:"<color>";inherits:true;initial-value:#dde0e3}@property --station{syntax:"<color>";inherits:true;initial-value:#9aa0a6}@property --playhead{syntax:"<color>";inherits:true;initial-value:#7a7f84}@property --count{syntax:"<color>";inherits:true;initial-value:#3d3d3d}@property --track-over{syntax:"<color>";inherits:true;initial-value:#6e747a}@property --track-over-quiet{syntax:"<color>";inherits:true;initial-value:#93999f}@property --link{syntax:"<color>";inherits:true;initial-value:#2d6aa3}:root{color-scheme:light;--bg:#eef0f2;--ink:#171717;--mute:#4a4a4a;--track:#c5c9ce;--track-quiet:#dde0e3;--station:#9aa0a6;--playhead:#7a7f84;--count:#3d3d3d;--track-over:#6e747a;--track-over-quiet:#93999f;--link:#2d6aa3;--serif:Palatino,"Palatino Linotype","Iowan Old Style","Times New Roman",serif;--sans:"Segoe UI","Helvetica Neue",sans-serif;--mono:Consolas,"Cascadia Mono","Liberation Mono",ui-monospace,monospace}:root.theme-ready{transition:--bg 0.9s ease,--ink 0.9s ease,--mute 0.9s ease,--track 0.9s ease,--track-quiet 0.9s ease,--station 0.9s ease,--playhead 0.9s ease,--count 0.9s ease,--track-over 0.9s ease,--track-over-quiet 0.9s ease,--link 0.9s ease}:root.dark{color-scheme:dark;--bg:#161718;--ink:#ececec;--mute:#b4b4b4;--track:#3a3d41;--track-quiet:#242628;--station:#6a6e72;--playhead:#8a8e92;--count:#c8c8c8;--track-over:#8e949a;--track-over-quiet:#6a7076;--link:#7eadd4}*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}#basemap{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--bg);opacity:0;transition:opacity 0.9s ease}body.base #basemap{opacity:1}#veil{position:fixed;inset:0;z-index:1;pointer-events:none;background:var(--bg);opacity:var(--veil,0)}#basemap .leaflet-container{background:transparent !important}#basemap .leaflet-tile-pane{filter:saturate(0.22) contrast(0.9);opacity:0.78;transition:filter 0.9s ease,opacity 0.9s ease}:root.dark #basemap .leaflet-tile-pane{filter:saturate(0.18) contrast(0.88) brightness(0.78);opacity:0.7}body.base #hud h1,body.base #hud #meta,body.base #nav button,body.base #corner button,#about{text-shadow:0 0 14px var(--bg),0 0 6px var(--bg)}#map{position:relative;z-index:2;display:block;width:100%;height:100%;background:transparent}.leaflet-control-attribution{background:transparent !important;color:var(--mute) !important;font:11px/1.4 var(--sans) !important;margin:0 22px 44px 0 !important;pointer-events:none}#hud{position:fixed;left:22px;top:18px;z-index:3;pointer-events:none}h1{margin:0;font-family:var(--serif);font-size:22px;font-weight:400;line-height:1.2;letter-spacing:0}#meta{margin:6px 0 0;font-family:var(--mono);font-size:13px;line-height:1.4;color:var(--mute)}#count{margin-left:1.25em;color:var(--ink)}#speed{margin:4px 0 0;display:flex;gap:1.1em;pointer-events:auto}#speed button{appearance:none;margin:0;padding:0;border:0;background:none;color:var(--mute);cursor:pointer;font:13px/1.4 var(--mono)}#speed button:hover,#speed button.on{color:var(--ink)}#speed button.on{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}#nav,#corner{position:fixed;bottom:16px;z-index:3;display:flex;flex-wrap:wrap;gap:0.15em 1.1em}#nav{left:22px}#corner{right:22px}#nav button,#corner button,#about-close{appearance:none;margin:0;padding:0;border:0;background:none;color:var(--mute);cursor:pointer;font:15px/1.5 var(--sans)}#nav button:hover,#nav button.on,#corner button:hover,#corner button.on,#about-close:hover{color:var(--ink)}#nav button.on,#corner button.on{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}#nav button:disabled,#nav button[aria-disabled="true"]{opacity:0.38;cursor:default;text-decoration:none}#nav button:disabled:hover,#nav button[aria-disabled="true"]:hover{color:var(--mute);text-decoration:none}#about-layer{position:fixed;inset:0;z-index:4}#about-layer[hidden]{display:none}#about-scrim{position:absolute;inset:0}#about{position:absolute;right:22px;bottom:48px;width:min(20rem,calc(100vw - 44px));padding:0;background:none;pointer-events:auto}#about-title{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}#about-body{margin:0 0 1.4em;font:15px/1.5 var(--sans);color:var(--mute)}#about-sources{margin:0;font-size:13px;line-height:1.5;color:var(--mute)}#about-src-kicker{margin:0 0 0.85em;font-family:var(--serif);font-size:15px;font-weight:400;line-height:1.3;color:var(--ink)}#about-sources .src-row{margin:0 0 0.75em}#about-src-insp,#about-src-data{display:block;margin:0 0 0.2em;font-family:var(--mono);font-size:12px;letter-spacing:0.04em;color:var(--ink)}#about-sources a{color:var(--link);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}#about-sources a:hover{color:var(--ink)}#about-close{margin:0.4em 0 0}#nav button:focus-visible,#corner button:focus-visible,#speed button:focus-visible,#about-close:focus-visible,#about-sources a:focus-visible{outline:2px solid var(--ink);outline-offset:3px}@media (prefers-reduced-motion:reduce){:root.theme-ready,#basemap,#basemap .leaflet-tile-pane{transition:none !important}}@media (max-width:640px){#hud{left:16px;top:16px}#nav,#corner{left:16px;right:16px;width:auto;gap:0.2em 0.8em}#nav{bottom:16px}#corner{bottom:60px}#nav button,#corner button,#about-close{min-height:44px;padding:0 0.15em}#about{right:16px;bottom:104px;left:16px;width:auto;max-height:calc(100dvh - 140px);overflow:auto;overscroll-behavior:contain}#map{touch-action:none}}@media (max-width:380px){h1{font-size:20px}#speed{gap:0.8em}}</style>
+  </head>
+  <body>
+    <div id="basemap"></div>
+    <div id="veil"></div>
+    <canvas id="map"></canvas>
+    <header id="hud">
+      <h1 id="title">Sound of commuting</h1>
+      <p id="meta"><span id="clock">…</span><span id="count" aria-live="polite">—</span></p>
+      <p id="speed" role="group" aria-label="Speed">
+        <button id="speed-1" type="button" class="on" aria-pressed="true">×1</button>
+        <button id="speed-20" type="button" aria-pressed="false">×20</button>
+      </p>
+    </header>
+    <nav id="nav" aria-label="Controls">
+      <button id="view-map" type="button" class="on" aria-pressed="true">Map</button>
+      <button id="view-bars" type="button" aria-pressed="false">Lines</button>
+      <button id="listen" type="button" class="on" aria-pressed="true">Mute</button>
+      <button id="theme" type="button" aria-pressed="false">Night</button>
+      <button id="basemap-toggle" type="button" aria-pressed="false">Basemap</button>
+    </nav>
+    <nav id="corner" aria-label="Language">
+      <button id="info" type="button" aria-expanded="false" aria-controls="about">Info</button>
+      <button id="lang-en" type="button" class="on" aria-pressed="true">EN</button>
+      <button id="lang-tr" type="button" aria-pressed="false">TR</button>
+    </nav>
+    <div id="about-layer" hidden>
+      <div id="about-scrim"></div>
+      <aside id="about" role="dialog" aria-modal="true" aria-labelledby="about-title">
+        <h2 id="about-title">Sound of commuting</h2>
+        <p id="about-body"></p>
+        <div id="about-sources">
+          <p id="about-src-kicker">Sources</p>
+          <p class="src-row">
+            <span id="about-src-insp">Inspiration</span>
+            <a href="https://www.trainjazz.com/" target="_blank" rel="noopener">TrainJazz</a>
+          </p>
+          <p class="src-row">
+            <span id="about-src-data">Data</span>
+            <a href="https://data.ibb.gov.tr/dataset/rayli-sistem-istasyon-noktalari-verisi" target="_blank" rel="noopener">İBB stations</a>,
+            <a href="https://data.ibb.gov.tr/dataset/iett-ibb360-web-servisi" target="_blank" rel="noopener">İBB 360</a>,
+            <a href="https://data.ibb.gov.tr/dataset/metro-istanbul-sefer-tarifeleri-listesi-web-servisi" target="_blank" rel="noopener">Metro İstanbul</a>,
+            <a href="https://www.tcddtasimacilik.gov.tr/marmaray/tr/gunluk_tren_saatleri" target="_blank" rel="noopener">Marmaray</a>,
+            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>
+          </p>
+        </div>
+        <button id="about-close" type="button">Close</button>
+      </aside>
+    </div>
+    <script src="assets/js/gtfs-clock.min.js?v=54"></script>
+    <script src="assets/js/commute-audio.min.js?v=54"></script>
+    <script src="assets/js/app.min.js?v=54"></script>
+  </body>
+</html>
