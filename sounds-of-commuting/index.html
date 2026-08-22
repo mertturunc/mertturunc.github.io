@@ -1,26 +1,47 @@
 <!-- Drop this folder into a Jekyll site as /sound-of-commuting/
-     Clock: realtime by default. Fast preview: ?speed=20  Frozen: ?day=thu&time=12:00 -->
+     Clock: realtime by default. Fast preview: ?speed=4|12|20  Frozen: ?day=thu&time=12:00 -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <title>Sound of commuting</title>
-    <script>window.__packP=Promise.all([fetch("assets/gtfs/week.json").then(function(r){return r.arrayBuffer()}),fetch("assets/gtfs/lines.json").then(function(r){return r.arrayBuffer()})]);</script>
-    <style>@property --bg{syntax:"<color>";inherits:true;initial-value:#eef0f2}@property --ink{syntax:"<color>";inherits:true;initial-value:#171717}@property --mute{syntax:"<color>";inherits:true;initial-value:#4a4a4a}@property --track{syntax:"<color>";inherits:true;initial-value:#c5c9ce}@property --track-quiet{syntax:"<color>";inherits:true;initial-value:#dde0e3}@property --station{syntax:"<color>";inherits:true;initial-value:#9aa0a6}@property --playhead{syntax:"<color>";inherits:true;initial-value:#7a7f84}@property --count{syntax:"<color>";inherits:true;initial-value:#3d3d3d}@property --track-over{syntax:"<color>";inherits:true;initial-value:#6e747a}@property --track-over-quiet{syntax:"<color>";inherits:true;initial-value:#93999f}@property --link{syntax:"<color>";inherits:true;initial-value:#2d6aa3}:root{color-scheme:light;--bg:#eef0f2;--ink:#171717;--mute:#4a4a4a;--track:#c5c9ce;--track-quiet:#dde0e3;--station:#9aa0a6;--playhead:#7a7f84;--count:#3d3d3d;--track-over:#6e747a;--track-over-quiet:#93999f;--link:#2d6aa3;--serif:Palatino,"Palatino Linotype","Iowan Old Style","Times New Roman",serif;--sans:"Segoe UI","Helvetica Neue",sans-serif;--mono:Consolas,"Cascadia Mono","Liberation Mono",ui-monospace,monospace}:root.theme-ready{transition:--bg 0.9s ease,--ink 0.9s ease,--mute 0.9s ease,--track 0.9s ease,--track-quiet 0.9s ease,--station 0.9s ease,--playhead 0.9s ease,--count 0.9s ease,--track-over 0.9s ease,--track-over-quiet 0.9s ease,--link 0.9s ease}:root.dark{color-scheme:dark;--bg:#161718;--ink:#ececec;--mute:#b4b4b4;--track:#3a3d41;--track-quiet:#242628;--station:#6a6e72;--playhead:#8a8e92;--count:#c8c8c8;--track-over:#8e949a;--track-over-quiet:#6a7076;--link:#7eadd4}*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}#basemap{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--bg);opacity:0;transition:opacity 0.9s ease}body.base #basemap{opacity:1}#veil{position:fixed;inset:0;z-index:1;pointer-events:none;background:var(--bg);opacity:var(--veil,0)}#basemap .leaflet-container{background:transparent !important}#basemap .leaflet-tile-pane{filter:saturate(0.22) contrast(0.9);opacity:0.78;transition:filter 0.9s ease,opacity 0.9s ease}:root.dark #basemap .leaflet-tile-pane{filter:saturate(0.18) contrast(0.88) brightness(0.78);opacity:0.7}body.base #hud h1,body.base #hud #meta,body.base #nav button,body.base #corner button,#about{text-shadow:0 0 14px var(--bg),0 0 6px var(--bg)}#map{position:relative;z-index:2;display:block;width:100%;height:100%;background:transparent}.leaflet-control-attribution{background:transparent !important;color:var(--mute) !important;font:11px/1.4 var(--sans) !important;margin:0 22px 44px 0 !important;pointer-events:none}#hud{position:fixed;left:22px;top:18px;z-index:3;pointer-events:none}h1{margin:0;font-family:var(--serif);font-size:22px;font-weight:400;line-height:1.2;letter-spacing:0}#meta{margin:6px 0 0;font-family:var(--mono);font-size:13px;line-height:1.4;color:var(--mute)}#count{margin-left:1.25em;color:var(--ink)}#speed{margin:4px 0 0;display:flex;gap:1.1em;pointer-events:auto}#speed button{appearance:none;margin:0;padding:0;border:0;background:none;color:var(--mute);cursor:pointer;font:13px/1.4 var(--mono)}#speed button:hover,#speed button.on{color:var(--ink)}#speed button.on{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}#nav,#corner{position:fixed;bottom:16px;z-index:3;display:flex;flex-wrap:wrap;gap:0.15em 1.1em}#nav{left:22px}#corner{right:22px}#nav button,#corner button,#about-close{appearance:none;margin:0;padding:0;border:0;background:none;color:var(--mute);cursor:pointer;font:15px/1.5 var(--sans)}#nav button:hover,#nav button.on,#corner button:hover,#corner button.on,#about-close:hover{color:var(--ink)}#nav button.on,#corner button.on{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}#nav button:disabled,#nav button[aria-disabled="true"]{opacity:0.38;cursor:default;text-decoration:none}#nav button:disabled:hover,#nav button[aria-disabled="true"]:hover{color:var(--mute);text-decoration:none}#about-layer{position:fixed;inset:0;z-index:4}#about-layer[hidden]{display:none}#about-scrim{position:absolute;inset:0}#about{position:absolute;right:22px;bottom:48px;width:min(20rem,calc(100vw - 44px));padding:0;background:none;pointer-events:auto}#about-title{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}#about-body{margin:0 0 1.4em;font:15px/1.5 var(--sans);color:var(--mute)}#about-sources{margin:0;font-size:13px;line-height:1.5;color:var(--mute)}#about-src-kicker{margin:0 0 0.85em;font-family:var(--serif);font-size:15px;font-weight:400;line-height:1.3;color:var(--ink)}#about-sources .src-row{margin:0 0 0.75em}#about-src-insp,#about-src-data{display:block;margin:0 0 0.2em;font-family:var(--mono);font-size:12px;letter-spacing:0.04em;color:var(--ink)}#about-sources a{color:var(--link);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}#about-sources a:hover{color:var(--ink)}#about-close{margin:0.4em 0 0}#nav button:focus-visible,#corner button:focus-visible,#speed button:focus-visible,#about-close:focus-visible,#about-sources a:focus-visible{outline:2px solid var(--ink);outline-offset:3px}@media (prefers-reduced-motion:reduce){:root.theme-ready,#basemap,#basemap .leaflet-tile-pane{transition:none !important}}@media (max-width:640px){#hud{left:16px;top:16px}#nav,#corner{left:16px;right:16px;width:auto;gap:0.2em 0.8em}#nav{bottom:16px}#corner{bottom:60px}#nav button,#corner button,#about-close{min-height:44px;padding:0 0.15em}#about{right:16px;bottom:104px;left:16px;width:auto;max-height:calc(100dvh - 140px);overflow:auto;overscroll-behavior:contain}#map{touch-action:none}}@media (max-width:380px){h1{font-size:20px}#speed{gap:0.8em}}</style>
+    <title>Sounds of commuting</title>
+    <link rel="preload" href="assets/samples/index.json" as="fetch" crossorigin />
+    <script>window.__SOC_BASE=(function(){var path=location.pathname||"/";var tail=path.split("/").pop()||"";if(/\.[a-z0-9]+$/i.test(tail))path=path.slice(0,path.lastIndexOf("/")+1);else if(!path.endsWith("/"))path+="/";return path;})();window.__packP=Promise.all([fetch(window.__SOC_BASE+"assets/gtfs/week.json").then(function(r){return r.arrayBuffer()}),fetch(window.__SOC_BASE+"assets/gtfs/lines.json").then(function(r){return r.arrayBuffer()})]);</script>
+    <style>@property --bg{syntax:"<color>";inherits:true;initial-value:#eef0f2}@property --ink{syntax:"<color>";inherits:true;initial-value:#171717}@property --mute{syntax:"<color>";inherits:true;initial-value:#4a4a4a}@property --track{syntax:"<color>";inherits:true;initial-value:#c5c9ce}@property --track-quiet{syntax:"<color>";inherits:true;initial-value:#dde0e3}@property --station{syntax:"<color>";inherits:true;initial-value:#9aa0a6}@property --count{syntax:"<color>";inherits:true;initial-value:#3d3d3d}@property --track-over{syntax:"<color>";inherits:true;initial-value:#6e747a}@property --track-over-quiet{syntax:"<color>";inherits:true;initial-value:#93999f}@property --link{syntax:"<color>";inherits:true;initial-value:#2d6aa3}:root{color-scheme:light;--bg:#eef0f2;--ink:#171717;--mute:#4a4a4a;--track:#c5c9ce;--track-quiet:#dde0e3;--station:#9aa0a6;--count:#3d3d3d;--track-over:#6e747a;--track-over-quiet:#93999f;--link:#2d6aa3;--font-display:"Iowan Old Style",Palatino,"Palatino Linotype","Book Antiqua",Georgia,serif;--font-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--serif:var(--font-display);--sans:var(--font-body);--text-display-lg:clamp(1.6rem,5.4vw,2.2667rem);--text-display:1.4667rem;--text-display-sm:1.3333rem;--text-body:1rem;--text-body-sm:0.8667rem;--text-label:0.8rem;--leading-body:1.5;--leading-tight:1.15}:root.theme-ready{transition:--bg 0.9s ease,--ink 0.9s ease,--mute 0.9s ease,--track 0.9s ease,--track-quiet 0.9s ease,--station 0.9s ease,--count 0.9s ease,--track-over 0.9s ease,--track-over-quiet 0.9s ease,--link 0.9s ease}:root.dark{color-scheme:dark;--bg:#161718;--ink:#ececec;--mute:#b4b4b4;--track:#3a3d41;--track-quiet:#242628;--station:#6a6e72;--count:#c8c8c8;--track-over:#8e949a;--track-over-quiet:#6a7076;--link:#7eadd4}*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:var(--text-body) / var(--leading-body) var(--font-body)}#basemap{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--bg);opacity:0;transition:opacity 0.9s ease}body.base #basemap{opacity:1}#veil{position:fixed;inset:0;z-index:1;pointer-events:none;background:var(--bg);opacity:var(--veil,0)}#basemap .leaflet-container{background:transparent !important}#basemap .leaflet-tile-pane{filter:saturate(0.22) contrast(0.9);opacity:0.78;transition:filter 0.9s ease,opacity 0.9s ease}:root.dark #basemap .leaflet-tile-pane{filter:saturate(0.18) contrast(0.88) brightness(0.78);opacity:0.7}body.base #hud h1,body.base #hud #meta,body.base #nav button,body.base #corner button,#about{text-shadow:0 0 14px var(--bg),0 0 6px var(--bg)}#map{position:relative;z-index:2;display:block;width:100%;height:100%;background:transparent}.leaflet-control-attribution{background:transparent !important;color:var(--mute) !important;font:var(--text-label) / var(--leading-body) var(--font-body) !important;margin:0 22px 44px 0 !important;pointer-events:none}#hud{position:fixed;left:26px;top:22px;z-index:3;max-width:min(420px,calc(100vw - 52px));pointer-events:none}h1{margin:0;font:400 var(--text-display) / var(--leading-tight) var(--font-display);letter-spacing:0}#meta{margin:6px 0 0;font:var(--text-body-sm) / var(--leading-body) var(--font-body);color:var(--mute)}.hud-count-row{position:relative;display:inline-block;margin-left:1.25em;vertical-align:middle;pointer-events:auto}#count{display:inline-flex;align-items:center;gap:0.4em;color:var(--ink)}#count-tip{left:calc(100%+10px);top:50%;right:auto;bottom:auto;transform:translateY(-50%)}.hud-speed-row{position:relative;width:fit-content;max-width:100%;margin:6px 0 0;pointer-events:auto}#speed{margin:0;display:flex;gap:1.1em;width:fit-content;pointer-events:auto}#speed-tip{top:calc(100%+6px);left:0;right:auto;bottom:auto;transform:none}.hud-tip{position:absolute;width:max-content;max-width:min(240px,calc(100vw - 48px));padding:4px 8px;font:var(--text-label) / var(--leading-body) var(--font-body);color:var(--ink);background:var(--bg);border:1px solid var(--track-quiet);border-radius:3px;white-space:nowrap;pointer-events:none;opacity:0;visibility:hidden;transition:opacity 0.12s ease,visibility 0.12s;z-index:20}#count .count-icon{width:0.95em;height:0.95em;color:var(--count);flex-shrink:0}#line-tip{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:4;display:inline-flex;align-items:center;gap:0.55em;max-width:min(520px,calc(100vw - 36px));padding:4px 10px;font:var(--text-label) / var(--leading-body) var(--font-body);color:var(--ink);background:var(--bg);border:1px solid var(--track-quiet);border-radius:3px;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#line-tip[hidden]{display:none !important}#line-tip-name{overflow:hidden;text-overflow:ellipsis}#line-tip-sep{color:var(--track);flex-shrink:0}#line-tip-inst{color:var(--mute);flex-shrink:0}#speed button{appearance:none;margin:0;padding:0;border:0;background:none;color:var(--mute);cursor:pointer;font:var(--text-body-sm) / var(--leading-body) var(--font-body)}#speed button:hover,#speed button.on{color:var(--ink)}#speed button.on{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}#nav,#corner{position:fixed;bottom:16px;z-index:3;display:flex;flex-wrap:wrap;gap:0.15em 1.1em}#nav{left:22px}#corner{right:22px}#nav button,#corner button,#about-close{appearance:none;margin:0;padding:0;border:0;background:none;color:var(--mute);cursor:pointer;font:var(--text-body) / var(--leading-body) var(--font-body)}#nav button:hover,#nav button.on,#corner button:hover,#corner button.on,#about-close:hover{color:var(--ink)}#nav button.on,#corner button.on{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}#nav button:disabled,#nav button[aria-disabled="true"]{opacity:0.38;cursor:default;text-decoration:none}#nav button:disabled:hover,#nav button[aria-disabled="true"]:hover{color:var(--mute);text-decoration:none}#about-layer{position:fixed;inset:0;z-index:4}#welcome-layer{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:28px 22px;background:var(--bg);pointer-events:auto}#welcome-layer[hidden]{display:none}body.welcome-open{overflow:hidden}#welcome{width:min(26rem,calc(100vw - 44px));text-align:center;pointer-events:auto}#welcome-title{margin:0;font:400 var(--text-display-lg) / var(--leading-tight) var(--font-display);color:var(--ink)}#welcome-body{margin:1.1em 0 2em;font:var(--text-body) / 1.55 var(--font-body);color:var(--mute)}#welcome-close{appearance:none;margin:0;padding:0.35em 0.1em;border:0;background:none;color:var(--ink);cursor:pointer;font:var(--text-body) / var(--leading-body) var(--font-body);text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}#welcome-close:hover{color:var(--mute)}#about-layer[hidden]{display:none}#about-scrim{position:absolute;inset:0}#about{position:absolute;right:22px;bottom:48px;width:min(20rem,calc(100vw - 44px));padding:0;background:none;pointer-events:auto}#about-title{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}#about-body{margin:0 0 1.4em;font:var(--text-body) / var(--leading-body) var(--font-body);color:var(--mute)}#about-sources{margin:0;font:var(--text-body-sm) / var(--leading-body) var(--font-body);color:var(--mute)}#about-src-insp,#about-src-data{color:var(--ink)}#about-sources .src-row{margin:0 0 0.6em}#about-sources .src-row:last-child{margin-bottom:0}#about-sources a{color:var(--link);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}#about-sources a:hover{color:var(--ink)}#about-close{margin:0.4em 0 0}#nav button:focus-visible,#corner button:focus-visible,#speed button:focus-visible,#about-close:focus-visible,#welcome-close:focus-visible,#about-sources a:focus-visible{outline:2px solid var(--ink);outline-offset:3px}@media (prefers-reduced-motion:reduce){:root.theme-ready,#basemap,#basemap .leaflet-tile-pane{transition:none !important}}@media (max-width:640px){#hud{left:18px;top:20px;max-width:calc(100vw - 36px)}#nav,#corner{left:16px;right:16px;width:auto;gap:0.2em 0.8em}#nav{bottom:16px}#corner{bottom:60px}#nav button,#corner button,#about-close{min-height:44px;padding:0 0.15em}#welcome-close{min-height:44px;padding:0 0.35em}#about{right:16px;bottom:104px;left:16px;width:auto;max-height:calc(100dvh - 140px);overflow:auto;overscroll-behavior:contain}#map{touch-action:none}}@media (max-width:380px){h1{font-size:var(--text-display-sm)}#speed{gap:0.8em}}</style>
   </head>
   <body>
     <div id="basemap"></div>
     <div id="veil"></div>
     <canvas id="map"></canvas>
+    <p id="line-tip" hidden aria-live="polite">
+      <span id="line-tip-name"></span><span id="line-tip-sep" hidden aria-hidden="true"> · </span
+      ><span id="line-tip-inst"></span>
+    </p>
     <header id="hud">
-      <h1 id="title">Sound of commuting</h1>
-      <p id="meta"><span id="clock">…</span><span id="count" aria-live="polite">—</span></p>
-      <p id="speed" role="group" aria-label="Speed">
-        <button id="speed-1" type="button" class="on" aria-pressed="true">×1</button>
-        <button id="speed-20" type="button" aria-pressed="false">×20</button>
+      <h1 id="title">Sounds of commuting</h1>
+      <p id="meta">
+        <span id="clock">…</span
+        ><span class="hud-count-row"
+          ><span id="count" aria-live="polite"
+            ><svg class="count-icon" viewBox="0 0 256 256" aria-hidden="true" focusable="false"
+              ><path
+                fill="currentColor"
+                d="M188 24H68a32.037 32.037 0 0 0-32 32v128a32.037 32.037 0 0 0 32 32h12l-14.4 19.2a8 8 0 0 0 12.8 9.6L100 216h56l21.6 28.8a8 8 0 0 0 12.8-9.6L176 216h12a32.037 32.037 0 0 0 32-32V56a32.037 32.037 0 0 0-32-32M84 184a12 12 0 1 1 12-12 12 12 0 0 1-12 12m36-64H52V80h68Zm52 64a12 12 0 1 1 12-12 12 12 0 0 1-12 12m32-64h-68V80h68Z" /></svg
+            ><span id="count-n">—</span></span
+          ><span id="count-tip" class="hud-tip" role="tooltip">Active Trains</span></span
+        >
       </p>
+      <div class="hud-speed-row">
+        <p id="speed" role="group" aria-label="Speed">
+          <button type="button" data-speed="1" class="on" aria-pressed="true">×1</button>
+          <button type="button" data-speed="4" aria-pressed="false">×4</button>
+          <button type="button" data-speed="12" aria-pressed="false">×12</button>
+          <button type="button" data-speed="20" aria-pressed="false">×20</button>
+        </p>
+        <span id="speed-tip" class="hud-tip" role="tooltip">Fast-forward the timetable clock</span>
+      </div>
     </header>
     <nav id="nav" aria-label="Controls">
       <button id="view-map" type="button" class="on" aria-pressed="true">Map</button>
@@ -34,31 +55,38 @@
       <button id="lang-en" type="button" class="on" aria-pressed="true">EN</button>
       <button id="lang-tr" type="button" aria-pressed="false">TR</button>
     </nav>
+    <div id="welcome-layer" hidden>
+      <div id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+        <h2 id="welcome-title">Sounds of commuting</h2>
+        <p id="welcome-body"></p>
+        <button id="welcome-close" type="button">Enter</button>
+      </div>
+    </div>
     <div id="about-layer" hidden>
       <div id="about-scrim"></div>
       <aside id="about" role="dialog" aria-modal="true" aria-labelledby="about-title">
-        <h2 id="about-title">Sound of commuting</h2>
+        <h2 id="about-title">Sounds of commuting</h2>
         <p id="about-body"></p>
         <div id="about-sources">
-          <p id="about-src-kicker">Sources</p>
           <p class="src-row">
-            <span id="about-src-insp">Inspiration</span>
+            <span id="about-src-insp">Inspired by</span>
             <a href="https://www.trainjazz.com/" target="_blank" rel="noopener">TrainJazz</a>
           </p>
           <p class="src-row">
-            <span id="about-src-data">Data</span>
-            <a href="https://data.ibb.gov.tr/dataset/rayli-sistem-istasyon-noktalari-verisi" target="_blank" rel="noopener">İBB stations</a>,
-            <a href="https://data.ibb.gov.tr/dataset/iett-ibb360-web-servisi" target="_blank" rel="noopener">İBB 360</a>,
-            <a href="https://data.ibb.gov.tr/dataset/metro-istanbul-sefer-tarifeleri-listesi-web-servisi" target="_blank" rel="noopener">Metro İstanbul</a>,
-            <a href="https://www.tcddtasimacilik.gov.tr/marmaray/tr/gunluk_tren_saatleri" target="_blank" rel="noopener">Marmaray</a>,
-            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>
+            <span id="about-src-data">Data source</span>
+            <a data-src="stations" href="https://data.ibb.gov.tr/dataset/rayli-sistem-istasyon-noktalari-verisi" target="_blank" rel="noopener">Subway Stations</a>,
+            <a data-src="ibb360" href="https://data.ibb.gov.tr/dataset/iett-ibb360-web-servisi" target="_blank" rel="noopener">İBB 360</a>,
+            <a data-src="metro" href="https://data.ibb.gov.tr/dataset/metro-istanbul-sefer-tarifeleri-listesi-web-servisi" target="_blank" rel="noopener">Metro İstanbul</a>,
+            <a data-src="marmaray" href="https://www.tcddtasimacilik.gov.tr/marmaray/tr/gunluk_tren_saatleri" target="_blank" rel="noopener">Marmaray</a>,
+            <a data-src="osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>
           </p>
         </div>
         <button id="about-close" type="button">Close</button>
       </aside>
     </div>
-    <script src="assets/js/gtfs-clock.min.js?v=54"></script>
-    <script src="assets/js/commute-audio.min.js?v=54"></script>
-    <script src="assets/js/app.min.js?v=54"></script>
+    <script src="assets/js/strings.min.js?v=55"></script>
+    <script src="assets/js/gtfs-clock.min.js?v=55"></script>
+    <script src="assets/js/commute-audio.min.js?v=55"></script>
+    <script src="assets/js/app.min.js?v=55"></script>
   </body>
 </html>
