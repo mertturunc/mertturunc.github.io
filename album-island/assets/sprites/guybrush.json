@@ -1,0 +1,16 @@
+{
+  "stand": {
+    "file": "guybrush-stand.png",
+    "frameWidth": 23,
+    "frameHeight": 47,
+    "frameCount": 1,
+    "fps": 1
+  },
+  "walk": {
+    "file": "guybrush-walk.png",
+    "frameWidth": 34,
+    "frameHeight": 49,
+    "frameCount": 6,
+    "fps": 3
+  }
+}

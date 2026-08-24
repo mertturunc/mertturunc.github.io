@@ -36,12 +36,14 @@ noindex: true
   }
 </style>
 
+<nav aria-label="{{ t.general.main_nav }}">
 <ul class="menu">
   <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
   <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
-  <li><span class="menu__item menu__item_selected">{{ t.nav.resume }}</span></li>
-  <div class="spacer"></div>
+  <li><a class="menu__item menu__item_selected" href="/en/resume/" aria-current="page">{{ t.nav.resume }}</a></li>
+  <li class="spacer" aria-hidden="true"></li>
 </ul>
+</nav>
 
 {% include resume.html %}
 

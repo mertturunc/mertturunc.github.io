@@ -2,28 +2,42 @@
 
 <!-- Full Language Switcher (Desktop) -->
 <div class="language-switcher">
-  <div class="language-switcher__toggle" id="lang-toggle">
-    <span class="language-switcher__icon">🌐</span>
+  <button
+    type="button"
+    class="language-switcher__toggle"
+    id="lang-toggle"
+    aria-expanded="false"
+    aria-haspopup="menu"
+    aria-controls="lang-menu"
+    aria-label="{{ t.general.language }}"
+  >
+    <span class="language-switcher__icon" aria-hidden="true">🌐</span>
     <span class="language-switcher__current">
       {% if current_lang == 'tr' %}{{ t.general.turkish }}{% else %}{{ t.general.english }}{% endif %}
     </span>
-    <span class="language-switcher__arrow">▼</span>
-  </div>
+    <span class="language-switcher__arrow" aria-hidden="true">▼</span>
+  </button>
   
-  <div class="language-switcher__menu" id="lang-menu">
+  <div class="language-switcher__menu" id="lang-menu" hidden>
     <div class="language-switcher__section">
       {% if current_lang == 'tr' %}
-        <a href="{{ alternate_url }}" class="language-switcher__link">🇺🇸 {{ t.general.english }}</a>
+        <a href="{{ alternate_url }}" class="language-switcher__link" lang="en" hreflang="en">🇺🇸 {{ t.general.english }}</a>
       {% else %}
-        <a href="{{ alternate_url }}" class="language-switcher__link">🇹🇷 {{ t.general.turkish }}</a>
+        <a href="{{ alternate_url }}" class="language-switcher__link" lang="tr" hreflang="tr">🇹🇷 {{ t.general.turkish }}</a>
       {% endif %}
     </div>
   </div>
 </div>
 
 <!-- Minimal Language Switcher (Mobile) -->
-<a href="{{ alternate_url }}" class="language-switcher-minimal" title="{% if current_lang == 'tr' %}{{ t.general.english }}{% else %}{{ t.general.turkish }}{% endif %}">
-  {% if current_lang == 'tr' %}🇹🇷{% else %}🇺🇸{% endif %}
+<a
+  href="{{ alternate_url }}"
+  class="language-switcher-minimal"
+  hreflang="{% if current_lang == 'tr' %}en{% else %}tr{% endif %}"
+  lang="{% if current_lang == 'tr' %}en{% else %}tr{% endif %}"
+  aria-label="{% if current_lang == 'tr' %}{{ t.general.english }}{% else %}{{ t.general.turkish }}{% endif %}"
+>
+  {% if current_lang == 'tr' %}TR{% else %}EN{% endif %}
 </a>
 
 <script>
@@ -31,22 +45,34 @@ document.addEventListener('DOMContentLoaded', function() {
   const toggle = document.getElementById('lang-toggle');
   const menu = document.getElementById('lang-menu');
   const switcher = toggle ? toggle.closest('.language-switcher') : null;
-  
-  if (toggle && menu && switcher) {
-    toggle.addEventListener('click', function(e) {
-      e.stopPropagation();
-      menu.classList.toggle('language-switcher__menu--open');
-      switcher.classList.toggle('language-switcher--open');
-    });
-    
-    document.addEventListener('click', function() {
-      menu.classList.remove('language-switcher__menu--open');
-      switcher.classList.remove('language-switcher--open');
-    });
-    
-    menu.addEventListener('click', function(e) {
-      e.stopPropagation();
-    });
+
+  if (!toggle || !menu || !switcher) return;
+
+  function setOpen(open) {
+    menu.classList.toggle('language-switcher__menu--open', open);
+    switcher.classList.toggle('language-switcher--open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    menu.hidden = !open;
   }
+
+  toggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+  });
+
+  document.addEventListener('click', function() {
+    setOpen(false);
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+
+  menu.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
 });
-</script> 
+</script>

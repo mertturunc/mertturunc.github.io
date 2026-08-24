@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -38,12 +38,13 @@
 <body>
   <!-- Search Bar -->
   <div id="search-container">
-    <input type="text" id="search-input" placeholder="Lokasyon arayın..." />
-    <div id="search-panel-results"></div>
+    <label class="visually-hidden" for="search-input">Lokasyon ara</label>
+    <input type="text" id="search-input" placeholder="Lokasyon arayın..." autocomplete="off" />
+    <div id="search-panel-results" role="listbox" aria-label="Arama sonuçları"></div>
   </div>
 
   <!-- Mobile Menu Toggle -->
-  <button id="mobile-menu-toggle" type="button">☰</button>
+  <button id="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="marker-controls" aria-label="Kontrol menüsünü aç">☰</button>
 
   <!-- Marker Control Menu -->
   <div id="marker-controls">
@@ -73,14 +74,14 @@
           Bu harita, yürüme ve ulaşım süresini birleştirerek İstanbul'da ulaşılabilir alanları görselleştirir. İşaretçiyi yerleştirin (haritaya tıklayın, arama çubuğunu veya düğmeyi kullanın), yeniden konumlandırmak için işareti sürükleyin ve kaydırıcıları ayarlayarak süre bilgilerini güncelleyebilirsiniz. Tampon bölgeler, en yakın istasyona yürüdükten sonra kalan yolculuk süresini, aktarma sürelerini göz önünde bulundurarak gösterir. Zaman etiketleri için tamponların üzerine gelin; kalan süreyi görmek için noktalı istasyonları tıklayabilirsiniz.
         </div>
       </div>
-      <div id="about">
+      <div id="data-sources">
         <div>Veri Kaynakları</div>
         <div class="about-text">
           <div>1) OpenStreetMap Data Contributors</div>
           <div>2) <a href="https://data.ibb.gov.tr/dataset/metro-istanbul-istasyon-bilgi-listesi" target="_blank" rel="noopener noreferrer">İBB Açık Veri Portalı | Metro İstanbul İstasyon Bilgi Listesi</a></div>
         </div>
       </div>
-      <div id="about">
+      <div id="inspiration">
         <div>Not</div>
         <div class="about-text">
           Bu uygulama <a href="https://curtisfenner.com/" target="_blank" rel="noopener noreferrer">Curtis Fenner</a>'ın <a href="https://curtisfenner.com/tokyo-transit-iso/" target="_blank" rel="noopener noreferrer">How far can trains take me in Tokyo?</a> projesinden ilham alınarak geliştirilmiştir.
@@ -94,7 +95,7 @@
   </div>
 
   <div id="map"></div>
-  <button id="legend-toggle" type="button">Hatlar</button>
+  <button id="legend-toggle" type="button" aria-expanded="false" aria-controls="line-legend">Hatlar</button>
   <div id="line-legend" aria-label="Toplu taşıma hatları göstergesi">
     <div class="legend-title">Hatlar</div>
     <div id="line-legend-list"></div>
@@ -110,5 +111,30 @@
   </script>
 
   <script src="app.js"></script>
+  <script>
+    (function () {
+      const menuBtn = document.getElementById('mobile-menu-toggle');
+      const panel = document.getElementById('marker-controls');
+      const legendBtn = document.getElementById('legend-toggle');
+      const legend = document.getElementById('line-legend');
+      if (menuBtn && panel) {
+        const syncMenu = function () {
+          const open = window.getComputedStyle(panel).display !== 'none';
+          menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          menuBtn.setAttribute('aria-label', open ? 'Kontrol menüsünü kapat' : 'Kontrol menüsünü aç');
+        };
+        menuBtn.addEventListener('click', function () { setTimeout(syncMenu, 0); });
+        syncMenu();
+      }
+      if (legendBtn && legend) {
+        const syncLegend = function () {
+          const open = window.getComputedStyle(legend).display !== 'none';
+          legendBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        legendBtn.addEventListener('click', function () { setTimeout(syncLegend, 0); });
+        syncLegend();
+      }
+    })();
+  </script>
 </body>
 </html>

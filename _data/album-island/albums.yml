@@ -1,0 +1,379 @@
+# Album ratings
+#
+# Album fields:
+#   cover_url: "https://…" or "/assets/covers/…" — optional artwork
+#   cover_hue: 280           — placeholder color when cover_url is omitted
+#   genres: [Alt, Rock, …]    — top 3 Apple Music genres (optional)
+#   released: "2018-06-29"    — release date parsed from Apple Music metadata
+#   apple_music_url: "https://…" — source album link for re-sync
+#
+# Track fields (tracks[].…):
+#   title, note              — title required; note optional
+#   stars: 1–5                — whole-star song rating
+#   kind: interlude | prelude — not rated; shows — instead of stars
+#   number: 1                 — optional track number (displayed zero-padded)
+#   duration: "3:42"          — optional length (any string, e.g. 3:42 or 4:05)
+#
+- artist: Gorillaz
+  title: Plastic Beach
+  score: 0
+  year: 2010
+  genre: Alternative
+  genres: [Alternative, Hip-Hop/Rap, Alternative Rap]
+  released: 2010-03-03
+  rated: 2026-08-24
+  slug: gorillaz-plastic-beach
+  cover_url: "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/b8/f9/b9/b8f9b9f8-a609-bde2-0302-349436ffc508/825646291038.jpg/600x600bb.jpg"
+  apple_music_url: "https://music.apple.com/us/album/plastic-beach/850569437"
+  tracks:
+    - number: 1
+      title: Orchestral Intro (feat. sinfonia ViVA)
+      duration: "1:09"
+      kind: interlude-
+    - number: 2
+      title: Welcome To the World of the Plastic Beach (feat. Snoop Dogg and Hypnotic Brass Ensemble)
+      duration: "3:36"
+    - number: 3
+      title: "White Flag (feat. Bashy, Kano and the National Orchestra For Arabic Music)"
+      duration: "3:43"
+    - number: 4
+      title: Rhinestone Eyes
+      duration: "3:20"
+    - number: 5
+      title: Stylo (feat. Mos Def and Bobby Womack)
+      duration: "4:31"
+    - number: 6
+      title: Superfast Jellyfish (feat. Gruff Rhys and De La Soul)
+      duration: "2:55"
+    - number: 7
+      title: Empire Ants (feat. Little Dragon)
+      duration: "4:44"
+    - number: 8
+      title: Glitter Freeze (feat. Mark E Smith)
+      duration: "4:03"
+    - number: 9
+      title: Some Kind of Nature (feat. Lou Reed)
+      duration: "3:00"
+    - number: 10
+      title: On Melancholy Hill
+      duration: "3:54"
+    - number: 11
+      title: Broken
+      duration: "3:17"
+    - number: 12
+      title: Sweepstakes (feat. Mos Def and Hypnotic Brass Ensemble)
+      duration: "5:20"
+    - number: 13
+      title: Plastic Beach (feat. Mick Jones and Paul Simonon)
+      duration: "3:47"
+    - number: 14
+      title: To Binge (feat. Little Dragon)
+      duration: "3:56"
+    - number: 15
+      title: Cloud of Unknowing (feat. Bobby Womack and sinfonia ViVA)
+      duration: "3:06"
+    - number: 16
+      title: Pirate Jet
+      duration: "2:32"
+
+- artist: Daft Punk
+  title: Random Access Memories
+  score: 0
+  year: 2013
+  genre: Pop
+  genres: [Pop, Electronic, Electronica]
+  released: 2013-05-17
+  rated: 2026-08-24
+  slug: daft-punk-ram
+  cover_url: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg"
+  apple_music_url: "https://music.apple.com/us/album/random-access-memories/617154241"
+  tracks:
+    - number: 1
+      title: Give Life Back to Music
+      duration: "4:34"
+      stars: 4
+      note: Opening statement — live-band warmth without losing the machine.
+    - number: 2
+      title: The Game of Love
+      duration: "5:22"
+      stars: 3
+    - number: 3
+      title: Giorgio by Moroder
+      duration: "9:05"
+      stars: 3
+    - number: 4
+      title: Within
+      duration: "3:49"
+      stars: 3
+    - number: 5
+      title: Instant Crush
+      duration: "5:38"
+      stars: 5
+      note: Julian Casablancas melody is the emotional center.
+    - number: 6
+      title: Lose Yourself to Dance
+      duration: "5:54"
+      stars: 5
+    - number: 7
+      title: Touch
+      duration: "8:19"
+      stars: 4
+    - number: 8
+      title: Get Lucky
+      duration: "6:10"
+      stars: 5
+      note: Overplayed but the groove engineering still holds up.
+    - number: 9
+      title: Beyond
+      duration: "4:50"
+      stars: 2
+    - number: 10
+      title: Motherboard
+      duration: "5:42"
+      stars: 2
+    - number: 11
+      title: Fragments of Time
+      duration: "4:40"
+      stars: 5
+    - number: 12
+      title: "Doin' it Right"
+      duration: "4:11"
+      stars: 3
+    - number: 13
+      title: Contact
+      duration: "6:21"
+      stars: 2
+
+- artist: Frank Ocean
+  title: channel ORANGE
+  score: 0
+  year: 2012
+  genre: Pop
+  genres: [Pop, "R&B/Soul", "Contemporary R&B"]
+  released: 2012-07-10
+  rated: 2026-08-24
+  slug: frank-ocean-channel-orange
+  cover_url: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/04/f8/63/04f863fc-2852-604f-c910-a97ac069506b/12UMGIM40339.rgb.jpg/600x600bb.jpg"
+  apple_music_url: "https://music.apple.com/us/album/channel-orange/1440765580"
+  tracks:
+    - number: 1
+      title: Start
+      duration: "0:46"
+      kind: interlude-
+    - number: 2
+      title: Thinkin Bout You
+      duration: "3:21"
+      stars: 5
+    - number: 3
+      title: Fertilizer
+      duration: "0:40"
+      kind: interlude-
+    - number: 4
+      title: Sierra Leone
+      duration: "2:29"
+      stars: 4
+    - number: 5
+      title: Sweet Life
+      duration: "4:23"
+      stars: 3
+    - number: 6
+      title: Not Just Money
+      duration: "1:00"
+      kind: interlude-
+    - number: 7
+      title: Super Rich Kids (feat. Earl Sweatshirt)
+      duration: "5:05"
+      stars: 4
+    - number: 8
+      title: Pilot Jones
+      duration: "3:04"
+      stars: 1
+    - number: 9
+      title: Crack Rock
+      duration: "3:44"
+      stars: 4
+    - number: 10
+      title: Pyramids
+      duration: "9:53"
+      stars: 1
+    - number: 11
+      title: Lost
+      duration: "3:54"
+      stars: 4
+    - number: 12
+      title: White (feat. John Mayer)
+      duration: "1:16"
+      kind: interlude-
+    - number: 13
+      title: Monks
+      duration: "3:20"
+      stars: 2
+    - number: 14
+      title: Bad Religion
+      duration: "2:55"
+      stars: 2
+    - number: 15
+      title: Pink Matter (feat. André 3000)
+      duration: "4:29"
+      stars: 4
+    - number: 16
+      title: Forrest Gump
+      duration: "3:15"
+      stars: 2
+    - number: 17
+      title: End
+      duration: "2:15"
+      kind: interlude-
+
+- artist: Massive Attack
+  title: Blue Lines
+  score: 0
+  year: 1991
+  genre: Electronic
+  released: 1991-04-08
+  rated: 2026-08-24
+  slug: massive-attack-blue-lines
+  cover_url: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e5/f7/c0/e5f7c07d-2182-e732-8ad6-be03814fe93c/13UABIM04453.rgb.jpg/600x600bb.jpg"
+  apple_music_url: "https://music.apple.com/us/album/blue-lines-2012-mix-master/715864097"
+  tracks:
+    - number: 1
+      title: "Safe From Harm (feat. Shara Nelson) [2012 Mix/Master]"
+      duration: "5:20"
+      stars: 3
+      note: Strong opener; mood is there before the album drifts.
+    - number: 2
+      title: "One Love (feat. Horace Andy) [2012 Mix/Master]"
+      duration: "4:48"
+      stars: 1
+    - number: 3
+      title: "Blue Lines (feat. Tricky) [2012 Mix/Master]"
+      duration: "4:22"
+      stars: 4
+    - number: 4
+      title: "Be Thankful For What You've Got (feat. Tony Bryan) [2012 Mix/Master]"
+      duration: "4:10"
+      stars: 3
+    - number: 5
+      title: "Five Man Army (feat. Horace Andy & Tricky) [2012 Mix/Master]"
+      duration: "6:04"
+      stars: 3
+    - number: 6
+      title: "Unfinished Sympathy (feat. Shara Nelson) [2012 Mix/Master]"
+      duration: "5:08"
+      stars: 2
+    - number: 7
+      title: "Daydreaming (feat. Shara Nelson & Tricky) [2012 Mix/Master]"
+      duration: "4:15"
+      stars: 2
+    - number: 8
+      title: "Lately (feat. Shara Nelson) [2012 Mix/Master]"
+      duration: "4:26"
+      stars: 3
+    - number: 9
+      title: "Hymn Of The Big Wheel (feat. Horace Andy) [2012 Mix/Master]"
+      duration: "6:22"
+      stars: 1
+
+- artist: Nine Inch Nails
+  title: The Downward Spiral
+  score: 0
+  year: 1994
+  genre: Alternative
+  genres: [Alternative, Electronic, Industrial]
+  released: 1994-03-08
+  rated: 2026-08-24
+  slug: nin-downward-spiral
+  cover_url: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/55/e0/85/55e0851e-11df-3b6a-7c54-4eef0efc2bed/15UMGIM67680.rgb.jpg/600x600bb.jpg"
+  apple_music_url: "https://music.apple.com/us/album/the-downward-spiral/1440837096"
+  tracks:
+    - number: 1
+      title: Mr. Self Destruct
+      duration: "4:30"
+      note: Placeholder — re-rate when revisiting the full listen.
+    - number: 2
+      title: Piggy
+      duration: "4:25"
+      note: Not scored yet.
+    - number: 3
+      title: Heresy
+      duration: "3:54"
+    - number: 4
+      title: March of the Pigs
+      duration: "2:59"
+    - number: 5
+      title: Closer
+      duration: "6:13"
+    - number: 6
+      title: Ruiner
+      duration: "4:59"
+    - number: 7
+      title: The Becoming
+      duration: "5:31"
+    - number: 8
+      title: I Do Not Want This
+      duration: "5:41"
+    - number: 9
+      title: Big Man with a Gun
+      duration: "1:36"
+    - number: 10
+      title: A Warm Place
+      duration: "3:23"
+    - number: 11
+      title: Eraser
+      duration: "4:54"
+    - number: 12
+      title: Reptile
+      duration: "6:52"
+    - number: 13
+      title: The Downward Spiral
+      duration: "3:57"
+    - number: 14
+      title: Hurt
+      duration: "6:13"
+      note: Not scored yet.
+
+- artist: Gorillaz
+  title: The Now Now
+  score: 0
+  year: 2018
+  genre: Alternative
+  genres: [Alternative, Hip-Hop/Rap, Rap]
+  released: 2018-06-29
+  rated: 2026-08-24
+  slug: gorillaz-the-now-now
+  cover_url: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/c8/a2/c0/c8a2c0cc-28e9-c0c6-f425-f6aaf13191f4/190295620660.jpg/600x600bb.jpg"
+  apple_music_url: "https://music.apple.com/us/album/the-now-now/1387814084"
+  tracks:
+    - number: 1
+      title: Humility (feat. George Benson)
+      duration: "3:18"
+    - number: 2
+      title: Tranz
+      duration: "2:43"
+    - number: 3
+      title: "Hollywood (feat. Snoop Dogg & Jamie Principle)"
+      duration: "4:53"
+    - number: 4
+      title: Kansas
+      duration: "4:08"
+    - number: 5
+      title: Sorcererz
+      duration: "3:00"
+    - number: 6
+      title: Idaho
+      duration: "3:42"
+    - number: 7
+      title: Lake Zurich
+      duration: "4:14"
+    - number: 8
+      title: Magic City
+      duration: "4:00"
+    - number: 9
+      title: Fire Flies
+      duration: "3:53"
+    - number: 10
+      title: One Percent
+      duration: "2:21"
+    - number: 11
+      title: Souk Eye
+      duration: "4:35"

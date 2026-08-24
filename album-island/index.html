@@ -1,0 +1,120 @@
+---
+layout: album-island
+title: Album Island
+description: A personal album rating ledger — like Monkey Island, but for records
+permalink: /album-island/
+guybrush: true
+---
+
+<header class="tavern-sign" role="banner">
+  <h1 class="tavern-sign__title">{{ page.title }}</h1>
+  <p class="tavern-sign__tagline">Rated albums &amp; track notes</p>
+</header>
+
+<main class="island-stage" id="main">
+  <div class="dialog-panel" role="region" aria-label="Album Island catalog">
+    <div class="dialog-panel__inner">
+      <label class="search-field" for="album-search">
+        <span class="search-field__label">Search</span>
+        <input
+          class="search-input"
+          id="album-search"
+          type="search"
+          placeholder="Artist or title…"
+          autocomplete="off"
+          spellcheck="false"
+          enterkeyhint="search"
+        >
+      </label>
+
+      <p class="visually-hidden" id="search-status" aria-live="polite" aria-atomic="true"></p>
+
+      {% assign sorted_albums = site.data.album-island.albums | sort: 'score' | reverse %}
+
+      <ol
+        class="album-list"
+        id="album-list"
+        data-count="{{ sorted_albums.size }}"
+        data-guybrush-base="{{ '/album-island/assets/sprites/' | relative_url }}"
+        data-guybrush-config="{{ '/album-island/assets/sprites/guybrush.json' | relative_url }}"
+      >
+        {% for album in sorted_albums %}
+          {% assign panel_id = "tracks-" | append: album.slug %}
+          <li
+            class="album-row{% if forloop.first %} is-top-ranked{% endif %}"
+            data-artist="{{ album.artist | downcase }}"
+            data-title="{{ album.title | downcase }}"
+            data-score="{{ album.score }}"
+            data-label-artist="{{ album.artist }}"
+            data-label-title="{{ album.title }}"
+          >
+            <button
+              type="button"
+              class="album-row__toggle"
+              aria-expanded="false"
+              aria-controls="{{ panel_id }}"
+              id="toggle-{{ album.slug }}"
+            >
+              <span class="album-row__score">{{ album.score }}</span>
+              {% if album.cover_url and album.cover_url != "" %}
+                <span class="album-row__cover album-row__cover--image" style="--cover-hue: {{ album.cover_hue | default: 30 }};">
+                  <img
+                    src="{{ album.cover_url | relative_url }}"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    width="48"
+                    height="48"
+                    data-cover-fallback
+                  >
+                </span>
+              {% else %}
+                <span class="album-row__cover" style="--cover-hue: {{ album.cover_hue }};" aria-hidden="true"></span>
+              {% endif %}
+              <span class="album-row__details">
+                <span class="album-row__artist">{{ album.artist }}</span>
+                <span class="album-row__title">{{ album.title }}</span>
+                <span class="album-row__meta">{{ album.year }} · {{ album.genre }}</span>
+              </span>
+              <span class="album-row__chevron" aria-hidden="true"></span>
+              <span class="visually-hidden" data-toggle-hint>, show track ratings</span>
+            </button>
+
+            <div class="album-row__panel" id="{{ panel_id }}" aria-labelledby="toggle-{{ album.slug }}" hidden>
+              {% if album.tracks and album.tracks.size > 0 %}
+                <p class="track-list__heading">Tracks</p>
+                <ol class="track-list">
+                  {% for track in album.tracks %}
+                    <li class="track-row">
+                      {% include album-island-track-rating.html track=track %}
+                      {% if track.number %}
+                        <span class="track-row__number">{{ track.number | prepend: '00' | slice: -2, 2 }}</span>
+                      {% endif %}
+                      <span class="track-row__main">
+                        <span class="track-row__title">{{ track.title }}</span>
+                        {% if track.note and track.note != "" %}
+                          <span class="track-row__note">{{ track.note }}</span>
+                        {% endif %}
+                      </span>
+                      {% if track.duration and track.duration != "" %}
+                        <span class="track-row__duration">{{ track.duration }}</span>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ol>
+              {% else %}
+                <p class="track-list__empty">No track ratings yet.</p>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+
+      <p class="empty-state" id="empty-search" role="status" hidden>No albums match your search.</p>
+
+      {% if sorted_albums.size == 0 %}
+        <p class="empty-state" id="empty-catalog">No albums rated yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</main>

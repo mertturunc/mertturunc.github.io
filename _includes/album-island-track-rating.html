@@ -1,0 +1,24 @@
+{% comment %}
+  Track rating column: 1–5 stars for songs; em dash for interludes, preludes, or unrated tracks.
+  Expects `track` in scope.
+{% endcomment %}
+{% assign track_kind = track.kind | default: '' | downcase %}
+{% if track_kind == 'interlude' or track_kind == 'prelude' %}
+  <span class="track-row__rating track-row__rating--skip" aria-label="Not rated ({{ track_kind }})" title="Not rated">—</span>
+{% elsif track.stars %}
+  <span class="track-row__rating" aria-label="{{ track.stars }} out of 5 stars">
+    {% for i in (1..5) %}
+      {% if i <= track.stars %}
+        <svg class="track-star track-star--filled" width="9" height="9" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M8 1.2 9.8 5.6 14.6 6.1 11 9.2 12.1 14 8 11.6 3.9 14 5 9.2 1.4 6.1 6.2 5.6z"/>
+        </svg>
+      {% else %}
+        <svg class="track-star" width="9" height="9" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M8 1.2 9.8 5.6 14.6 6.1 11 9.2 12.1 14 8 11.6 3.9 14 5 9.2 1.4 6.1 6.2 5.6z"/>
+        </svg>
+      {% endif %}
+    {% endfor %}
+  </span>
+{% else %}
+  <span class="track-row__rating track-row__rating--skip" aria-label="Not rated yet" title="Not rated">—</span>
+{% endif %}

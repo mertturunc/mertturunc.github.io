@@ -28,7 +28,7 @@ url: "https://blog.atr0p.dev"
 # Multilingual configuration
 languages: ["tr", "en"]
 default_lang: "tr"
-exclude_from_localization: ["i", "fonts", "f", "style.css", "sw.js", "maptest", "script", "vendor", "_site"]
+exclude_from_localization: ["i", "fonts", "f", "style.css", "sw.js", "maptest", "script", "vendor", "_site", "album-island"]
 
 # Collections configuration
 collections:

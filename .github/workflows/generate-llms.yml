@@ -43,10 +43,10 @@ jobs:
             end.sort_by { |post| post[:date] }.reverse
             
             content = <<~MARKDOWN
-              # Mert Turunç\'s Blog
+              # mert\'s Blog
               
               ## About
-              This is a personal blog and portfolio website showcasing projects, blog posts, and professional information about Mert Turunç.
+              This is a personal blog and portfolio website showcasing projects, blog posts, and professional information about mert.
               
               ## Main Content
               The site contains the following main sections:

@@ -8,8 +8,9 @@
   {% else %}
     <meta name="viewport" content="width=640" />
   {% endif %}
-  <meta name="theme-color" content="hsl(199, 39%, 39%)">
-  <link href="/i/favicon.png" rel="icon" sizes="32x32">
+  <meta name="theme-color" content="#282828">
+  <link href="/favicon.ico" rel="icon">
+  <link href="/i/favicon.png" rel="icon" type="image/png" sizes="32x32">
 
   <!-- Apply theme immediately to prevent flash -->
   <script>
@@ -18,20 +19,18 @@
       if (savedTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
       }
+      var themeColor = document.querySelector('meta[name="theme-color"]');
+      if (themeColor) themeColor.setAttribute('content', savedTheme === 'dark' ? '#282828' : '#fbf1c7');
     })();
   </script>
 
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link href='/style.css?v=20201203' rel='stylesheet' type='text/css' />
+  <link href='/style.css?v=20260824' rel='stylesheet' type='text/css' />
   {% include syntax-highlighting.html %}
   <title>{{ page.title }} @ {{ t.site_title }}</title>
 
-  <!-- Mastodon verification -->
-  <link rel="me" href="https://mapstodon.space/@GeoTurunc">
-
   <link href="/blog/atom.xml" rel="alternate" title="atr0p's blog" type="application/atom+xml" />
 
-  <meta name="author" content="Mert Turunç" />
+  <meta name="author" content="mert" />
   <meta name="fediverse:creator" content="@GeoTurunc@mapstodon.space" />
 
   {% if page.noindex %}
@@ -78,7 +77,7 @@
   
   {% if page.categories contains 'blog' %}
     <meta property="article:published_time" content="{{ page.date | date: '%Y-%m-%d' }}" />
-    <meta property="article:author" content="Mert Turunç" />
+    <meta property="article:author" content="mert" />
   {% endif %}
 
   <!-- Twitter Card meta tags -->
@@ -111,21 +110,24 @@
     {% endif %}
   {% endif %}
 
-  {% comment %} Add alternate language links {% endcomment %}
+  {% comment %} Alternate language links — live host, not github.io {% endcomment %}
   {% if current_lang == 'tr' %}
-    <link rel="alternate" hreflang="en" href="https://mertturunc.github.io/en{{ page.url }}" />
-    <link rel="alternate" hreflang="tr" href="https://mertturunc.github.io{{ page.url }}" />
+    <link rel="alternate" hreflang="tr" href="{{ site.url }}{{ page.url }}" />
+    <link rel="alternate" hreflang="en" href="{{ site.url }}/en{{ page.url }}" />
+    <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url }}" />
   {% else %}
-    <link rel="alternate" hreflang="tr" href="https://mertturunc.github.io{{ page.url | remove: '/en' }}" />
-    <link rel="alternate" hreflang="en" href="https://mertturunc.github.io{{ page.url }}" />
+    <link rel="alternate" hreflang="en" href="{{ site.url }}{{ page.url }}" />
+    <link rel="alternate" hreflang="tr" href="{{ site.url }}{{ page.url | remove: '/en' }}" />
+    <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url | remove: '/en' }}" />
   {% endif %}
 </head>
 <body>
+<a class="skip-link" href="#main">{{ t.general.skip_to_content }}</a>
 <!-- Top controls -->
 <div class="top-controls">
   <!-- Theme Toggle Button -->
-  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-    <span id="theme-icon">☀️</span>
+  <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="true" aria-label="{{ t.general.theme_toggle }}">
+    <span id="theme-icon" aria-hidden="true">☀️</span>
   </button>
   
   <!-- Language Switcher -->
@@ -133,9 +135,14 @@
 </div>
 
 <div class="page {{ page.class }}">
+<main id="main">
 
 {{ content }}
 
+</main>
+</div>
+
+<div id="heading-link-status" class="visually-hidden" role="status" aria-live="polite"></div>
 <div class="preload"></div>
 
 <script>
@@ -159,6 +166,7 @@
   
   // Initialize icon
   updateIcon(currentTheme);
+  themeToggle.setAttribute('aria-pressed', currentTheme === 'dark' ? 'true' : 'false');
   
   // Theme toggle click handler
   themeToggle.addEventListener('click', function() {
@@ -174,58 +182,77 @@
     
     // Update icon
     updateIcon(newTheme);
+    themeToggle.setAttribute('aria-pressed', newTheme === 'dark' ? 'true' : 'false');
     
     // Save preference
     localStorage.setItem('theme', newTheme);
+    var themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute('content', newTheme === 'dark' ? '#282828' : '#fbf1c7');
   });
 })();
 
-// Header anchor links functionality
+// Heading permalinks: a real control copies the section URL. Headings themselves are not buttons.
 (function() {
-  // Function to create a URL-friendly slug from text
+  const translations = {
+    permalink: '{{ t.general.heading_permalink }}',
+    copied: '{{ t.general.heading_permalink_copied }}'
+  };
+
   function createSlug(text) {
     return text
+      .normalize('NFKD')
+      .replace(/\p{M}/gu, '')
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-')     // Replace spaces with hyphens
-      .replace(/-+/g, '-')      // Replace multiple hyphens with single
-      .trim();
+      .replace(/[^\p{L}\p{N}\s-]/gu, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 
-  // Add anchor links to headers
+  function announce(message) {
+    const status = document.getElementById('heading-link-status');
+    if (!status) return;
+    status.textContent = '';
+    status.textContent = message;
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     const headers = document.querySelectorAll('h1:not(.r-title), h2, h3, h4, h5, h6');
-    
-    headers.forEach(function(header) {
-      // Create slug from header text
-      const slug = createSlug(header.textContent);
-      
-      // Set the id if it doesn't exist
+    const usedIds = new Set(Array.from(document.querySelectorAll('[id]')).map(function(el) { return el.id; }));
+
+    headers.forEach(function(header, index) {
+      if (header.classList.contains('visually-hidden')) return;
+      if (header.parentElement && header.parentElement.classList.contains('year-group')) return;
+      if (header.closest('nav')) return;
+      if (header.querySelector('.heading-permalink')) return;
+
+      let slug = header.id || createSlug(header.textContent.replace(/#$/, '').trim());
+      if (!slug) slug = 'section-' + (index + 1);
+
       if (!header.id) {
-        header.id = slug;
+        let unique = slug;
+        let n = 2;
+        while (usedIds.has(unique)) {
+          unique = slug + '-' + n++;
+        }
+        header.id = unique;
+        usedIds.add(unique);
       }
-      
-      // Add click handler
-      header.addEventListener('click', function() {
-        // Update URL with anchor
-        const newUrl = window.location.pathname + window.location.search + '#' + header.id;
-        window.history.pushState(null, null, newUrl);
-        
-        // Optional: scroll to header smoothly
-        header.scrollIntoView({ behavior: 'smooth' });
-        
-        // Copy link to clipboard
-        navigator.clipboard.writeText(window.location.href).then(function() {
-          // Show a brief visual feedback
-          const originalColor = header.style.color;
-          header.style.color = 'var(--accent-color)';
-          setTimeout(function() {
-            header.style.color = originalColor;
-          }, 200);
-        }).catch(function() {
-          // Fallback if clipboard API is not available
-        });
+
+      const link = document.createElement('a');
+      link.className = 'heading-permalink';
+      link.href = '#' + header.id;
+      link.setAttribute('aria-label', translations.permalink);
+      link.innerHTML = '<span aria-hidden="true">#</span>';
+      link.addEventListener('click', function() {
+        const url = window.location.origin + window.location.pathname + window.location.search + '#' + header.id;
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(url).then(function() {
+            announce(translations.copied);
+          }).catch(function() {});
+        }
       });
+      header.appendChild(link);
     });
   });
 })();
@@ -241,9 +268,10 @@
 
   function createCopyButton() {
     const button = document.createElement('button');
+    button.type = 'button';
     button.className = 'copy-button';
     button.innerHTML = '📋 ' + translations.copy;
-    button.setAttribute('aria-label', 'Copy code to clipboard');
+    button.setAttribute('aria-label', translations.copy);
     return button;
   }
 
@@ -498,8 +526,8 @@
       const originalTransform = chip.style.transform;
       
       // Animate success state
-      chip.style.background = '#28a745';
-      chip.style.color = 'white';
+      chip.style.background = 'var(--status-ok)';
+      chip.style.color = 'var(--status-ok-fg)';
       chip.style.transition = 'all 0.2s ease';
       
       // Reset after 2 seconds with smooth transition
@@ -517,8 +545,8 @@
       const originalTransform = chip.style.transform;
       
       // Animate error state
-      chip.style.background = '#dc3545';
-      chip.style.color = 'white';
+      chip.style.background = 'var(--status-bad)';
+      chip.style.color = 'var(--status-bad-fg)';
       chip.style.transition = 'all 0.2s ease';
       
       // Reset after 2 seconds with smooth transition
@@ -574,8 +602,8 @@
             const originalTransform = chip.style.transform;
             
             // Animate success state
-            chip.style.background = '#28a745';
-            chip.style.color = 'white';
+            chip.style.background = 'var(--status-ok)';
+            chip.style.color = 'var(--status-ok-fg)';
             chip.style.transition = 'all 0.2s ease';
             
             // Reset after 2 seconds with smooth transition

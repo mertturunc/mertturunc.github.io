@@ -8,6 +8,7 @@ tr:
   homepage:
     greeting: "merhaba"
     intro: "ben mert, <del>karışık kaset</del> ve <a href=\"https://medium.com/@mertturunc\" >medium</a> üzerinden denediğim blog işini kendime ait bir siteye taşımak istedim. blog ile beraber arada ürettiğim işleri de eklemeyi düşünüyorum."
+    portrait_alt: "mert"
   post:
     starred_tooltip: "yıldızlı"
     music_tooltip: "müzik"
@@ -15,6 +16,7 @@ tr:
     guide_tooltip: "rehber"
     wip_tooltip: "yakında"
     filter_all: "tümü"
+    filter_group: "yazı filtreleri"
     read_in: "bu yazıyı şu dilde oku:"
     available_in: "bu yazı şu dillerde mevcut:"
     original_lang: "orijinal dil:"
@@ -40,6 +42,11 @@ tr:
     language: "dil"
     turkish: "türkçe"
     english: "ingilizce"
+    skip_to_content: "içeriğe geç"
+    main_nav: "ana menü"
+    theme_toggle: "tema değiştir"
+    heading_permalink: "bu başlığın bağlantısı"
+    heading_permalink_copied: "bağlantı kopyalandı"
   months:
     - "ocak"
     - "şubat"
@@ -65,6 +72,7 @@ en:
   homepage:
     greeting: "hello"
     intro: "i'm mert, i wanted to move the blogging work i tried on <del>karışık kaset</del> and <a href=\"https://medium.com/@mertturunc\" >medium</a> to my own site. along with the blog, i'm thinking of adding the work i produce from time to time."
+    portrait_alt: "mert"
   post:
     starred_tooltip: "starred"
     music_tooltip: "music"
@@ -72,6 +80,7 @@ en:
     guide_tooltip: "guide"
     wip_tooltip: "wip"
     filter_all: "all"
+    filter_group: "Post filters"
     read_in: "read this post in:"
     available_in: "this post is available in:"
     original_lang: "original language:"
@@ -97,6 +106,11 @@ en:
     language: "language"
     turkish: "turkish"
     english: "english"
+    skip_to_content: "Skip to content"
+    main_nav: "Main menu"
+    theme_toggle: "Toggle theme"
+    heading_permalink: "Link to this heading"
+    heading_permalink_copied: "Link copied"
   months:
     - "january"
     - "february"

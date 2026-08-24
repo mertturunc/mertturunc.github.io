@@ -3,32 +3,24 @@ layout: default
 ---
 {% include language-utils.html %}
 
-<head>
-  <script>
-    // Preload the projects page
-    const projectsLink = document.querySelector('a[href="/projects/"]');
-    if (projectsLink) {
-      projectsLink.addEventListener('mouseover', function() {
-        const preloadLink = document.createElement('link');
-        preloadLink.rel = 'prefetch';
-        preloadLink.href = '/projects/';
-        document.head.appendChild(preloadLink);
-      });
-    }
-  </script>
-</head>
 <style>
   .return-button {
     display: inline-block;
     margin-bottom: 20px;
-    color: #777;
+    color: var(--muted-text);
     text-decoration: none;
+    border-bottom: none;
     font-size: 16px;
     transition: color 0.2s ease;
   }
 
   .return-button:hover {
-    color: #555;
+    color: var(--accent-color);
+  }
+
+  .return-button:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
   }
 
   .return-button::before {
@@ -39,25 +31,22 @@ layout: default
   .project-content {
     margin-top: 20px;
   }
-
-  /* Optimize iframe loading */
-  .sketchfab-embed-wrapper iframe {
-    loading: lazy;
-  }
 </style>
 
+<nav aria-label="{{ t.general.main_nav }}">
 <ul class="menu">
   {% if current_lang == 'en' %}
     <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
-    <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
+    <li><a class="menu__item" href="/en/projects/" aria-current="page">{{ t.nav.projects }}</a></li>
     <li><a class="menu__item" href="/en/resume/">{{ t.nav.resume }}</a></li>
   {% else %}
     <li><a class="menu__item" href="/">{{ t.nav.blog }}</a></li>
-    <li><a class="menu__item" href="/projects/">{{ t.nav.projects }}</a></li>
+    <li><a class="menu__item" href="/projects/" aria-current="page">{{ t.nav.projects }}</a></li>
     <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
   {% endif %}
-  <div class="spacer"></div>
+  <li class="spacer" aria-hidden="true"></li>
 </ul>
+</nav>
 
 <div class="post">
   {% if current_lang == 'en' %}

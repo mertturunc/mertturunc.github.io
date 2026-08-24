@@ -526,11 +526,11 @@ summary: Portfolyo sayılabilecek bir sayfa
   h1 { margin-bottom: -80px; }
   h2 { margin-top: 120px !important; }
   .gh-stars:before { content:"★"; font-size: 20px; vertical-align: baseline; position: relative; top: -1px; margin: 0 5px 0 10px; }
-  .gh-stars { color: #00000090; }
+  .gh-stars { color: var(--muted-text); }
   .icon { width: 128px; height: 128px; position: absolute; margin: 120px 0 0 -148px; }
   blockquote { position: relative; margin-bottom: 3em; }
   .quote-author { position: absolute; right: 0; }
-  .svglogo { color: #000000; }
+  .svglogo { color: var(--primary-text); }
 
   .kategori{ display: grid;}
 
@@ -544,13 +544,17 @@ summary: Portfolyo sayılabilecek bir sayfa
     margin-top: 10px;
     transition: all 0.3s ease;
     border-radius: 4px 4px 0 0;
-    background-color: #777;
-    color: white;
+    background-color: var(--code-bg);
+    color: var(--primary-text);
     cursor: pointer;
     width: 100%;
     border: none;
     text-align: left;
     outline: none;
+  }
+  .collapsible:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
   }
   .collapsible-title {
     display: flex;
@@ -563,7 +567,7 @@ summary: Portfolyo sayılabilecek bir sayfa
   }
   
   .project-date {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--muted-text);
     font-size: 0.85em;
     font-weight: 300;
     margin-left: 12px;
@@ -590,7 +594,7 @@ summary: Portfolyo sayılabilecek bir sayfa
   }
 
   .active, .collapsible:hover {
-    background-color: #555;
+    background-color: var(--border-color);
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
@@ -674,11 +678,11 @@ summary: Portfolyo sayılabilecek bir sayfa
 
   /* Enhanced hover effects for better interaction */
   .collapsible:not(.active):hover {
-    background-color: #666;
+    background-color: var(--border-color);
   }
 
   .active {
-    background-color: #555;
+    background-color: var(--border-color);
     border-radius: 4px 4px 0 0;
   }
 
@@ -735,7 +739,7 @@ summary: Portfolyo sayılabilecek bir sayfa
     opacity: 1;
     padding: 40px 40px 30px 40px;
     border: 1px solid var(--border-color);
-    transition: all 0.3s cubic-bezier(.4,2,.6,1);
+    transition: transform 0.3s ease, opacity 0.3s ease;
     animation: fadeInUp 0.4s;
     display: flex;
     flex-direction: column;
@@ -760,7 +764,10 @@ summary: Portfolyo sayılabilecek bir sayfa
     transition: background 0.2s, color 0.2s, box-shadow 0.2s;
     outline: none;
   }
-  .modal-close-btn:hover {
+  .modal-close-btn:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+  }
     background: var(--btn-hover);
     color: var(--primary-bg);
     box-shadow: 0 4px 16px rgba(0,0,0,0.18);
@@ -806,12 +813,14 @@ summary: Portfolyo sayılabilecek bir sayfa
   }
 </style>
 
+<nav aria-label="{{ t.general.main_nav }}">
 <ul class="menu">
   <li><a class="menu__item" href="/">{{ t.nav.blog }}</a></li>
-  <li><span class="menu__item menu__item_selected" href="/projects/">{{ t.nav.projects }}</span></li>
+  <li><a class="menu__item menu__item_selected" href="/projects/" aria-current="page">{{ t.nav.projects }}</a></li>
   <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
-  <div class="spacer"></div>
+  <li class="spacer" aria-hidden="true"></li>
 </ul>
+</nav>
 
 <div class="post">
 {% if site.projects.size > 0 %}

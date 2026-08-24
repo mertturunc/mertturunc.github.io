@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1c1824">
+  <title>{{ page.title }}</title>
+  <meta name="description" content="{{ page.description }}">
+  <link rel="preload" href="{{ '/album-island/assets/fonts/vt323-400.ttf' | relative_url }}" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="{{ '/album-island/assets/fonts/silkscreen-400.ttf' | relative_url }}" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="{{ '/album-island/assets/css/main.css' | relative_url }}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to catalog</a>
+  {{ content }}
+  {% if page.guybrush %}
+  <script src="{{ '/album-island/assets/js/guybrush-lines.js' | relative_url }}" defer></script>
+  <script src="{{ '/album-island/assets/js/guybrush.js' | relative_url }}" defer></script>
+  {% endif %}
+  <script src="{{ '/album-island/assets/js/inventory.js' | relative_url }}" defer></script>
+</body>
+</html>

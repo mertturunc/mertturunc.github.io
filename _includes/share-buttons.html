@@ -70,7 +70,7 @@ Usage: {% include share-buttons.html %}
 .share-buttons {
   margin: 30px 0;
   padding: 20px 0;
-  border-top: 0.5px solid #fe8019;
+  border-top: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   gap: 15px;
@@ -79,7 +79,7 @@ Usage: {% include share-buttons.html %}
 
 .share-buttons__label {
   font-weight: 500;
-  color: #666;
+  color: var(--muted-text);
   font-size: 14px;
 }
 
@@ -99,8 +99,8 @@ Usage: {% include share-buttons.html %}
   text-decoration: none;
   border: none;
   cursor: pointer;
-  background: #f5f5f5;
-  color: #666;
+  background: var(--code-bg);
+  color: var(--muted-text);
 }
 
 .share-button:hover {
@@ -124,8 +124,8 @@ Usage: {% include share-buttons.html %}
 }
 
 .share-button--copy:hover {
-  background: #333;
-  color: white;
+  background: var(--primary-text);
+  color: var(--primary-bg);
 }
 
 .share-button svg {
@@ -144,8 +144,8 @@ Usage: {% include share-buttons.html %}
 
 /* Copy feedback */
 .share-button--copy.copied {
-  background: #4CAF50;
-  color: white;
+  background: var(--status-ok);
+  color: var(--status-ok-fg);
 }
 </style>
 

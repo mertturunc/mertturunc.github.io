@@ -12,4 +12,8 @@ OPEN_GRAPH_IMAGE_REQUIREMENTS.md
 node_modules
 tools/draft-tournament/_scrape/
 tools/draft-tournament/_kitprobe/
-
+.cursor
+.impeccable
+PRODUCT.md
+DESIGN.md
+NUL

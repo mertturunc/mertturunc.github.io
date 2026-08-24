@@ -3,6 +3,7 @@ layout: default
 ---
 {% include language-utils.html %}
 
+<nav aria-label="{{ t.general.main_nav }}">
 <ul class="menu">
   {% if current_lang == 'en' %}
     <li><a class="menu__item menu__item_inside" href="/en/">{{ t.nav.blog }}</a></li>
@@ -13,17 +14,18 @@ layout: default
     <li><a class="menu__item" href="/projects/">{{ t.nav.projects }}</a></li>
     <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
   {% endif %}
-  <div class="spacer"></div>
+  <li class="spacer" aria-hidden="true"></li>
 </ul>
+</nav>
 
 <div class="post">
   <h1 class="r-title news__title">
     {% if page.wip %}
       {{ page.title }} <span class="wip-badge">{{ t.post.wip }}</span>
     {% else %}
-      <a href="#0" class="r-link animated-underline animated-underline_type1">
+      <span class="r-link animated-underline animated-underline_type1">
         {{ page.title }}
-      </a>
+      </span>
     {% endif %}
   </h1>
 
