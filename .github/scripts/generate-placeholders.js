@@ -1,7 +1,9 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const zlib = require('zlib');
 const matter = require('gray-matter');
 const sharp = require('sharp');
 const { Resvg } = require('@resvg/resvg-js');
@@ -36,8 +38,8 @@ const COLOR = {
   accent: '#fe8019'
 };
 
-const FONT_SANS = 'IBM Plex Sans, ui-sans-serif, sans-serif';
-const FONT_MONO = 'IBM Plex Mono, ui-monospace, monospace';
+const FONT_SANS = 'IBM Plex Sans';
+const FONT_MONO = 'IBM Plex Mono';
 
 const repoRoot = path.join(__dirname, '../../');
 const FONT_DIR = path.join(repoRoot, 'fonts');
@@ -55,6 +57,74 @@ function ensureDir(dirPath) {
   }
 }
 
+function woffToSfnt(woff) {
+  if (woff.toString('ascii', 0, 4) !== 'wOFF') {
+    throw new Error('not woff1');
+  }
+  const flavor = woff.readUInt32BE(4);
+  const numTables = woff.readUInt16BE(12);
+  const totalSfntSize = woff.readUInt32BE(16);
+  const sfnt = Buffer.alloc(totalSfntSize);
+  sfnt.writeUInt32BE(flavor, 0);
+  sfnt.writeUInt16BE(numTables, 4);
+  let maxPow = 1;
+  while (maxPow * 2 <= numTables) maxPow *= 2;
+  const searchRange = maxPow * 16;
+  sfnt.writeUInt16BE(searchRange, 6);
+  sfnt.writeUInt16BE(Math.round(Math.log2(maxPow)), 8);
+  sfnt.writeUInt16BE(numTables * 16 - searchRange, 10);
+
+  const entries = [];
+  for (let i = 0; i < numTables; i++) {
+    const o = 44 + i * 20;
+    entries.push({
+      tag: woff.readUInt32BE(o),
+      offset: woff.readUInt32BE(o + 4),
+      compLength: woff.readUInt32BE(o + 8),
+      origLength: woff.readUInt32BE(o + 12),
+      origChecksum: woff.readUInt32BE(o + 16)
+    });
+  }
+  entries.sort((a, b) => a.tag - b.tag);
+
+  let dest = 12 + numTables * 16;
+  dest = (dest + 3) & ~3;
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    const rec = 12 + i * 16;
+    sfnt.writeUInt32BE(e.tag, rec);
+    sfnt.writeUInt32BE(e.origChecksum, rec + 4);
+    sfnt.writeUInt32BE(dest, rec + 8);
+    sfnt.writeUInt32BE(e.origLength, rec + 12);
+    const chunk = woff.slice(e.offset, e.offset + e.compLength);
+    const data = e.compLength < e.origLength ? zlib.inflateSync(chunk) : chunk;
+    data.copy(sfnt, dest, 0, Math.min(data.length, e.origLength));
+    dest += e.origLength;
+    dest = (dest + 3) & ~3;
+  }
+  return sfnt;
+}
+
+function plexTtfFiles() {
+  const cache = path.join(os.tmpdir(), 'hobizone-plex-ttf');
+  fs.mkdirSync(cache, { recursive: true });
+  const pairs = [
+    ['IBMPlexSans-Text.woff', 'IBMPlexSans-Text.ttf'],
+    ['IBMPlexMono-Text-Latin1.woff', 'IBMPlexMono-Text.ttf']
+  ];
+  const files = [];
+  for (const [woffName, ttfName] of pairs) {
+    const ttfPath = path.join(cache, ttfName);
+    const woffPath = path.join(FONT_DIR, woffName);
+    if (!fs.existsSync(ttfPath) || fs.statSync(woffPath).mtimeMs > fs.statSync(ttfPath).mtimeMs) {
+      fs.writeFileSync(ttfPath, woffToSfnt(fs.readFileSync(woffPath)));
+    }
+    files.push(ttfPath);
+  }
+  return files;
+}
+
+const PLEX_TTFS = plexTtfFiles();
 ensureDir(sourcePlaceholdersDir);
 ensureDir(siteDir);
 ensureDir(sitePlaceholdersDir);
@@ -87,48 +157,106 @@ function smoothstep(t) {
   return t * t * (3 - 2 * t);
 }
 
-function valueNoise2(ix, iy, seed) {
+function quintic(t) {
+  return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+const GRADS = [
+  [1, 0], [-1, 0], [0, 1], [0, -1],
+  [0.70710678, 0.70710678], [-0.70710678, 0.70710678],
+  [0.70710678, -0.70710678], [-0.70710678, -0.70710678]
+];
+
+function gradAt(ix, iy, seed) {
   const n = Math.imul(ix + seed, 374761393) ^ Math.imul(iy + seed * 3, 668265263);
-  return ((n ^ (n >>> 13)) >>> 0) / 4294967296;
+  return GRADS[(n >>> 0) & 7];
 }
 
 function noise2(x, y, seed) {
   const x0 = Math.floor(x);
   const y0 = Math.floor(y);
-  const fx = smoothstep(x - x0);
-  const fy = smoothstep(y - y0);
-  const v00 = valueNoise2(x0, y0, seed);
-  const v10 = valueNoise2(x0 + 1, y0, seed);
-  const v01 = valueNoise2(x0, y0 + 1, seed);
-  const v11 = valueNoise2(x0 + 1, y0 + 1, seed);
-  return lerp(lerp(v00, v10, fx), lerp(v01, v11, fx), fy);
+  const fx = x - x0;
+  const fy = y - y0;
+  const u = quintic(fx);
+  const v = quintic(fy);
+  const g00 = gradAt(x0, y0, seed);
+  const g10 = gradAt(x0 + 1, y0, seed);
+  const g01 = gradAt(x0, y0 + 1, seed);
+  const g11 = gradAt(x0 + 1, y0 + 1, seed);
+  const n00 = g00[0] * fx + g00[1] * fy;
+  const n10 = g10[0] * (fx - 1) + g10[1] * fy;
+  const n01 = g01[0] * fx + g01[1] * (fy - 1);
+  const n11 = g11[0] * (fx - 1) + g11[1] * (fy - 1);
+  return lerp(lerp(n00, n10, u), lerp(n01, n11, u), v);
 }
 
-function fbm(x, y, seed) {
+function fbm(x, y, seed, octaves, lacunarity, rot) {
   let sum = 0;
   let amp = 1;
   let freq = 1;
   let norm = 0;
-  for (let o = 0; o < 5; o++) {
-    sum += (noise2(x * freq, y * freq, seed + o * 19) * 2 - 1) * amp;
+  for (let o = 0; o < octaves; o++) {
+    const a = rot + o * 0.73;
+    const c = Math.cos(a);
+    const s = Math.sin(a);
+    const px = x * freq;
+    const py = y * freq;
+    sum += noise2(px * c - py * s, px * s + py * c, seed + o * 19) * amp;
     norm += amp;
     amp *= 0.5;
-    freq *= 2.05;
+    freq *= lacunarity;
   }
-  return sum / norm;
+  return sum / (norm || 1);
 }
 
-// Quilez nested domain warp: f(p + fbm(p + fbm(p)))
-function warpedHeight(nx, ny, seed) {
-  const px = nx * 3.1;
-  const py = ny * 2.35;
-  const q0 = fbm(px, py, seed);
-  const q1 = fbm(px + 5.2, py + 1.3, seed + 7);
-  const r0 = fbm(px + 4 * q0 + 1.7, py + 4 * q1 + 9.2, seed + 13);
-  const r1 = fbm(px + 4 * q0 + 8.3, py + 4 * q1 + 2.8, seed + 19);
-  const h = fbm(px + 4 * r0, py + 4 * r1, seed + 23);
-  const ridge = 1 - Math.abs(fbm(px * 0.7, py * 0.7, seed + 31));
-  return h * 0.82 + (ridge * 2 - 1) * 0.18;
+function terrainParams(seed) {
+  const rand = mulberry32(seed ^ 0x9e3779b9);
+  const hills = [];
+  const nHills = 2 + Math.floor(rand() * 3);
+  for (let i = 0; i < nHills; i++) {
+    hills.push({
+      x: 0.1 + rand() * 0.8,
+      y: 0.12 + rand() * 0.76,
+      r: 0.12 + rand() * 0.34,
+      h: (rand() * 2 - 1) * (0.2 + rand() * 0.4)
+    });
+  }
+  return {
+    freqX: 1.5 + rand() * 3.1,
+    freqY: 1.15 + rand() * 2.6,
+    warp: 0.7 + rand() * 3.6,
+    ridge: rand() < 0.5 ? rand() * 0.34 : 0,
+    octaves: 4 + Math.floor(rand() * 3),
+    lacunarity: 1.86 + rand() * 0.38,
+    rot: rand() * Math.PI * 2,
+    offsetX: rand() * 48,
+    offsetY: rand() * 48,
+    qx: 2 + rand() * 8,
+    qy: 1 + rand() * 7,
+    hills,
+    levels: 8 + Math.floor(rand() * 5),
+    streams: 1 + Math.floor(rand() * 3),
+    exag: 12 + rand() * 18
+  };
+}
+
+function warpedHeight(nx, ny, seed, p) {
+  const px = nx * p.freqX + p.offsetX;
+  const py = ny * p.freqY + p.offsetY;
+  const q0 = fbm(px, py, seed, 3, p.lacunarity, p.rot);
+  const q1 = fbm(px + p.qx, py + p.qy, seed + 7, 3, p.lacunarity, p.rot + 1.17);
+  const h = fbm(px + p.warp * q0, py + p.warp * q1, seed + 23, p.octaves, p.lacunarity, p.rot * 0.5);
+  let z = h;
+  if (p.ridge > 0) {
+    const ridge = 1 - Math.abs(fbm(px * 0.52, py * 0.52, seed + 31, 4, p.lacunarity, p.rot + 0.4));
+    z = h * (1 - p.ridge) + (ridge * 2 - 1) * p.ridge;
+  }
+  for (const hill of p.hills) {
+    const dx = nx - hill.x;
+    const dy = (ny - hill.y) * 1.12;
+    z += hill.h * Math.exp(-(dx * dx + dy * dy) / (hill.r * hill.r));
+  }
+  return z;
 }
 
 function hexRgb(hex) {
@@ -179,13 +307,14 @@ function wrapLines(text, maxChars, maxLines) {
 }
 
 function buildHeight(seed) {
+  const params = terrainParams(seed);
   const grid = [];
   let min = Infinity;
   let max = -Infinity;
   for (let y = 0; y <= ROWS; y++) {
     grid[y] = [];
     for (let x = 0; x <= COLS; x++) {
-      const h = warpedHeight(x / COLS, y / ROWS, seed);
+      const h = warpedHeight(x / COLS, y / ROWS, seed, params);
       grid[y][x] = h;
       min = Math.min(min, h);
       max = Math.max(max, h);
@@ -197,7 +326,7 @@ function buildHeight(seed) {
       grid[y][x] = (grid[y][x] - min) / span;
     }
   }
-  return grid;
+  return { grid, params };
 }
 
 function sampleGrid(grid, fx, fy) {
@@ -220,8 +349,7 @@ function cell(grid, x, y) {
   return grid[Math.max(0, Math.min(ROWS, y))][Math.max(0, Math.min(COLS, x))];
 }
 
-function buildShade(grid) {
-  const exag = 22;
+function buildShade(grid, exag) {
   const alt = 45 * Math.PI / 180;
   const az = 315 * Math.PI / 180;
   const lx = Math.cos(alt) * Math.sin(az);
@@ -266,16 +394,41 @@ async function renderReliefPng(height, shade) {
       let rgb = mixRgb(paper, hard, (1 - s) * 0.72 + (1 - h) * 0.18);
       rgb = mixRgb(rgb, straw, s * 0.26);
       rgb = mixRgb(rgb, walnut, h * 0.1);
-      const tooth = ((Math.imul(px * 374761393 ^ py * 668265263, 1597334677) >>> 0) / 4294967296 - 0.5) * 9;
-      const dusk = smoothstep(Math.max(0, (py - (MAP_H - 220)) / 220)) * 0.42;
-      rgb = mixRgb(rgb, hard, dusk);
       const i = (py * WIDTH + px) * 3;
-      buf[i] = Math.max(0, Math.min(255, rgb[0] + tooth));
-      buf[i + 1] = Math.max(0, Math.min(255, rgb[1] + tooth));
-      buf[i + 2] = Math.max(0, Math.min(255, rgb[2] + tooth * 0.85));
+      buf[i] = rgb[0];
+      buf[i + 1] = rgb[1];
+      buf[i + 2] = rgb[2];
     }
   }
   return sharp(buf, { raw: { width: WIDTH, height: MAP_H, channels: 3 } }).png().toBuffer();
+}
+
+async function renderScrimPng() {
+  const topBand = Math.round(HEIGHT * 0.16);
+  const botBand = Math.round(HEIGHT * 0.31);
+  const buf = Buffer.alloc(WIDTH * HEIGHT * 4);
+  for (let y = 0; y < HEIGHT; y++) {
+    let a = 0;
+    if (y < topBand) a = Math.max(a, Math.round(255 * 0.7 * (1 - y / topBand)));
+    const fromBot = HEIGHT - 1 - y;
+    if (fromBot < botBand) a = Math.max(a, Math.round(255 * 0.82 * (1 - fromBot / botBand)));
+    if (!a) continue;
+    for (let x = 0; x < WIDTH; x++) {
+      const i = (y * WIDTH + x) * 4;
+      buf[i + 3] = a;
+    }
+  }
+  return sharp(buf, { raw: { width: WIDTH, height: HEIGHT, channels: 4 } }).png().toBuffer();
+}
+
+let scrimHrefPromise = null;
+function scrimHref() {
+  if (!scrimHrefPromise) {
+    scrimHrefPromise = renderScrimPng().then(
+      png => `data:image/png;base64,${png.toString('base64')}`
+    );
+  }
+  return scrimHrefPromise;
 }
 
 function marchingSegments(grid, level) {
@@ -440,23 +593,24 @@ function traceStream(grid, startX, startY) {
   return pts;
 }
 
-function pickStreams(grid, seed) {
+function pickStreams(grid, seed, count) {
   const rand = mulberry32(seed + 99);
   const candidates = [];
   for (let y = 4; y < ROWS - 4; y += 3) {
     for (let x = 4; x < COLS - 4; x += 3) {
-      if (grid[y][x] > 0.72) candidates.push([x, y, grid[y][x]]);
+      if (grid[y][x] > 0.68) candidates.push([x, y, grid[y][x]]);
     }
   }
   candidates.sort((a, b) => b[2] - a[2]);
   const starts = [];
+  const want = Math.max(1, count);
   for (const c of candidates) {
-    if (starts.length >= 2) break;
-    if (starts.every(s => Math.hypot(s[0] - c[0], s[1] - c[1]) > 28)) {
+    if (starts.length >= want) break;
+    if (starts.every(s => Math.hypot(s[0] - c[0], s[1] - c[1]) > 24)) {
       starts.push(c);
     }
   }
-  while (starts.length < 2) {
+  while (starts.length < want) {
     starts.push([
       20 + Math.floor(rand() * (COLS - 40)),
       12 + Math.floor(rand() * (ROWS - 24))
@@ -470,12 +624,13 @@ async function generatePlaceholderSVG(post) {
     const title = (post && post.title) ? String(post.title) : 'buralarda iken';
     const seed = hashString(title);
     const rand = mulberry32(seed);
-    const height = buildHeight(seed);
-    const shade = buildShade(height);
+    const { grid: height, params } = buildHeight(seed);
+    const shade = buildShade(height, params.exag);
     const reliefPng = await renderReliefPng(height, shade);
     const reliefHref = `data:image/png;base64,${reliefPng.toString('base64')}`;
+    const fadeHref = await scrimHref();
 
-    const levelCount = 11;
+    const levelCount = params.levels;
     const contourPaths = [];
     for (let i = 1; i < levelCount; i++) {
       const level = i / levelCount;
@@ -503,7 +658,7 @@ async function generatePlaceholderSVG(post) {
       );
     }
 
-    const streams = pickStreams(height, seed).map(pts => (
+    const streams = pickStreams(height, seed, params.streams).map(pts => (
       `<path d="${pathD(pts)}" fill="none" stroke="${COLOR.ink}" stroke-width="6" stroke-linecap="round" opacity="0.1"/>`
     ));
 
@@ -523,13 +678,12 @@ async function generatePlaceholderSVG(post) {
     const mark = escapeXml(post && post.siteTitle ? post.siteTitle : 'buralarda iken');
     const postTitle = String(title || '').toLowerCase();
     const showPostTitle = postTitle && postTitle !== 'buralarda iken';
-    const lines = wrapLines(postTitle, 28, 2);
+    const lines = wrapLines(postTitle, 34, 2);
     const titleX = 48;
     const titleTs = lines.map((line, i) => (
-      `<tspan x="${titleX}" dy="${i === 0 ? 0 : 68}">${escapeXml(line)}</tspan>`
+      `<tspan x="${titleX}" dy="${i === 0 ? 0 : 44}">${escapeXml(line)}</tspan>`
     )).join('');
-    const titleY = lines.length > 1 ? 512 : 580;
-    const typeStroke = `stroke="${COLOR.hard}" stroke-width="10" stroke-linejoin="round" paint-order="stroke fill"`;
+    const titleY = lines.length > 1 ? 540 : 586;
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -537,9 +691,10 @@ async function generatePlaceholderSVG(post) {
   ${streams.join('\n  ')}
   ${contourPaths.join('\n  ')}
   ${compass}
-  <text x="48" y="72" fill="${COLOR.ink}" font-size="48" font-weight="700" font-family="${FONT_SANS}" ${typeStroke}>${mark}</text>
-  ${dateLabel ? `<text x="1152" y="72" text-anchor="end" fill="${COLOR.straw}" font-size="48" font-weight="700" font-family="${FONT_SANS}" ${typeStroke}>${dateLabel}</text>` : ''}
-  ${showPostTitle ? `<text x="${titleX}" y="${titleY}" fill="${COLOR.ink}" font-size="60" font-weight="700" font-family="${FONT_SANS}" ${typeStroke}>${titleTs}</text>` : ''}
+  <image href="${fadeHref}" xlink:href="${fadeHref}" width="${WIDTH}" height="${HEIGHT}" preserveAspectRatio="none"/>
+  <text x="48" y="52" fill="${COLOR.ink}" font-size="22" font-family="${FONT_MONO}">${mark}</text>
+  ${dateLabel ? `<text x="1152" y="52" text-anchor="end" fill="${COLOR.straw}" font-size="22" font-family="${FONT_MONO}">${dateLabel}</text>` : ''}
+  ${showPostTitle ? `<text x="${titleX}" y="${titleY}" fill="${COLOR.ink}" font-size="40" font-family="${FONT_SANS}">${titleTs}</text>` : ''}
 </svg>`;
   } catch (error) {
     console.error(`Error generating SVG for ${post && post.title ? post.title : 'unknown post'}: ${error.message}`);
@@ -571,10 +726,11 @@ async function rasterize(svgString) {
     background: COLOR.paper,
     font: {
       fontDirs: [FONT_DIR],
+      fontFiles: PLEX_TTFS,
       defaultFontFamily: 'IBM Plex Sans',
       sansSerifFamily: 'IBM Plex Sans',
       monospaceFamily: 'IBM Plex Mono',
-      loadSystemFonts: true
+      loadSystemFonts: false
     }
   });
   const pngData = resvg.render();
