@@ -44,13 +44,7 @@ jobs:
         uses: actions/configure-pages@v4
       - name: Build with Jekyll
         # Outputs to the './_site' directory by default
-        run: |
-          if [ -n "${MAPBOX_ACCESS_TOKEN}" ]; then
-            printf 'mapbox_access_token: "%s"\n' "${MAPBOX_ACCESS_TOKEN}" > _config.secrets.yml
-            bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}" --config _config.yml,_config.secrets.yml
-          else
-            bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
-          fi
+        run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
           MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
