@@ -5,14 +5,7 @@ lang: tr
 ---
 {% include language-utils.html %}
 
-<nav aria-label="{{ t.general.main_nav }}">
-<ul class="menu">
-  <li><a class="menu__item menu__item_selected" href="/" aria-current="page">{{ t.nav.blog }}</a></li>
-  <li><a class="menu__item" href="/projects/">{{ t.nav.projects }}</a></li>
-  <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
-  <li class="spacer" aria-hidden="true"></li>
-</ul>
-</nav>
+{% include site-nav.html active="blog" %}
 
 <h1 class="visually-hidden">{{ t.nav.blog }}</h1>
 

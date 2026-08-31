@@ -1,30 +1,23 @@
+---
+layout: null
+title: draft tournament
+tool: draft-tournament
+---
+{% include language-utils.html %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Draft Tournament</title>
+<title>draft tournament @ {{ t.site_title }}</title>
+{% include tool-head.html %}
 <style>
-  :root {
-    color-scheme: light;
-    --bg: #f7f7f7;
-    --panel: #ffffff;
-    --border: #d7d7d7;
-    --text: #111827;
-    --muted: #4b5563;
-    --error: #b91c1c;
-    --warn: #92400e;
-    --ok: #166534;
-    --primary: #2563eb;
-    --now: #fef3c7;
-  }
-
   * { box-sizing: border-box; }
 
   html, body {
     margin: 0;
     min-height: 100%;
-    font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+    font-family: var(--sans);
     line-height: 1.35;
     color: var(--text);
     background: var(--bg);
@@ -33,18 +26,15 @@
   .wrap {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 12px;
+    padding: 12px 12px 64px;
   }
 
   h1 {
     margin: 0 0 4px;
-    font-size: 1.15rem;
   }
 
   .sub {
     margin: 0 0 10px;
-    color: var(--muted);
-    font-size: 0.8rem;
   }
 
   .toolbar {
@@ -58,7 +48,7 @@
   .toolbar .spacer { flex: 1; }
 
   .status-bar {
-    font-size: 0.78rem;
+    font-size: 12px;
     color: var(--muted);
     margin-bottom: 10px;
   }
@@ -75,18 +65,19 @@
 
   .steps button {
     border: 1px solid var(--border);
-    background: #fff;
+    background: var(--panel);
     border-radius: 4px;
     padding: 5px 8px;
-    font-size: 0.75rem;
+    font-size: 12px;
+    min-height: 24px;
     cursor: pointer;
   }
 
   .steps button.active {
-    background: #eef3ff;
-    border-color: #c5d4ff;
-    color: #1e3a8a;
-    font-weight: 600;
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--primary-bg);
+    font-weight: 400;
   }
 
   .steps button:disabled {
@@ -94,9 +85,15 @@
     cursor: not-allowed;
   }
 
+  @media (pointer: coarse) {
+    .steps button {
+      min-height: 32px;
+    }
+  }
+
   section.panel {
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
     padding: 12px;
     background: var(--panel);
     margin-bottom: 10px;
@@ -104,18 +101,18 @@
 
   section.panel h2 {
     margin: 0 0 8px;
-    font-size: 0.95rem;
+    font-size: 14px;
   }
 
   .hint {
     margin: 0 0 10px;
     color: var(--muted);
-    font-size: 0.78rem;
+    font-size: 12px;
   }
 
   label {
     display: block;
-    font-size: 0.76rem;
+    font-size: 12px;
     color: var(--muted);
     margin-bottom: 3px;
   }
@@ -127,7 +124,7 @@
   button,
   textarea {
     font: inherit;
-    font-size: 0.85rem;
+    font-size: 14px;
   }
 
   input[type="text"],
@@ -139,14 +136,14 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 6px 8px;
-    background: #fff;
+    background: var(--panel);
   }
 
   button {
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 6px 10px;
-    background: #fff;
+    background: var(--panel);
     cursor: pointer;
   }
 
@@ -156,16 +153,16 @@
   }
 
   button.primary {
-    background: #eef3ff;
-    border-color: #c5d4ff;
-    color: #1e3a8a;
-    font-weight: 600;
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--primary-bg);
+    font-weight: 400;
   }
 
   button.danger {
     color: var(--error);
-    border-color: #fecaca;
-    background: #fef2f2;
+    border-color: var(--error);
+    background: color-mix(in srgb, var(--error) 12%, var(--panel));
   }
 
   .row {
@@ -189,7 +186,7 @@
   }
 
   .manager-row .idx {
-    font-size: 0.8rem;
+    font-size: 12px;
     color: var(--muted);
     text-align: center;
   }
@@ -202,9 +199,9 @@
 
   .kit-card {
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
     padding: 8px;
-    background: #fafafa;
+    background: var(--code-bg);
     overflow: hidden;
     color: var(--text);
   }
@@ -215,13 +212,13 @@
 
   .kit-card h3 {
     margin: 0 0 6px;
-    font-size: 0.88rem;
+    font-size: 14px;
     color: var(--text);
   }
 
   .kit-card.themed h3,
   .kit-card.themed .kit-picked {
-    background: rgba(255, 255, 255, 0.9);
+    background: color-mix(in srgb, var(--panel) 90%, transparent);
     border-radius: 4px;
     padding: 6px 8px;
   }
@@ -231,7 +228,7 @@
     flex-direction: column;
     gap: 8px;
     margin-top: 6px;
-    font-size: 0.82rem;
+    font-size: 14px;
     color: var(--text);
   }
 
@@ -251,7 +248,7 @@
     width: 56px;
     height: 56px;
     object-fit: contain;
-    background: rgba(0,0,0,0.04);
+    background: var(--code-bg);
     border-radius: 4px;
     border: 1px solid var(--border);
   }
@@ -277,10 +274,10 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #1e3a8a;
-    color: #fff;
-    font-size: 0.62rem;
-    font-weight: 700;
+    background: var(--accent-color);
+    color: var(--primary-bg);
+    font-size: 12px;
+    font-weight: 800;
     letter-spacing: 0.02em;
     vertical-align: middle;
     flex-shrink: 0;
@@ -299,7 +296,7 @@
     overflow: auto;
     border: 1px solid var(--border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--panel);
   }
 
   .club-opt {
@@ -309,10 +306,10 @@
     width: 100%;
     text-align: left;
     border: 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border);
     border-radius: 0;
     padding: 6px 8px;
-    background: #fff;
+    background: var(--panel);
   }
 
   .club-opt .club-opt-meta {
@@ -321,16 +318,16 @@
   }
 
   .club-opt .club-opt-name {
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 400;
   }
 
   .club-opt .club-opt-sub {
-    font-size: 0.68rem;
+    font-size: 12px;
     color: var(--muted);
   }
 
-  .club-opt:hover { background: #f3f4f6; }
+  .club-opt:hover { background: var(--code-bg); }
   .club-opt:disabled { opacity: 0.4; }
 
   .order-list li.themed {
@@ -339,7 +336,7 @@
   }
 
   .order-list li.themed .name {
-    background: rgba(255, 255, 255, 0.9);
+    background: color-mix(in srgb, var(--panel) 90%, transparent);
     border-radius: 4px;
     padding: 2px 6px;
   }
@@ -358,24 +355,24 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     margin-bottom: 6px;
-    background: #fff;
+    background: var(--panel);
   }
 
   .order-list .pick-num {
     width: 28px;
     height: 28px;
-    border-radius: 50%;
-    background: #eef3ff;
-    color: #1e3a8a;
+    border-radius: 4px;
+    background: var(--accent-color);
+    color: var(--primary-bg);
     display: grid;
     place-items: center;
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 800;
   }
 
   .order-list .name {
     flex: 1;
-    font-weight: 600;
+    font-weight: 400;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -387,18 +384,18 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
-    background: #fffbeb;
-    border: 1px solid #f59e0b;
-    border-radius: 6px;
+    background: var(--now);
+    border: 1px solid var(--warn);
+    border-radius: 4px;
     padding: 10px 12px;
     margin-bottom: 10px;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #111827;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
   }
 
   .now-banner .now-label {
-    color: #92400e;
+    color: var(--warn);
   }
 
   .now-banner .now-text {
@@ -442,32 +439,31 @@
     width: 100%;
     text-align: left;
     border: 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border);
     border-radius: 0;
     padding: 7px 8px;
-    background: #fff;
+    background: var(--panel);
   }
 
-  .player-row:hover { background: #f0f7ff; }
-  .player-row:disabled { opacity: 0.4; background: #f9fafb; }
+  .player-row:hover { background: var(--accent-soft); }
+  .player-row:disabled { opacity: 0.4; background: var(--code-bg); }
 
   .ovr {
-    font-weight: 700;
-    font-size: 0.95rem;
-    text-align: center;
+    font-weight: 800;
+    font-size: 14px;
   }
 
   .player-meta {
-    font-size: 0.72rem;
+    font-size: 12px;
     color: var(--muted);
   }
 
   .pos-badge {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #374151;
-    background: #f3f4f6;
-    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text);
+    background: var(--code-bg);
+    border-radius: 4px;
     padding: 2px 6px;
   }
 
@@ -480,32 +476,32 @@
 
   .squad {
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
     padding: 8px;
-    background: #fafafa;
+    background: var(--code-bg);
   }
 
   .squad.current {
-    border-color: #f59e0b;
-    background: #fffbeb;
+    border-color: var(--warn);
+    background: var(--now);
     order: -1;
   }
 
   .squad-now {
     margin-left: auto;
-    font-size: 0.68rem;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #92400e;
-    background: #fde68a;
-    border-radius: 3px;
+    color: var(--primary-bg);
+    background: var(--warn);
+    border-radius: 4px;
     padding: 2px 6px;
   }
 
   .squad h3 {
     margin: 0 0 6px;
-    font-size: 0.82rem;
+    font-size: 14px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -515,7 +511,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: 0.75rem;
+    font-size: 12px;
   }
 
   .squad li {
@@ -523,7 +519,7 @@
     gap: 6px;
     align-items: baseline;
     padding: 2px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border);
   }
 
   .squad li .slot { color: var(--muted); width: 18px; }
@@ -540,8 +536,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 0.68rem;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--muted);
@@ -551,21 +547,21 @@
   }
 
   .squad-pos-label .count {
-    font-weight: 600;
+    font-weight: 400;
     letter-spacing: 0;
     text-transform: none;
   }
 
   .squad li .pos-tag {
     flex: 0 0 28px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: #374151;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text);
   }
 
   .squad li .ovr-tag {
     flex: 0 0 22px;
-    font-weight: 700;
+    font-weight: 800;
   }
 
   .squad li .name-tag {
@@ -578,26 +574,26 @@
 
   .squad-empty {
     color: var(--muted);
-    font-size: 0.72rem;
+    font-size: 12px;
     padding: 2px 0 4px;
   }
 
   .transfer-block {
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
     padding: 10px;
     margin-bottom: 10px;
-    background: #fafafa;
+    background: var(--code-bg);
   }
 
   .transfer-block.warn {
-    border-color: #f59e0b;
-    background: #fffbeb;
+    border-color: var(--warn);
+    background: var(--now);
   }
 
   .transfer-block h3 {
     margin: 0 0 6px;
-    font-size: 0.9rem;
+    font-size: 14px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -605,12 +601,12 @@
 
   .transfer-block h4 {
     margin: 10px 0 4px;
-    font-size: 0.78rem;
+    font-size: 12px;
     color: var(--muted);
   }
 
   .adds-meta {
-    font-size: 0.78rem;
+    font-size: 12px;
     margin: 0 0 6px;
     color: var(--text);
   }
@@ -622,14 +618,14 @@
   .transfer-block ul {
     margin: 0;
     padding-left: 18px;
-    font-size: 0.8rem;
+    font-size: 12px;
   }
 
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.82rem;
-    background: #fff;
+    font-size: 14px;
+    background: var(--panel);
   }
 
   th, td {
@@ -638,7 +634,7 @@
     text-align: left;
   }
 
-  th { background: #f3f4f6; font-size: 0.75rem; }
+  th { background: var(--code-bg); font-size: 12px; }
 
   td.num, th.num { text-align: center; }
 
@@ -650,7 +646,7 @@
   }
 
   .mgr-cell .team-id-name {
-    font-weight: 600;
+    font-weight: 400;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -673,7 +669,7 @@
 
   .matchday h3 {
     margin: 0 0 6px;
-    font-size: 0.85rem;
+    font-size: 14px;
   }
 
   .fixture-row {
@@ -685,7 +681,7 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     margin-bottom: 6px;
-    background: #fff;
+    background: var(--panel);
   }
 
   .team-id {
@@ -699,14 +695,14 @@
   .team-id-away { justify-content: flex-start; }
 
   .team-id-name {
-    font-size: 0.82rem;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 400;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .fixture-row .vs { font-size: 0.75rem; color: var(--muted); text-align: center; }
+  .fixture-row .vs { font-size: 12px; color: var(--muted); text-align: center; }
 
   .hidden { display: none !important; }
 
@@ -719,7 +715,7 @@
 
   .empty {
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: 12px;
     padding: 8px;
   }
 
@@ -727,19 +723,20 @@
 </style>
 </head>
 <body>
+{% include tool-chrome.html %}
 <div class="wrap">
-  <h1>Draft Tournament</h1>
-  <p class="sub">Host tool: kits → pick order → snake draft (18) → transfers → fixtures → standings</p>
+  <h1 class="tool-title" id="main" data-i18n="title">draft tournament</h1>
+  <p class="sub tool-lede" data-i18n="lede">host tool: kits → pick order → snake draft (18) → transfers → fixtures → standings</p>
 
   <div class="toolbar">
-    <button type="button" id="btnExport" class="secondary">Export JSON</button>
-    <button type="button" id="btnImport">Import JSON</button>
+    <button type="button" id="btnExport" class="secondary" data-i18n="export">export json</button>
+    <button type="button" id="btnImport" data-i18n="import">import json</button>
     <input type="file" id="fileImport" accept="application/json,.json" />
     <span class="spacer"></span>
-    <button type="button" id="btnReset" class="danger">Reset tournament</button>
+    <button type="button" id="btnReset" class="danger" data-i18n="reset">reset tournament</button>
   </div>
 
-  <div id="statusBar" class="status-bar">Loading player database…</div>
+  <div id="statusBar" class="status-bar" role="status" aria-live="polite" data-i18n="loading">loading player database…</div>
 
   <div class="steps" id="steps"></div>
 
@@ -750,16 +747,26 @@
 (function () {
   "use strict";
 
+  function t(key, vars) {
+    return typeof window.toolT === "function" ? window.toolT(key, vars) : key;
+  }
+
+  let lastStatus = { key: "loading", kind: "", vars: null };
+  function setStatusT(key, kind, vars) {
+    lastStatus = { key: key, kind: kind || "", vars: vars || null };
+    setStatus(t(key, vars), kind);
+  }
+
   const STORAGE_KEY = "draft-tournament-v1";
   const PICKS_PER_TEAM = 18;
   const PHASES = [
-    { id: "setup", label: "Setup" },
-    { id: 1, label: "1 Kits" },
-    { id: 2, label: "2 Order" },
-    { id: 3, label: "3 Draft" },
-    { id: 4, label: "4 Transfers" },
-    { id: 5, label: "5 Fixtures" },
-    { id: 6, label: "6 Results" },
+    { id: "setup", labelKey: "phase_setup" },
+    { id: 1, labelKey: "phase_kits" },
+    { id: 2, labelKey: "phase_order" },
+    { id: 3, labelKey: "phase_draft" },
+    { id: 4, labelKey: "phase_transfers" },
+    { id: 5, labelKey: "phase_fixtures" },
+    { id: 6, labelKey: "phase_results" },
   ];
 
   /** @type {Array<{id:string, displayName:string, search:string, overallRating:number, firstName:string, lastName:string, commonName:string|null, leagueName:string, nationality:any, team:any, position:any}>} */
@@ -1021,11 +1028,11 @@
       version: 1,
       phase: "setup",
       managers: [
-        { id: uid(), name: "Manager 1", kitTeamId: null },
-        { id: uid(), name: "Manager 2", kitTeamId: null },
-        { id: uid(), name: "Manager 3", kitTeamId: null },
-        { id: uid(), name: "Manager 4", kitTeamId: null },
-        { id: uid(), name: "Manager 5", kitTeamId: null },
+        { id: uid(), name: t("manager_n", { n: 1 }), kitTeamId: null },
+        { id: uid(), name: t("manager_n", { n: 2 }), kitTeamId: null },
+        { id: uid(), name: t("manager_n", { n: 3 }), kitTeamId: null },
+        { id: uid(), name: t("manager_n", { n: 4 }), kitTeamId: null },
+        { id: uid(), name: t("manager_n", { n: 5 }), kitTeamId: null },
       ],
       pickOrder: [],
       picks: [],
@@ -1461,7 +1468,7 @@
     PHASES.forEach(function (ph) {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = ph.label;
+      btn.textContent = t(ph.labelKey);
       const active = String(state.phase) === String(ph.id);
       if (active) btn.classList.add("active");
       const reachable = canVisit(ph.id) || String(state.phase) === String(ph.id);
@@ -1494,7 +1501,7 @@
     if (opts.back) {
       const back = document.createElement("button");
       back.type = "button";
-      back.textContent = opts.backLabel || "Back";
+      back.textContent = opts.backLabel || t("back");
       back.addEventListener("click", opts.back);
       row.appendChild(back);
     }
@@ -1502,7 +1509,7 @@
       const next = document.createElement("button");
       next.type = "button";
       next.className = "primary";
-      next.textContent = opts.nextLabel || "Continue";
+      next.textContent = opts.nextLabel || t("continue");
       next.disabled = !!opts.nextDisabled;
       next.addEventListener("click", opts.next);
       row.appendChild(next);
@@ -1513,11 +1520,11 @@
   function renderSetup(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
-    panel.innerHTML = "<h2>Setup managers</h2><p class=\"hint\">Add 2–8 managers. Names are required.</p>";
+    panel.innerHTML = "<h2>" + t("setup_h") + "</h2><p class=\"hint\">" + t("setup_hint") + "</p>";
 
     const countField = document.createElement("div");
     countField.className = "field";
-    countField.innerHTML = "<label>Number of managers</label>";
+    countField.innerHTML = "<label>" + t("n_managers") + "</label>";
     const countInput = document.createElement("input");
     countInput.type = "number";
     countInput.min = 2;
@@ -1529,7 +1536,7 @@
       countInput.value = n;
       const prev = state.managers.slice();
       if (n < prev.length && (state.picks.length || state.fixtures.length)) {
-        if (!confirm("Reducing managers clears later tournament data. Continue?")) {
+        if (!confirm(t("reduce_confirm"))) {
           countInput.value = state.managers.length;
           return;
         }
@@ -1538,7 +1545,7 @@
       const next = [];
       for (let i = 0; i < n; i++) {
         if (prev[i]) next.push(prev[i]);
-        else next.push({ id: uid(), name: "Manager " + (i + 1), kitTeamId: null });
+        else next.push({ id: uid(), name: t("manager_n", { n: i + 1 }), kitTeamId: null });
       }
       state.managers = next;
       ensurePickOrder();
@@ -1555,13 +1562,13 @@
       const input = document.createElement("input");
       input.type = "text";
       input.value = m.name;
-      input.placeholder = "Manager name";
+      input.placeholder = t("manager_name");
       input.addEventListener("input", function () {
         m.name = input.value;
         save();
       });
       input.addEventListener("change", function () {
-        m.name = input.value.trim() || ("Manager " + (i + 1));
+        m.name = input.value.trim() || t("manager_n", { n: i + 1 });
         input.value = m.name;
         save();
         renderSteps();
@@ -1571,7 +1578,7 @@
     });
 
     navButtons(panel, {
-      nextLabel: "Continue to kits →",
+      nextLabel: t("to_kits"),
       nextDisabled: !setupComplete(),
       next: function () {
         if (!setupComplete()) return;
@@ -1585,7 +1592,7 @@
   function renderKits(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
-    panel.innerHTML = "<h2>Phase 1 — Kit clubs</h2><p class=\"hint\">Each manager picks a unique men's club. Crests and kits load after decrypt.</p>";
+    panel.innerHTML = "<h2>" + t("kits_h") + "</h2><p class=\"hint\">" + t("kits_hint") + "</p>";
 
     const grid = document.createElement("div");
     grid.className = "kit-grid";
@@ -1623,9 +1630,9 @@
 
         const clear = document.createElement("button");
         clear.type = "button";
-        clear.textContent = "Change";
+        clear.textContent = t("change");
         clear.addEventListener("click", function () {
-          if (state.picks.length && !confirm("Changing kits clears draft picks and fixtures. Continue?")) return;
+          if (state.picks.length && !confirm(t("kits_confirm"))) return;
           if (state.picks.length) invalidateFrom(1);
           m.kitTeamId = null;
           save();
@@ -1636,7 +1643,7 @@
       } else {
         const search = document.createElement("input");
         search.type = "search";
-        search.placeholder = "Search clubs…";
+        search.placeholder = t("search_clubs");
         search.value = kitSearchByManager[m.id] || "";
         const list = document.createElement("div");
         list.className = "club-list";
@@ -1671,16 +1678,16 @@
             meta.className = "club-opt-meta";
             const name = document.createElement("div");
             name.className = "club-opt-name";
-            name.textContent = c.label + (taken.has(c.id) || taken.has(String(c.id)) ? " (taken)" : "");
+            name.textContent = c.label + (taken.has(c.id) || taken.has(String(c.id)) ? t("taken") : "");
             meta.appendChild(name);
             const sub = document.createElement("div");
             sub.className = "club-opt-sub";
             const shownKits = outfieldKitCount(c.kits || 0);
-            sub.textContent = shownKits ? shownKits + " kits" : "kit";
+            sub.textContent = shownKits ? t("kits_n", { n: shownKits }) : t("kits_one");
             meta.appendChild(sub);
             btn.appendChild(meta);
             btn.addEventListener("click", function () {
-              if (state.picks.length && !confirm("Changing kits clears draft picks and fixtures. Continue?")) return;
+              if (state.picks.length && !confirm(t("kits_confirm"))) return;
               if (state.picks.length) invalidateFrom(1);
               m.kitTeamId = c.id;
               save();
@@ -1690,7 +1697,7 @@
             shown++;
           }
           if (!shown) {
-            list.innerHTML = "<div class=\"empty\">No clubs found</div>";
+            list.innerHTML = "<div class=\"empty\">" + t("no_clubs") + "</div>";
           }
         }
 
@@ -1708,7 +1715,7 @@
     panel.appendChild(grid);
     navButtons(panel, {
       back: function () { goPhase("setup"); },
-      nextLabel: "Continue to pick order →",
+      nextLabel: t("to_order"),
       nextDisabled: !kitsComplete(),
       next: function () {
         if (!kitsComplete()) return;
@@ -1723,7 +1730,7 @@
     ensurePickOrder();
     const panel = document.createElement("section");
     panel.className = "panel";
-    panel.innerHTML = "<h2>Phase 2 — Pick order</h2><p class=\"hint\">Moderator sets draft order. Position 1 picks first in round 1.</p>";
+    panel.innerHTML = "<h2>" + t("order_h") + "</h2><p class=\"hint\">" + t("order_hint") + "</p>";
 
     const list = document.createElement("ol");
     list.className = "order-list";
@@ -1757,7 +1764,7 @@
       up.textContent = "↑";
       up.disabled = idx === 0;
       up.addEventListener("click", function () {
-        if (state.picks.length && !confirm("Changing order clears draft picks. Continue?")) return;
+        if (state.picks.length && !confirm(t("order_confirm"))) return;
         if (state.picks.length) invalidateFrom(2);
         const arr = state.pickOrder;
         const t = arr[idx - 1];
@@ -1771,7 +1778,7 @@
       down.textContent = "↓";
       down.disabled = idx === state.pickOrder.length - 1;
       down.addEventListener("click", function () {
-        if (state.picks.length && !confirm("Changing order clears draft picks. Continue?")) return;
+        if (state.picks.length && !confirm(t("order_confirm"))) return;
         if (state.picks.length) invalidateFrom(2);
         const arr = state.pickOrder;
         const t = arr[idx + 1];
@@ -1788,9 +1795,9 @@
 
     const shuffle = document.createElement("button");
     shuffle.type = "button";
-    shuffle.textContent = "Shuffle random order";
+    shuffle.textContent = t("shuffle");
     shuffle.addEventListener("click", function () {
-      if (state.picks.length && !confirm("Changing order clears draft picks. Continue?")) return;
+      if (state.picks.length && !confirm(t("order_confirm"))) return;
       if (state.picks.length) invalidateFrom(2);
       const arr = state.pickOrder.slice();
       for (let i = arr.length - 1; i > 0; i--) {
@@ -1807,7 +1814,7 @@
 
     navButtons(panel, {
       back: function () { goPhase(1); },
-      nextLabel: "Start draft →",
+      nextLabel: t("start_draft"),
       nextDisabled: !orderComplete(),
       next: function () {
         if (!orderComplete()) return;
@@ -1927,7 +1934,7 @@
   function renderDraft(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
-    panel.innerHTML = "<h2>Phase 3 — Snake draft</h2><p class=\"hint\">Order snakes each round: 1→N then N→1. Each manager picks " + PICKS_PER_TEAM + " players.</p>";
+    panel.innerHTML = "<h2>" + t("draft_h") + "</h2><p class=\"hint\">" + t("draft_hint", { n: PICKS_PER_TEAM }) + "</p>";
 
     const info = currentPickInfo();
     const done = draftComplete();
@@ -1935,12 +1942,12 @@
     const banner = document.createElement("div");
     banner.className = "now-banner";
     if (done) {
-      banner.textContent = "Draft complete — all " + state.picks.length + " picks locked in.";
+      banner.textContent = t("draft_done", { n: state.picks.length });
     } else if (info && info.manager) {
       const kit = kitClub(info.manager);
       const label = document.createElement("span");
       label.className = "now-label";
-      label.textContent = "NOW PICKING:";
+      label.textContent = t("now_picking");
       banner.appendChild(label);
       if (kit && kit.imageUrl) {
         const crest = crestImgEl(kit.imageUrl);
@@ -1951,11 +1958,15 @@
       text.textContent =
         info.manager.name +
         (kit ? " (" + kit.label + ")" : "") +
-        " — pick " + info.pickNumber + " of " + PICKS_PER_TEAM +
-        " (overall " + (info.globalIndex + 1) + "/" + info.total + ")";
+        " — " + t("pick_of", {
+          n: info.pickNumber,
+          total: PICKS_PER_TEAM,
+          g: info.globalIndex + 1,
+          all: info.total
+        });
       banner.appendChild(text);
     } else {
-      banner.textContent = "No active pick";
+      banner.textContent = t("no_pick");
     }
     panel.appendChild(banner);
 
@@ -1963,7 +1974,7 @@
     actions.className = "row";
     const undo = document.createElement("button");
     undo.type = "button";
-    undo.textContent = "Undo last pick";
+    undo.textContent = t("undo");
     undo.disabled = state.picks.length === 0;
     undo.addEventListener("click", function () {
       state.picks.pop();
@@ -1983,7 +1994,7 @@
 
     const q = document.createElement("input");
     q.type = "search";
-    q.placeholder = "Search name / club…";
+    q.placeholder = t("search_players");
     q.value = draftFilter.q;
     q.addEventListener("input", function () {
       draftFilter.q = q.value;
@@ -1994,7 +2005,7 @@
     ["", "GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"].forEach(function (v) {
       const o = document.createElement("option");
       o.value = v;
-      o.textContent = v || "Pos";
+      o.textContent = v || t("pos");
       pos.appendChild(o);
     });
     pos.value = draftFilter.pos;
@@ -2005,15 +2016,15 @@
 
     const type = document.createElement("select");
     [
-      ["", "Type"],
-      ["goalkeeper", "GK type"],
-      ["defender", "Def"],
-      ["midfielder", "Mid"],
-      ["forward", "Fwd"],
+      ["", "type_all"],
+      ["goalkeeper", "type_gk"],
+      ["defender", "type_def"],
+      ["midfielder", "type_mid"],
+      ["forward", "type_fwd"],
     ].forEach(function (pair) {
       const o = document.createElement("option");
       o.value = pair[0];
-      o.textContent = pair[1];
+      o.textContent = t(pair[1]);
       type.appendChild(o);
     });
     type.value = draftFilter.type;
@@ -2024,7 +2035,7 @@
 
     const minOvr = document.createElement("input");
     minOvr.type = "number";
-    minOvr.placeholder = "Min OVR";
+    minOvr.placeholder = t("min_ovr");
     minOvr.value = draftFilter.minOvr;
     minOvr.addEventListener("input", function () {
       draftFilter.minOvr = minOvr.value;
@@ -2033,7 +2044,7 @@
 
     const maxOvr = document.createElement("input");
     maxOvr.type = "number";
-    maxOvr.placeholder = "Max OVR";
+    maxOvr.placeholder = t("max_ovr");
     maxOvr.value = draftFilter.maxOvr;
     maxOvr.addEventListener("input", function () {
       draftFilter.maxOvr = maxOvr.value;
@@ -2054,12 +2065,12 @@
     function refreshPlayerList() {
       list.innerHTML = "";
       if (done) {
-        list.innerHTML = "<div class=\"empty\">Draft finished.</div>";
+        list.innerHTML = "<div class=\"empty\">" + t("draft_finished") + "</div>";
         return;
       }
       const rows = filterPlayers();
       if (!rows.length) {
-        list.innerHTML = "<div class=\"empty\">No players match filters.</div>";
+        list.innerHTML = "<div class=\"empty\">" + t("no_match") + "</div>";
         return;
       }
       rows.forEach(function (p) {
@@ -2124,7 +2135,7 @@
       if (isCurrent) {
         const tag = document.createElement("span");
         tag.className = "squad-now";
-        tag.textContent = "picking";
+        tag.textContent = t("picking");
         h.appendChild(tag);
       }
       squad.appendChild(h);
@@ -2147,7 +2158,7 @@
 
     navButtons(panel, {
       back: function () { goPhase(2); },
-      nextLabel: "Continue to transfers →",
+      nextLabel: t("to_transfers"),
       nextDisabled: !done,
       next: function () {
         if (!done) return;
@@ -2409,7 +2420,7 @@
     section.className = "transfer-block warn";
 
     const h = document.createElement("h3");
-    h.textContent = "Clubs that need players added";
+    h.textContent = t("need_adds");
     section.appendChild(h);
 
     const ul = document.createElement("ul");
@@ -2423,8 +2434,8 @@
       const target =
         row.kind === "locked" ? row.label + " XI" : row.label;
       const line =
-        "Add " + row.addCount + " player" + (row.addCount === 1 ? "" : "s") +
-        " to " + target;
+        t(row.addCount === 1 ? "add_one" : "add_n", { n: row.addCount }) +
+        " → " + target;
       const li = document.createElement("li");
       li.className = "adds-line";
       appendCrestOrInitial(li, row.imageUrl, target);
@@ -2436,15 +2447,15 @@
 
     const copyBtn = document.createElement("button");
     copyBtn.type = "button";
-    copyBtn.textContent = "Copy";
+    copyBtn.textContent = t("copy");
     copyBtn.style.marginTop = "8px";
     copyBtn.addEventListener("click", function () {
       const text = copyLines.join("\n");
       navigator.clipboard.writeText(text).then(function () {
-        copyBtn.textContent = "Copied";
-        setTimeout(function () { copyBtn.textContent = "Copy"; }, 1200);
+        copyBtn.textContent = t("copied");
+        setTimeout(function () { copyBtn.textContent = t("copy"); }, 1200);
       }).catch(function () {
-        prompt("Copy:", text);
+        prompt(t("copy_prompt"), text);
       });
     });
     section.appendChild(copyBtn);
@@ -2455,7 +2466,7 @@
   function renderTransfers(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
-    panel.innerHTML = "<h2>Phase 4 — Transfer summary</h2><p class=\"hint\">Grouped by source club: who leaves that club, and which manager they go to.</p>";
+    panel.innerHTML = "<h2>" + t("transfers_h") + "</h2><p class=\"hint\">" + t("transfers_hint") + "</p>";
 
     const groups = buildTransferBySourceClub();
     renderClubsNeedingAdds(panel, groups);
@@ -2463,7 +2474,7 @@
     if (!groups.length) {
       const empty = document.createElement("p");
       empty.className = "empty";
-      empty.textContent = "No transfers needed — every drafted player is already on their manager’s kit club.";
+      empty.textContent = t("no_transfers");
       panel.appendChild(empty);
     }
 
@@ -2482,11 +2493,11 @@
         h.appendChild(img);
       }
       h.appendChild(document.createTextNode(
-        "From " + group.club.label + " — " + group.total + " player" + (group.total === 1 ? "" : "s")
+        t("from_club", { club: group.club.label, n: group.total })
       ));
       block.appendChild(h);
 
-      const blockLines = ["From " + group.club.label + " — " + group.total + " players"];
+      const blockLines = [t("from_club", { club: group.club.label, n: group.total })];
 
       // Preserve pick-order / manager setup order
       const managerIds = state.pickOrder.length
@@ -2501,7 +2512,7 @@
         const destLabel = m.name + (kit ? " (" + kit.label + ")" : "");
 
         const h4 = document.createElement("h4");
-        h4.textContent = "→ " + destLabel + " — " + rows.length + " player" + (rows.length === 1 ? "" : "s");
+        h4.textContent = t("dest_club", { label: destLabel, n: rows.length });
         block.appendChild(h4);
 
         const ul = document.createElement("ul");
@@ -2521,7 +2532,7 @@
             lines.push("- " + line);
           });
         block.appendChild(ul);
-        blockLines.push("→ " + destLabel + " (" + rows.length + ")");
+        blockLines.push(t("dest_club", { label: destLabel, n: rows.length }));
         blockLines.push.apply(blockLines, lines);
       });
 
@@ -2530,15 +2541,15 @@
 
       const copyBtn = document.createElement("button");
       copyBtn.type = "button";
-      copyBtn.textContent = "Copy this club";
+      copyBtn.textContent = t("copy_club");
       copyBtn.style.marginTop = "8px";
       copyBtn.addEventListener("click", function () {
         const text = blockLines.join("\n");
         navigator.clipboard.writeText(text).then(function () {
-          copyBtn.textContent = "Copied";
-          setTimeout(function () { copyBtn.textContent = "Copy this club"; }, 1200);
+          copyBtn.textContent = t("copied");
+          setTimeout(function () { copyBtn.textContent = t("copy_club"); }, 1200);
         }).catch(function () {
-          prompt("Copy:", text);
+          prompt(t("copy_prompt"), text);
         });
       });
       block.appendChild(copyBtn);
@@ -2549,14 +2560,14 @@
       const copyAll = document.createElement("button");
       copyAll.type = "button";
       copyAll.className = "primary";
-      copyAll.textContent = "Copy all transfers";
+      copyAll.textContent = t("copy_all");
       copyAll.addEventListener("click", function () {
         const text = fullCopyLines.join("\n").trim();
         navigator.clipboard.writeText(text).then(function () {
-          copyAll.textContent = "Copied";
-          setTimeout(function () { copyAll.textContent = "Copy all transfers"; }, 1200);
+          copyAll.textContent = t("copied");
+          setTimeout(function () { copyAll.textContent = t("copy_all"); }, 1200);
         }).catch(function () {
-          prompt("Copy:", text);
+          prompt(t("copy_prompt"), text);
         });
       });
       panel.appendChild(copyAll);
@@ -2564,7 +2575,7 @@
 
     navButtons(panel, {
       back: function () { goPhase(3); },
-      nextLabel: "Continue to fixtures →",
+      nextLabel: t("to_fixtures"),
       next: function () {
         if (!state.fixtures.length) generateFixtures();
         save();
@@ -2577,14 +2588,14 @@
   function renderFixtures(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
-    panel.innerHTML = "<h2>Phase 5 — Fixtures</h2><p class=\"hint\">Double round-robin (home and away). Generate once, then enter results in phase 6.</p>";
+    panel.innerHTML = "<h2>" + t("fixtures_h") + "</h2><p class=\"hint\">" + t("fixtures_hint") + "</p>";
 
     const row = document.createElement("div");
     row.className = "row";
     const gen = document.createElement("button");
     gen.type = "button";
     gen.className = "primary";
-    gen.textContent = state.fixtures.length ? "Regenerate fixtures" : "Generate fixtures";
+    gen.textContent = state.fixtures.length ? t("regen_fix") : t("gen_fix");
     gen.addEventListener("click", function () {
       const hadFixtures = state.fixtures.length > 0;
       const hasResults = state.fixtures.some(function (f) {
@@ -2592,20 +2603,15 @@
           f.homeGoals !== "" && f.awayGoals !== "";
       });
       if (hadFixtures) {
-        const msg = hasResults
-          ? "This wipes all fixtures and results, then draws a new schedule. Continue?"
-          : "Draw a new fixture schedule? Current fixtures will be replaced.";
+        const msg = hasResults ? t("regen_confirm") : t("gen_confirm");
         if (!confirm(msg)) return;
       }
       generateFixtures({ reshuffle: true });
       save();
-      setStatus(
-        "Fixtures " + (hadFixtures ? "regenerated" : "generated") +
-          " — " + state.fixtures.length + " matches across " +
-          (state.fixtures.length ? state.fixtures[state.fixtures.length - 1].matchday : 0) +
-          " matchdays.",
-        "ok"
-      );
+      setStatusT("fix_done", "ok", {
+        what: t(hadFixtures ? "regenerated" : "generated"),
+        n: state.fixtures.length
+      });
       render();
     });
     row.appendChild(gen);
@@ -2614,7 +2620,7 @@
     if (!state.fixtures.length) {
       panel.appendChild(Object.assign(document.createElement("p"), {
         className: "empty",
-        textContent: "No fixtures yet. Click Generate.",
+        textContent: t("no_fix"),
       }));
     } else {
       const byMd = {};
@@ -2626,7 +2632,7 @@
         const block = document.createElement("div");
         block.className = "matchday";
         const h = document.createElement("h3");
-        h.textContent = "Matchday " + md;
+        h.textContent = t("matchday", { n: md });
         block.appendChild(h);
         byMd[md].forEach(function (f) {
           const home = managerById(f.homeId);
@@ -2640,7 +2646,7 @@
 
           const vs = document.createElement("div");
           vs.className = "vs";
-          vs.textContent = "vs";
+          vs.textContent = t("vs");
 
           const awayEl = document.createElement("div");
           awayEl.className = "away";
@@ -2657,7 +2663,7 @@
 
     navButtons(panel, {
       back: function () { goPhase(4); },
-      nextLabel: "Enter results →",
+      nextLabel: t("to_results"),
       nextDisabled: !state.fixtures.length,
       next: function () {
         if (!state.fixtures.length) return;
@@ -2670,7 +2676,7 @@
   function renderResults(app) {
     const panel = document.createElement("section");
     panel.className = "panel";
-    panel.innerHTML = "<h2>Phase 6 — Results & standings</h2><p class=\"hint\">Enter scores. Standings update automatically (3 pts win, 1 draw).</p>";
+    panel.innerHTML = "<h2>" + t("results_h") + "</h2><p class=\"hint\">" + t("results_hint") + "</p>";
 
     // Standings first for visibility
     const tableWrap = document.createElement("div");
@@ -2678,9 +2684,11 @@
     const table = document.createElement("table");
     table.innerHTML =
       "<thead><tr>" +
-      "<th>#</th><th>Manager</th>" +
-      "<th class=\"num\">P</th><th class=\"num\">W</th><th class=\"num\">D</th><th class=\"num\">L</th>" +
-      "<th class=\"num\">GF</th><th class=\"num\">GA</th><th class=\"num\">GD</th><th class=\"num\">Pts</th>" +
+      "<th>#</th><th>" + t("th_manager") + "</th>" +
+      "<th class=\"num\">" + t("th_p") + "</th><th class=\"num\">" + t("th_w") + "</th>" +
+      "<th class=\"num\">" + t("th_d") + "</th><th class=\"num\">" + t("th_l") + "</th>" +
+      "<th class=\"num\">" + t("th_gf") + "</th><th class=\"num\">" + t("th_ga") + "</th>" +
+      "<th class=\"num\">" + t("th_gd") + "</th><th class=\"num\">" + t("th_pts") + "</th>" +
       "</tr></thead>";
     const tbody = document.createElement("tbody");
     standings().forEach(function (r, i) {
@@ -2734,7 +2742,7 @@
       const block = document.createElement("div");
       block.className = "matchday";
       const h = document.createElement("h3");
-      h.textContent = "Matchday " + md;
+      h.textContent = t("matchday", { n: md });
       block.appendChild(h);
 
       byMd[md].forEach(function (f) {
@@ -2752,14 +2760,14 @@
         const hi = document.createElement("input");
         hi.type = "number";
         hi.min = 0;
-        hi.placeholder = "H";
+        hi.placeholder = t("home_ab");
         hi.value = f.homeGoals == null ? "" : f.homeGoals;
         const sep = document.createElement("span");
         sep.textContent = "–";
         const ai = document.createElement("input");
         ai.type = "number";
         ai.min = 0;
-        ai.placeholder = "A";
+        ai.placeholder = t("away_ab");
         ai.value = f.awayGoals == null ? "" : f.awayGoals;
 
         function sync() {
@@ -2827,31 +2835,31 @@
         if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.managers)) {
           throw new Error("Invalid tournament file");
         }
-        if (!confirm("Replace current tournament with imported file?")) return;
+        if (!confirm(t("import_confirm"))) return;
         state = Object.assign(defaultState(), parsed);
         save();
         render();
-        setStatus("Imported tournament (" + state.managers.length + " managers).", "ok");
+        setStatusT("imported", "ok", { n: state.managers.length });
       } catch (err) {
-        alert("Import failed: " + err.message);
+        alert(t("import_fail", { err: err.message }));
       }
     };
     reader.readAsText(file);
   });
 
   document.getElementById("btnReset").addEventListener("click", function () {
-    if (!confirm("Reset the entire tournament? This cannot be undone (unless you exported).")) return;
+    if (!confirm(t("reset_confirm"))) return;
     state = defaultState();
     save();
     render();
-    setStatus("Tournament reset. " + players.length.toLocaleString() + " players loaded.", "ok");
+    setStatusT("reset_ok", "ok", { n: players.length.toLocaleString() });
   });
 
   // ——— Boot ———
 
   async function boot() {
     loadSaved();
-    setStatus("Loading & decrypting player database… this may take a few seconds.");
+    setStatusT("loading_long");
     try {
       const [keyRes, encRes, packRes, teamsRes] = await Promise.all([
         fetch("k.txt"),
@@ -2872,20 +2880,25 @@
       const teamsPack = await decryptPayload(teamsPayload, password);
       indexTeamsCdn(teamsPack);
       indexPlayers(raw);
-      setStatus(
-        players.length.toLocaleString() + " players · " +
-          kitClubs.length.toLocaleString() + " clubs loaded.",
-        "ok"
-      );
+      setStatusT("loaded", "ok", {
+        players: players.length.toLocaleString(),
+        clubs: kitClubs.length.toLocaleString()
+      });
       document.getElementById("app").classList.remove("hidden");
       render();
     } catch (err) {
       console.error(err);
-      setStatus("Failed to load players: " + err.message, "error");
+      setStatusT("load_fail", "error", { err: err.message });
     }
   }
 
   boot();
+
+  window.addEventListener("langchange", function () {
+    const app = document.getElementById("app");
+    if (app && !app.classList.contains("hidden")) render();
+    setStatus(t(lastStatus.key, lastStatus.vars), lastStatus.kind);
+  });
 })();
 </script>
 </body>

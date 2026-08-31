@@ -1,0 +1,16 @@
+{% comment %} Flat tool list: title on the left, year on the right. {% endcomment %}
+<ul class="tools-index-list">
+{% for tool in site.data.tools %}
+  {% if current_lang == 'en' %}
+    {% assign tool_title = tool.title %}
+  {% else %}
+    {% assign tool_title = tool.title_tr | default: tool.title %}
+  {% endif %}
+  <li class="post-item">
+    <a href="{{ tool.url }}?lang={{ current_lang }}">
+      <span class="tools-index-list__title">{{ tool_title }}</span>
+      <span class="date">{{ tool.year }}</span>
+    </a>
+  </li>
+{% endfor %}
+</ul>

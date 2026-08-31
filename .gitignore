@@ -17,3 +17,11 @@ tools/draft-tournament/_kitprobe/
 PRODUCT.md
 DESIGN.md
 NUL
+.claude
+.playwright
+.playwright-cli
+.playwright-mcp
+.playwright
+.playwright-mcp
+_config.local.yml
+_config.secrets.yml

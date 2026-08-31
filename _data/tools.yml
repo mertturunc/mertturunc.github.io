@@ -1,0 +1,19 @@
+# Published year for each tool. Add new tools here so the catalog
+# and the on-tool peer lists stay in sync.
+- id: ascii-studio
+  title: ascii gif studio
+  title_tr: ascii gif studio
+  year: 2026
+  url: /tools/ascii-studio/
+
+- id: draft-tournament
+  title: draft tournament
+  title_tr: draft tournament
+  year: 2026
+  url: /tools/draft-tournament/
+
+- id: simplify
+  title: geojson simplifier
+  title_tr: geojson simplifier
+  year: 2026
+  url: /tools/simplify/

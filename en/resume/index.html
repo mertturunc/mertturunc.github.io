@@ -36,19 +36,12 @@ noindex: true
   }
 </style>
 
-<nav aria-label="{{ t.general.main_nav }}">
-<ul class="menu">
-  <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
-  <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
-  <li><a class="menu__item menu__item_selected" href="/en/resume/" aria-current="page">{{ t.nav.resume }}</a></li>
-  <li class="spacer" aria-hidden="true"></li>
-</ul>
-</nav>
+{% include site-nav.html active="resume" %}
 
 {% include resume.html %}
 
 <div class="resume-stub">
-  <h1>Resume</h1>
-  <p>CV available on request.</p>
+  <h1>resume</h1>
+  <p>cv available on request.</p>
   <p><a href="mailto:info@atr0p.dev">info[at]atr0p[dot]dev</a></p>
 </div>

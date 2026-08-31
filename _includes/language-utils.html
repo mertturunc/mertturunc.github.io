@@ -36,9 +36,15 @@ Language utility functions for the multilingual Jekyll site
     {% endif %}
   {% endfor %}
   
-  {% comment %} If no specific translation found, fall back to homepage {% endcomment %}
+  {% comment %} If no specific translation found, fall back to projects index or homepage {% endcomment %}
   {% unless page_exists %}
-    {% if alternate_lang == 'en' %}
+    {% if page.collection == 'projects' %}
+      {% if alternate_lang == 'en' %}
+        {% assign alternate_url = '/en/projects/' %}
+      {% else %}
+        {% assign alternate_url = '/projects/' %}
+      {% endif %}
+    {% elsif alternate_lang == 'en' %}
       {% assign alternate_url = '/en/' %}
     {% else %}
       {% assign alternate_url = '/' %}
@@ -55,9 +61,15 @@ Language utility functions for the multilingual Jekyll site
     {% elsif current_url == '/projects/' %}
       {% assign alternate_url = '/en/projects/' %}
       {% assign page_exists = true %}
+    {% elsif current_url == '/tools/' %}
+      {% assign alternate_url = '/en/tools/' %}
+      {% assign page_exists = true %}
     {% elsif current_url == '/resume/' %}
       {% assign alternate_url = '/en/resume/' %}
       {% assign page_exists = false %}
+    {% elsif page.collection == 'projects' %}
+      {% assign alternate_url = '/en/projects/' %}
+      {% assign page_exists = true %}
     {% else %}
       {% assign alternate_url = '/en/' %}
       {% assign page_exists = true %}
@@ -70,8 +82,14 @@ Language utility functions for the multilingual Jekyll site
     {% elsif current_url == '/en/projects/' %}
       {% assign alternate_url = '/projects/' %}
       {% assign page_exists = true %}
+    {% elsif current_url == '/en/tools/' %}
+      {% assign alternate_url = '/tools/' %}
+      {% assign page_exists = true %}
     {% elsif current_url == '/en/resume/' %}
       {% assign alternate_url = '/resume/' %}
+      {% assign page_exists = true %}
+    {% elsif page.collection == 'projects' %}
+      {% assign alternate_url = '/projects/' %}
       {% assign page_exists = true %}
     {% else %}
       {% assign alternate_url = '/' %}

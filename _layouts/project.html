@@ -3,68 +3,58 @@ layout: default
 ---
 {% include language-utils.html %}
 
-<style>
-  .return-button {
-    display: inline-block;
-    margin-bottom: 20px;
-    color: var(--muted-text);
-    text-decoration: none;
-    border-bottom: none;
-    font-size: 16px;
-    transition: color 0.2s ease;
-  }
+{% if current_lang == 'en' and page.title_en %}
+  {% assign display_title = page.title_en %}
+{% else %}
+  {% assign display_title = page.title %}
+{% endif %}
 
-  .return-button:hover {
-    color: var(--accent-color);
-  }
+{% if current_lang == 'en' and page.category_en %}
+  {% assign display_category = page.category_en %}
+{% else %}
+  {% assign display_category = page.category %}
+{% endif %}
 
-  .return-button:focus-visible {
-    outline: 2px solid var(--accent-color);
-    outline-offset: 2px;
-  }
+{% assign description_to_show = "" %}
+{% if current_lang == 'en' and page.description_en %}
+  {% assign description_to_show = page.description_en %}
+{% elsif page.description %}
+  {% assign description_to_show = page.description %}
+{% endif %}
 
-  .return-button::before {
-    content: "←";
-    margin-right: 5px;
-  }
+{% assign project_folder = page.slug %}
+{% assign body_text = content | strip_html | strip %}
 
-  .project-content {
-    margin-top: 20px;
-  }
-</style>
+{% include site-nav.html active="projects" %}
 
-<nav aria-label="{{ t.general.main_nav }}">
-<ul class="menu">
-  {% if current_lang == 'en' %}
-    <li><a class="menu__item" href="/en/">{{ t.nav.blog }}</a></li>
-    <li><a class="menu__item" href="/en/projects/" aria-current="page">{{ t.nav.projects }}</a></li>
-    <li><a class="menu__item" href="/en/resume/">{{ t.nav.resume }}</a></li>
-  {% else %}
-    <li><a class="menu__item" href="/">{{ t.nav.blog }}</a></li>
-    <li><a class="menu__item" href="/projects/" aria-current="page">{{ t.nav.projects }}</a></li>
-    <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
-  {% endif %}
-  <li class="spacer" aria-hidden="true"></li>
-</ul>
-</nav>
-
-<div class="post">
+<div class="post project-page">
   {% if current_lang == 'en' %}
     <a href="/en/projects/" class="return-button">{{ t.project.return_to_projects }}</a>
   {% else %}
     <a href="/projects/" class="return-button">{{ t.project.return_to_projects }}</a>
   {% endif %}
-  
-  <h1>
-    {% if current_lang == 'en' and page.title_en %}
-      {{ page.title_en }}
-    {% else %}
-      {{ page.title }}
-    {% endif %}
+
+  <h1 class="r-title news__title">
+    <span class="r-link">{{ display_title }}</span>
   </h1>
-  
-  {% comment %} Show translation links if available {% endcomment %}
+
+  {% if display_category or page.date %}
+  <p class="project-meta">
+    {% if display_category %}<span>{{ display_category }}</span>{% endif %}
+    {% if display_category and page.date %}<span class="separator" aria-hidden="true">·</span>{% endif %}
+    {% if page.date %}<time datetime="{{ page.date | date: '%Y-%m-%d' }}">{{ page.date | date: '%Y' }}</time>{% endif %}
+  </p>
+  {% endif %}
+
+  {% assign other_translations = false %}
   {% if page.translations %}
+    {% for translation in page.translations %}
+      {% if translation.lang != current_lang %}
+        {% assign other_translations = true %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  {% if other_translations %}
     <div class="translation-links">
       <span class="translation-links__label">{{ t.project.available_in }}</span>
       {% for translation in page.translations %}
@@ -80,34 +70,32 @@ layout: default
       {% endfor %}
     </div>
   {% endif %}
-  
-  {% comment %} Display description in appropriate language {% endcomment %}
-  {% assign description_to_show = "" %}
-  {% if current_lang == 'en' and page.description_en %}
-    {% assign description_to_show = page.description_en %}
-  {% elsif page.description %}
-    {% assign description_to_show = page.description %}
-  {% endif %}
-  
-  {% if description_to_show != "" %}
-  <p class="description">{{ description_to_show }}</p>
-  {% endif %}
-  
-  {% if page.embed_url %}
+
+  {% if page.show_carousel and page.carousel_images %}
+    {% include image-carousel.html folder=project_folder images=page.carousel_images %}
+  {% elsif page.mapbox_style %}
+    {% include mapbox-embed.html style=page.mapbox_style view=page.mapbox_view title=display_title lazy=true %}
+  {% elsif page.embed_url %}
   <div class="sketchfab-embed-wrapper">
-    <iframe title="
-    {%- if current_lang == 'en' and page.title_en -%}
-      {{ page.title_en }}
-    {%- else -%}
-      {{ page.title }}
-    {%- endif -%}
-    " frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ page.embed_url }}" loading="lazy"></iframe>
+    <iframe title="{{ display_title }}" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share width="100%" height="300" src="{{ page.embed_url }}" loading="lazy"></iframe>
   </div>
   {% endif %}
 
+  {% if description_to_show != "" %}
+  <p class="project-lede">{{ description_to_show }}</p>
+  {% endif %}
+
+  {% if page.site_url %}
+  <div class="project-buttons">
+    <a href="{{ page.site_url }}" class="project-link" target="_blank" rel="noopener noreferrer" aria-label="{{ t.project.visit_site_new_tab }}">{{ t.project.visit_site }}<span class="visually-hidden"> ({{ t.general.opens_new_tab }})</span></a>
+  </div>
+  {% endif %}
+
+  {% if body_text != "" %}
   <div class="project-content">
     {{ content }}
   </div>
+  {% endif %}
 
   {% include share-buttons.html %}
 </div>

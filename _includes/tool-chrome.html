@@ -1,0 +1,233 @@
+<a class="skip-link" href="#main">{{ t.general.skip_to_content }}</a>
+{% include tools-peers.html %}
+<div class="top-controls">
+  <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="true" aria-label="{{ t.general.theme_toggle }}">
+    <span id="theme-icon" aria-hidden="true">☀️</span>
+  </button>
+  <button class="lang-toggle" id="tool-lang-toggle" type="button" lang="tr" aria-label="{{ t.general.english }}">TR</button>
+</div>
+<script type="application/json" id="tool-i18n">
+{
+  "tr": {
+    "site_title": {{ site.data.translations.tr.site_title | jsonify }},
+    "nav_tools": {{ site.data.translations.tr.nav.tools | jsonify }},
+    "skip": {{ site.data.translations.tr.general.skip_to_content | jsonify }},
+    "theme": {{ site.data.translations.tr.general.theme_toggle | jsonify }},
+    "switch_to": {{ site.data.translations.tr.general.english | jsonify }},
+    "collapse": {{ site.data.translations.tr.general.collapse_panel | jsonify }},
+    "expand": {{ site.data.translations.tr.general.expand_panel | jsonify }},
+    "code": "TR",
+    "home": {{ '/' | relative_url | jsonify }},
+    "catalog": {{ '/tools/' | relative_url | jsonify }}
+  },
+  "en": {
+    "site_title": {{ site.data.translations.en.site_title | jsonify }},
+    "nav_tools": {{ site.data.translations.en.nav.tools | jsonify }},
+    "skip": {{ site.data.translations.en.general.skip_to_content | jsonify }},
+    "theme": {{ site.data.translations.en.general.theme_toggle | jsonify }},
+    "switch_to": {{ site.data.translations.en.general.turkish | jsonify }},
+    "collapse": {{ site.data.translations.en.general.collapse_panel | jsonify }},
+    "expand": {{ site.data.translations.en.general.expand_panel | jsonify }},
+    "code": "EN",
+    "home": {{ '/en/' | relative_url | jsonify }},
+    "catalog": {{ '/en/tools/' | relative_url | jsonify }}
+  }
+}
+</script>
+{% if page.tool %}
+<script type="application/json" id="tool-ui">{{ site.data.tool-ui[page.tool] | jsonify }}</script>
+{% endif %}
+<script>
+(function () {
+  var html = document.documentElement;
+  var strings = {};
+  try {
+    strings = JSON.parse(document.getElementById('tool-i18n').textContent);
+  } catch (e) {
+    strings = {};
+  }
+  var uiPack = {};
+  var uiEl = document.getElementById('tool-ui');
+  if (uiEl) {
+    try { uiPack = JSON.parse(uiEl.textContent); } catch (e) { uiPack = {}; }
+  }
+
+  function interpolate(str, vars) {
+    if (str == null) return '';
+    str = String(str);
+    if (!vars) return str;
+    return str.replace(/%(\w+)%/g, function (_, k) {
+      return vars[k] == null ? '' : String(vars[k]);
+    });
+  }
+
+  window.toolT = function (key, vars) {
+    var lang = html.getAttribute('data-lang') === 'en' ? 'en' : 'tr';
+    var pack = uiPack[lang] || {};
+    return interpolate(pack[key], vars);
+  };
+
+  var skip = document.querySelector('.skip-link');
+  var homeLink = document.getElementById('tool-home-link');
+  var homeTitle = document.getElementById('tool-home-title');
+  var peers = document.getElementById('tool-peers');
+  var catalog = document.getElementById('tool-peers-catalog');
+  var dock = document.querySelector('.tool-dock');
+  var dockToggle = document.getElementById('tool-dock-toggle');
+  var dockToggleLabel = document.getElementById('tool-dock-toggle-label');
+  var themeToggle = document.getElementById('theme-toggle');
+  var themeIcon = document.getElementById('theme-icon');
+  var langToggle = document.getElementById('tool-lang-toggle');
+  var currentTheme = localStorage.getItem('theme') || 'dark';
+
+  function applyLang(lang) {
+    lang = lang === 'en' ? 'en' : 'tr';
+    var s = strings[lang];
+    if (!s) return;
+    html.setAttribute('data-lang', lang);
+    if (skip) skip.textContent = s.skip;
+    if (homeTitle) homeTitle.textContent = s.site_title;
+    if (homeLink) homeLink.setAttribute('href', s.home);
+    if (catalog) {
+      catalog.textContent = '/' + s.nav_tools;
+      catalog.setAttribute('href', s.catalog);
+    }
+    if (peers) {
+      peers.setAttribute('aria-label', s.nav_tools);
+      peers.setAttribute('lang', lang);
+    }
+    document.querySelectorAll('.tool-peers__name').forEach(function (el) {
+      var next = lang === 'en' ? el.getAttribute('data-title-en') : el.getAttribute('data-title-tr');
+      if (next) el.textContent = next;
+    });
+    if (themeToggle) themeToggle.setAttribute('aria-label', s.theme);
+    if (langToggle) {
+      langToggle.textContent = s.code;
+      langToggle.setAttribute('lang', lang);
+      langToggle.setAttribute('aria-label', s.switch_to);
+    }
+    var pageTitle = dock && dock.getAttribute('data-page-title');
+    if (pageTitle) document.title = pageTitle + ' @ ' + s.site_title;
+    try { localStorage.setItem('lang', lang); } catch (err) {}
+    applyDockLabel();
+    scheduleUi(lang);
+  }
+
+  function applyUiStrings(lang) {
+    var pack = uiPack[lang] || {};
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (pack[key] == null) return;
+      var attr = el.getAttribute('data-i18n-attr');
+      if (attr) el.setAttribute(attr, pack[key]);
+      else el.textContent = pack[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      if (pack[key] != null) el.setAttribute('placeholder', pack[key]);
+    });
+    if (pack.title) {
+      var site = (strings[lang] && strings[lang].site_title) || '';
+      document.title = pack.title + ' @ ' + site;
+      if (dock) dock.setAttribute('data-page-title', pack.title);
+    }
+    html.setAttribute('lang', lang);
+    window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: lang } }));
+  }
+
+  var uiScheduled = false;
+  function scheduleUi(lang) {
+    if (document.readyState === 'loading') {
+      if (!uiScheduled) {
+        uiScheduled = true;
+        document.addEventListener('DOMContentLoaded', function () {
+          applyUiStrings(html.getAttribute('data-lang') === 'en' ? 'en' : 'tr');
+        });
+      }
+    } else {
+      applyUiStrings(lang);
+    }
+  }
+
+  function isDockCollapsed() {
+    return html.getAttribute('data-dock') === 'collapsed';
+  }
+
+  function applyDockLabel() {
+    var lang = html.getAttribute('data-lang') === 'en' ? 'en' : 'tr';
+    var s = strings[lang];
+    if (!s || !dockToggleLabel) return;
+    dockToggleLabel.textContent = isDockCollapsed() ? s.expand : s.collapse;
+  }
+
+  function applyDock(collapsed) {
+    html.setAttribute('data-dock', collapsed ? 'collapsed' : 'open');
+    try { localStorage.setItem('tool-dock', collapsed ? 'collapsed' : 'open'); } catch (err) {}
+    if (peers) {
+      if (collapsed) peers.setAttribute('hidden', '');
+      else peers.removeAttribute('hidden');
+    }
+    if (homeLink) {
+      if (collapsed) homeLink.setAttribute('hidden', '');
+      else homeLink.removeAttribute('hidden');
+    }
+    if (dockToggle) dockToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    applyDockLabel();
+  }
+
+  var fromQuery = null;
+  try {
+    fromQuery = new URLSearchParams(location.search).get('lang');
+  } catch (err) {}
+  var initialLang = (fromQuery === 'en' || fromQuery === 'tr')
+    ? fromQuery
+    : (localStorage.getItem('lang') || 'tr');
+  applyLang(initialLang);
+  applyDock(localStorage.getItem('tool-dock') === 'collapsed');
+
+  if (fromQuery === 'en' || fromQuery === 'tr') {
+    try {
+      var url = new URL(location.href);
+      url.searchParams.delete('lang');
+      var cleaned = url.pathname + url.search + url.hash;
+      history.replaceState(null, '', cleaned);
+    } catch (err) {}
+  }
+
+  if (langToggle) {
+    langToggle.addEventListener('click', function () {
+      var next = html.getAttribute('data-lang') === 'en' ? 'tr' : 'en';
+      applyLang(next);
+    });
+  }
+
+  if (dockToggle) {
+    dockToggle.addEventListener('click', function () {
+      applyDock(!isDockCollapsed());
+    });
+  }
+
+  function updateIcon(theme) {
+    themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+
+  updateIcon(currentTheme);
+  themeToggle.setAttribute('aria-pressed', currentTheme === 'dark' ? 'true' : 'false');
+
+  themeToggle.addEventListener('click', function () {
+    var isCurrentlyDark = html.hasAttribute('data-theme');
+    var newTheme = isCurrentlyDark ? 'light' : 'dark';
+    if (newTheme === 'dark') {
+      html.setAttribute('data-theme', 'dark');
+    } else {
+      html.removeAttribute('data-theme');
+    }
+    updateIcon(newTheme);
+    themeToggle.setAttribute('aria-pressed', newTheme === 'dark' ? 'true' : 'false');
+    localStorage.setItem('theme', newTheme);
+    var themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute('content', newTheme === 'dark' ? '#282828' : '#fbf1c7');
+    window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newTheme } }));
+  });
+})();
+</script>

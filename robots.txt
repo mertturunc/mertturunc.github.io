@@ -35,7 +35,6 @@ Disallow: /resume/
 Disallow: /en/resume/
 
 # Test / draft
-Disallow: /maptest/
 Disallow: /*?draft=*
 Disallow: /*?hidden=*
 

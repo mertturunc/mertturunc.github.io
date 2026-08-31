@@ -5,13 +5,9 @@ plugins:
   - jekyll-redirect-from
   - jekyll-sitemap
 
-# Plugin directories
-plugins_dir: _plugins
-
 # Sitemap configuration
 sitemap:
   exclude:
-    - "/maptest/"
     - "/script/"
     - "/vendor/"
     - "/resume/"
@@ -24,11 +20,8 @@ sitemap:
 
 # Site configuration
 url: "https://blog.atr0p.dev"
-
-# Multilingual configuration
-languages: ["tr", "en"]
 default_lang: "tr"
-exclude_from_localization: ["i", "fonts", "f", "style.css", "sw.js", "maptest", "script", "vendor", "_site", "album-island"]
+mapbox_access_token: ""
 
 # Collections configuration
 collections:
@@ -38,8 +31,18 @@ collections:
 
 exclude:
   - "vendor"
-  - "maptest"
   - "script"
+  - "NUL"
+  - tools/ascii-studio/_src
+  - tools/ascii-studio/vite.build.config.js
+  - tools/ascii-studio/verify.mjs
+  - tools/ascii-studio/package.json
+  - tools/ascii-studio/package-lock.json
+  - tools/ascii-studio/node_modules
+  - tools/ascii-studio/asset-build
+  - .playwright-cli
+  - .playwright
+  - .playwright-mcp
 defaults:
   -
     scope:

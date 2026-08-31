@@ -1,0 +1,54 @@
+{% comment %}
+  Shared tool dock: back to the notebook, catalog path, peer list.
+  Current tool is inferred from page.url unless include.current is passed.
+{% endcomment %}
+{% assign current_id = include.current %}
+{% unless current_id %}
+  {% for tool in site.data.tools %}
+    {% if page.url == tool.url %}
+      {% assign current_id = tool.id %}
+    {% endif %}
+  {% endfor %}
+{% endunless %}
+{% if current_lang == 'en' %}
+  {% assign tools_index_url = '/en/tools/' %}
+{% else %}
+  {% assign tools_index_url = '/tools/' %}
+{% endif %}
+<div class="tool-dock" data-page-title="{{ page.title | escape }}">
+  <p class="tool-home">
+    <button type="button" class="tool-dock__toggle" id="tool-dock-toggle" aria-expanded="true" aria-controls="tool-peers">
+      <span class="tool-dock__glyph tool-dock__glyph--collapse" aria-hidden="true">[&lt;]</span>
+      <span class="tool-dock__glyph tool-dock__glyph--expand" aria-hidden="true">[&gt;]</span>
+      <span class="sr-only" id="tool-dock-toggle-label">{{ t.general.collapse_panel }}</span>
+    </button>
+    <a id="tool-home-link" href="{{ '/' | relative_url }}">
+      <span id="tool-home-title">{{ t.site_title }}</span>
+    </a>
+  </p>
+  <nav id="tool-peers" class="tool-peers" aria-label="{{ t.nav.tools }}" lang="{{ current_lang }}">
+    <p class="tool-peers__label"><a id="tool-peers-catalog" href="{{ tools_index_url }}">/{{ t.nav.tools }}</a></p>
+    <ul>
+      {% for tool in site.data.tools %}
+        {% if current_lang == 'en' %}
+          {% assign tool_title = tool.title %}
+        {% else %}
+          {% assign tool_title = tool.title_tr | default: tool.title %}
+        {% endif %}
+        <li>
+          {% if current_id == tool.id %}
+            <span aria-current="page">
+              <span class="tool-peers__name" data-title-tr="{{ tool.title_tr | default: tool.title | escape }}" data-title-en="{{ tool.title | escape }}">{{ tool_title }}</span>
+              <span class="tool-peers__year">{{ tool.year }}</span>
+            </span>
+          {% else %}
+            <a href="{{ tool.url }}">
+              <span class="tool-peers__name" data-title-tr="{{ tool.title_tr | default: tool.title | escape }}" data-title-en="{{ tool.title | escape }}">{{ tool_title }}</span>
+              <span class="tool-peers__year">{{ tool.year }}</span>
+            </a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+</div>

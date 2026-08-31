@@ -1,7 +1,7 @@
 ---
 layout: default
 title: özgeçmiş
-summary: Özgeçmiş talep üzerine
+summary: özgeçmiş talep üzerine paylaşılır
 sitemap: false
 noindex: true
 ---
@@ -35,19 +35,12 @@ noindex: true
   }
 </style>
 
-<nav aria-label="{{ t.general.main_nav }}">
-<ul class="menu">
-  <li><a class="menu__item" href="/">{{ t.nav.blog }}</a></li>
-  <li><a class="menu__item" href="/projects/">{{ t.nav.projects }}</a></li>
-  <li><a class="menu__item menu__item_selected" href="/resume/" aria-current="page">{{ t.nav.resume }}</a></li>
-  <li class="spacer" aria-hidden="true"></li>
-</ul>
-</nav>
+{% include site-nav.html active="resume" %}
 
 {% include resume.html %}
 
 <div class="resume-stub">
-  <h1>Özgeçmiş</h1>
-  <p>CV talep üzerine paylaşılır.</p>
+  <h1>özgeçmiş</h1>
+  <p>cv talep üzerine paylaşılır.</p>
   <p><a href="mailto:info@atr0p.dev">info[at]atr0p[dot]dev</a></p>
 </div>

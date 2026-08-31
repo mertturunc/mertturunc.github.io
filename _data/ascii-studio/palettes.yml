@@ -1,0 +1,37 @@
+# Ink palettes rendered as chips by _includes/ascii-studio-app.html.
+# Mirrors INK_PALETTES in tools/ascii-studio/_src/state.js — keep the ids in sync.
+- id: denim
+  name: Denim
+  shadow: "#151921"
+  mid: "#3f4f73"
+  highlight: "#1d4ed8"
+
+- id: carbon
+  name: Carbon
+  shadow: "#18181b"
+  mid: "#5b6474"
+  highlight: "#c7ced8"
+
+- id: amber
+  name: Amber
+  shadow: "#24170a"
+  mid: "#a16207"
+  highlight: "#fbbf24"
+
+- id: forest
+  name: Forest
+  shadow: "#10281a"
+  mid: "#15803d"
+  highlight: "#a7f3d0"
+
+- id: wine
+  name: Wine
+  shadow: "#3c0d22"
+  mid: "#be123c"
+  highlight: "#fbcfe8"
+
+- id: ocean
+  name: Ocean
+  shadow: "#10233b"
+  mid: "#2563eb"
+  highlight: "#bfdbfe"

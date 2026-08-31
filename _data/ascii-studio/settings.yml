@@ -1,0 +1,67 @@
+# Settings sliders rendered server-side by _includes/ascii-studio-app.html from this data file.
+# Mirrors SETTING_DEFS in tools/ascii-studio/_src/state.js — keep the keys in sync.
+- key: gridWidth
+  label: grid width
+  min: 32
+  max: 220
+  step: 2
+
+- key: gridHeight
+  label: grid height
+  min: 20
+  max: 140
+  step: 2
+
+- key: cellSize
+  label: character size (px)
+  min: 4
+  max: 16
+  step: 1
+
+- key: fps
+  label: fps
+  min: 4
+  max: 30
+  step: 1
+
+- key: duration
+  label: duration (s)
+  min: 0.5
+  max: 4
+  step: 0.25
+
+- key: spinSpeed
+  label: spin speed (deg/s)
+  min: 0
+  max: 180
+  step: 5
+
+- key: threshold
+  label: color threshold
+  min: 0
+  max: 1
+  step: 0.01
+
+- key: split
+  label: mid split
+  min: 0
+  max: 1
+  step: 0.01
+
+- key: contrast
+  label: contrast
+  min: -50
+  max: 50
+  step: 5
+
+- key: lightAzimuth
+  label: light azimuth (°)
+  min: 0
+  max: 360
+  step: 5
+
+- key: lightElevation
+  label: light elevation (°)
+  min: 0
+  max: 90
+  step: 5

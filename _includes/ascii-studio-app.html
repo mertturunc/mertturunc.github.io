@@ -1,0 +1,146 @@
+{% include language-utils.html %}
+<div class="app" role="application" data-i18n="title" data-i18n-attr="aria-label" aria-label="ascii gif studio">
+
+    <header class="topbar">
+      <div class="brand">
+        <h1 class="wordmark tool-title" id="main" data-i18n="title">ascii gif studio</h1>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="frame">
+        <div id="drop-zone" class="drop-zone" role="button" tabindex="0" data-i18n="import_aria" data-i18n-attr="aria-label" aria-label="import a 3d model file">
+          <div id="empty-state" class="empty-state">
+            <div class="empty-motif" aria-hidden="true"><span>▂</span><span>▄</span><span>▆</span><span>█</span><span>▆</span><span>▄</span><span>▂</span></div>
+            <p class="drop-message" data-i18n="drop">drop a model here</p>
+            <p class="drop-sub" data-i18n="drop_sub">FBX · OBJ · glTF / GLB · USD — it auto-spins or plays its animation in a seamless looping GIF, shaded in one, two, or three inks over transparency.</p>
+          </div>
+          <div id="replace-hint" class="replace-hint" data-i18n="replace_hint">drop another model to replace</div>
+          <input id="file-input" type="file" accept=".fbx,.obj,.gltf,.glb,.usdz,.usd,.usda,.usdc" hidden />
+        </div>
+
+        <canvas id="ascii-canvas" role="img" data-i18n="canvas_aria" data-i18n-attr="aria-label" aria-label="ascii preview — drop a model to begin"></canvas>
+        <div id="spin-hint" class="hint hidden" role="status" aria-live="polite" data-i18n="spin_hint">no animation — auto-spinning for a seamless loop</div>
+      </div>
+
+      <div id="loaded-ui" class="loaded-ui hidden">
+        <div class="tray">
+          <div class="tray-left">
+            <div id="main-file-chip" class="chip hidden">
+              <span class="dot"></span>
+              <span id="main-file-label" aria-live="polite"></span>
+              <button id="remove-model-btn" class="chip-remove" data-i18n="remove_model" data-i18n-attr="aria-label" aria-label="remove model and start over">×</button>
+            </div>
+
+            <div id="motion-row" class="field-card hidden">
+              <div class="motion-btns" role="group" data-i18n="motion" data-i18n-attr="aria-label" aria-label="motion">
+                <button type="button" class="seg" data-motion="auto" data-i18n="auto">auto</button>
+                <button type="button" class="seg" data-motion="animation" data-i18n="animation">animation</button>
+                <button type="button" class="seg" data-motion="spin" data-i18n="spin">spin</button>
+              </div>
+              <select id="motion-select" class="sr-only" tabindex="-1">
+                <option value="auto" data-i18n="auto">auto</option>
+                <option value="animation" data-i18n="anim_clip">animation clip</option>
+                <option value="spin" data-i18n="spin_360">spin 360°</option>
+              </select>
+            </div>
+
+            <div id="anim-row" class="field-card hidden">
+              <label class="sr-only" for="anim-select" data-i18n="anim_clip">animation clip</label>
+              <select id="anim-select"></select>
+            </div>
+          </div>
+
+          <div class="tray-right">
+            <details class="settings" id="controls-panel">
+              <summary><span data-i18n="settings">settings</span><span class="chev">▾</span></summary>
+              <div class="controls-body">
+
+                <div class="minor-actions">
+                  <button id="gltf-folder-btn" class="ghost-btn"><span data-i18n="import_folder">import gltf folder</span><span class="folder-hint" data-i18n="import_folder_hint">for .gltf scenes that ship with .bin / texture files</span></button>
+                  <button id="anim-file-btn" class="ghost-btn hidden" data-i18n="import_anim">import fbx/gltf animation</button>
+                </div>
+                <input id="gltf-folder-input" type="file" webkitdirectory multiple accept=".gltf,.bin,.png,.jpg,.jpeg,.webp,.ktx2,.json" hidden />
+                <input id="anim-file-input" type="file" accept=".fbx,.gltf,.glb" hidden />
+
+                <div class="controls-hr"></div>
+
+                {% comment %}
+                  Sliders are rendered server-side from _data/ascii-studio/settings.yml so the
+                  controls are part of the Jekyll template, not injected by JS.
+                {% endcomment %}
+                {% for def in site.data.ascii-studio.settings %}
+                  <label class="slider-row">
+                    <span class="slider-label" data-i18n="set_{{ def.key }}">{{ def.label }}</span>
+                    <input type="range" data-key="{{ def.key }}" min="{{ def.min }}" max="{{ def.max }}" step="{{ def.step }}" value="{% case def.key %}{% when 'gridWidth' %}96{% when 'gridHeight' %}54{% when 'cellSize' %}8{% when 'fps' %}12{% when 'duration' %}1.5{% when 'spinSpeed' %}45{% when 'threshold' %}0.5{% when 'split' %}0.67{% when 'contrast' %}0{% when 'lightAzimuth' %}45{% when 'lightElevation' %}40{% endcase %}">
+                    <span class="slider-value" data-val="{{ def.key }}"></span>
+                  </label>
+                {% endfor %}
+
+                <div class="color-row" id="color-row">
+                  <label class="color-item" id="color-a-item">
+                    <span id="color-a-label" data-i18n="shadow_color">shadow color</span>
+                    <input type="color" id="color-a" />
+                  </label>
+                  <label class="color-item" id="color-b-item">
+                    <span id="color-b-label" data-i18n="highlight_color">highlight color</span>
+                    <input type="color" id="color-b" />
+                  </label>
+                  <label class="color-item hidden" id="color-c-item">
+                    <span id="color-c-label" data-i18n="mid_color">mid color</span>
+                    <input type="color" id="color-c" />
+                  </label>
+                </div>
+
+                <div class="style-rows">
+                  <div class="controls-hr"></div>
+                  <div class="style-field">
+                    <span class="style-label" data-i18n="ink_palette">ink palette</span>
+                    <div class="palette-grid" id="palette-grid" role="group" data-i18n="ink_palette" data-i18n-attr="aria-label" aria-label="ink palette">
+                      {% for p in site.data.ascii-studio.palettes %}
+                        <button type="button" class="palette-chip" data-palette="{{ p.id }}" aria-label="{{ p.name }}" title="{{ p.name }}">
+                          <span class="pc-swatches" aria-hidden="true">
+                            <span style="background:{{ p.shadow }}"></span>
+                            <span style="background:{{ p.mid }}"></span>
+                            <span style="background:{{ p.highlight }}"></span>
+                          </span>
+                          <span class="pc-name">{{ p.name }}</span>
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <div class="style-field">
+                    <span class="style-label" data-i18n="ink_colors">ink colors</span>
+                    <div class="motion-btns inks-btns" role="group" data-i18n="ink_colors" data-i18n-attr="aria-label" aria-label="ink colors">
+                      <button type="button" class="seg" data-ink="1">1</button>
+                      <button type="button" class="seg" data-ink="2">2</button>
+                      <button type="button" class="seg" data-ink="3">3</button>
+                    </div>
+                  </div>
+                  <div class="style-field">
+                    <span class="style-label" data-i18n="dither">dither (ink mixing)</span>
+                    <div class="motion-btns inks-btns" role="group" data-i18n="dither" data-i18n-attr="aria-label" aria-label="dither">
+                      <button type="button" class="seg" data-dither="none" data-i18n="dither_off">off</button>
+                      <button type="button" class="seg" data-dither="bayer4x4">4×4</button>
+                      <button type="button" class="seg" data-dither="bayer8x8">8×8</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </details>
+
+            <div id="export-row" class="export-row hidden">
+              <button id="export-btn" class="export-btn" data-i18n="export">export gif</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="preview-wrap" class="preview-wrap hidden">
+          <img id="preview-img" data-i18n="preview_alt" data-i18n-attr="alt" alt="generated gif preview" />
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden" role="alert"></div>

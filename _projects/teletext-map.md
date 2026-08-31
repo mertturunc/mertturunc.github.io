@@ -5,11 +5,14 @@ title_en: teletext map
 category: web haritalar
 category_en: web maps
 date: 2025-01-17
-description: Modern haritaları, klasik teletekst sistemlerini anımsatan nostaljik ASCII formatına dönüştüren retro esintili bir harita görüntüleyici.
-description_en: A retro-inspired map viewer that transforms modern maps into nostalgic ASCII art displays, reminiscent of classic teletext systems.
+description: modern haritaları, klasik teletekst sistemlerini anımsatan nostaljik ascii formatına dönüştüren retro esintili bir harita görüntüleyici.
+description_en: a retro-inspired map viewer that transforms modern maps into nostalgic ascii art displays, reminiscent of classic teletext systems.
 has_full_page: false
 show_carousel: true
-carousel_images: "demo.gif"
+carousel_images: "demo.mp4"
+carousel_poster: "demo-poster.webp"
+carousel_alts: "teletekst harita demosu"
+carousel_alts_en: "teletext map demo"
 site_url: https://github.com/mertturunc/teletext-map
 #translations:
 #  - lang: tr

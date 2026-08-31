@@ -1,0 +1,22 @@
+{% include language-utils.html %}
+<meta name="theme-color" content="#282828">
+<link href="/favicon.ico" rel="icon">
+<link href="/i/favicon.png" rel="icon" type="image/png" sizes="32x32">
+<link rel="stylesheet" href="{{ '/tools/assets/css/shell.css' | relative_url }}?v=20260831-8">
+<script>
+  (function () {
+    var savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    var savedLang = localStorage.getItem('lang');
+    if (savedLang === 'en' || savedLang === 'tr') {
+      document.documentElement.setAttribute('data-lang', savedLang);
+    }
+    if (localStorage.getItem('tool-dock') === 'collapsed') {
+      document.documentElement.setAttribute('data-dock', 'collapsed');
+    }
+    var themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute('content', savedTheme === 'dark' ? '#282828' : '#fbf1c7');
+  })();
+</script>

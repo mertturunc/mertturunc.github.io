@@ -24,7 +24,7 @@
     })();
   </script>
 
-  <link href='/style.css?v=20260824' rel='stylesheet' type='text/css' />
+  <link href='/style.css?v=20260831-6' rel='stylesheet' type='text/css' />
   {% include syntax-highlighting.html %}
   <title>{{ page.title }} @ {{ t.site_title }}</title>
 
@@ -54,6 +54,9 @@
     {% else %}
       <meta property="og:image" content="{{ site.url }}{{ page.header }}" />
     {% endif %}
+  {% elsif page.collection == 'projects' and page.carousel_images %}
+    {% assign first_project_image = page.carousel_images | split: ',' | first | strip %}
+    <meta property="og:image" content="{{ site.url }}/projects/{{ page.slug }}/{{ first_project_image }}" />
   {% else %}
     {% comment %} Check for generated placeholder {% endcomment %}
     {% if page.categories contains 'blog' %}
@@ -92,6 +95,9 @@
     {% else %}
       <meta name="twitter:image" content="{{ site.url }}{{ page.header }}" />
     {% endif %}
+  {% elsif page.collection == 'projects' and page.carousel_images %}
+    {% assign first_project_image = page.carousel_images | split: ',' | first | strip %}
+    <meta name="twitter:image" content="{{ site.url }}/projects/{{ page.slug }}/{{ first_project_image }}" />
   {% else %}
     {% comment %} Use the same placeholder logic for Twitter {% endcomment %}
     {% if page.categories contains 'blog' %}
@@ -111,7 +117,10 @@
   {% endif %}
 
   {% comment %} Alternate language links — live host, not github.io {% endcomment %}
-  {% if current_lang == 'tr' %}
+  {% if page.collection == 'projects' %}
+    <link rel="alternate" hreflang="tr" href="{{ site.url }}{{ page.url }}" />
+    <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url }}" />
+  {% elsif current_lang == 'tr' %}
     <link rel="alternate" hreflang="tr" href="{{ site.url }}{{ page.url }}" />
     <link rel="alternate" hreflang="en" href="{{ site.url }}/en{{ page.url }}" />
     <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url }}" />
@@ -121,7 +130,7 @@
     <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url | remove: '/en' }}" />
   {% endif %}
 </head>
-<body>
+<body{% if page.layout == 'project' or page.layout == 'post' %} class="post-layout"{% endif %}>
 <a class="skip-link" href="#main">{{ t.general.skip_to_content }}</a>
 <!-- Top controls -->
 <div class="top-controls">

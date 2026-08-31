@@ -1,30 +1,24 @@
+---
+layout: null
+title: geojson simplifier
+tool: simplify
+---
+{% include language-utils.html %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GeoJSON Simplifier</title>
+<title>geojson simplifier @ {{ t.site_title }}</title>
+{% include tool-head.html %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.css" />
 <style>
-  :root {
-    color-scheme: light;
-    --bg: #f7f7f7;
-    --panel: #ffffff;
-    --border: #d7d7d7;
-    --text: #111827;
-    --muted: #4b5563;
-    --error: #b91c1c;
-    --warn: #92400e;
-    --ok: #166534;
-    --primary: #2563eb;
-  }
-
   html,
   body {
     margin: 0;
     height: 100%;
-    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-family: var(--sans);
     line-height: 1.3;
     color: var(--text);
     background: var(--bg);
@@ -40,7 +34,7 @@
     overflow-y: auto;
     border-right: 1px solid var(--border);
     background: var(--panel);
-    padding: 10px;
+    padding: 10px 10px 56px;
     box-sizing: border-box;
   }
 
@@ -55,22 +49,21 @@
 
   h1 {
     margin: 0 0 8px;
-    font-size: 1.05rem;
-    line-height: 1.15;
   }
 
   section {
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
     padding: 8px;
     margin-bottom: 8px;
     background: var(--panel);
   }
 
   section h2 {
-    margin: 0 0 7px;
-    font-size: 0.83rem;
-    letter-spacing: 0.01em;
+    margin: 0 0 8px;
+    font-size: 14px;
+    letter-spacing: 0;
+    font-weight: 400;
   }
 
   .section-compact {
@@ -79,7 +72,7 @@
 
   label {
     display: block;
-    font-size: 0.76rem;
+    font-size: 12px;
     color: var(--muted);
     margin-bottom: 4px;
   }
@@ -88,7 +81,7 @@
     margin-top: 2px;
     margin-bottom: 6px;
     color: var(--muted);
-    font-size: 0.72rem;
+    font-size: 12px;
   }
 
   input[type="number"],
@@ -109,17 +102,8 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 5px 7px;
-    background: #fff;
-    font-size: 0.78rem;
-  }
-
-  input[type="number"]:focus,
-  textarea:focus,
-  select:focus,
-  button:focus {
-    outline: 1px solid rgba(37, 99, 235, 0.28);
-    outline-offset: 0;
-    border-color: var(--primary);
+    background: var(--btn-bg);
+    font-size: 14px;
   }
 
   input[type="range"] {
@@ -130,8 +114,8 @@
     min-height: 94px;
     resize: vertical;
     line-height: 1.2;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 11px;
+    font-family: var(--mono);
+    font-size: 12px;
   }
 
   button {
@@ -144,17 +128,17 @@
   }
 
   button.primary {
-    background: #eef3ff;
-    border-color: #c5d4ff;
-    color: #1e3a8a;
-    font-weight: 500;
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--primary-bg);
+    font-weight: 400;
   }
 
   button.secondary {
-    background: #fff;
+    background: var(--btn-bg);
     border-color: var(--border);
     color: var(--text);
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .row {
@@ -173,7 +157,7 @@
   .compact-details summary {
     cursor: pointer;
     color: var(--muted);
-    font-size: 0.74rem;
+    font-size: 12px;
     user-select: none;
   }
 
@@ -188,54 +172,52 @@
   .algorithm-help {
     margin: 4px 0 6px;
     color: var(--muted);
-    font-size: 0.72rem;
+    font-size: 12px;
     line-height: 1.25;
   }
 
   .message {
     margin: 0 0 4px;
-    font-size: 0.75rem;
+    font-size: 12px;
     line-height: 1.25;
-  }
-
-  .message.info {
-    color: #e5e7eb;
+    color: var(--muted);
   }
 
   .message.success {
-    color: #bbf7d0;
+    color: var(--ok);
   }
 
   .message.error {
-    color: #fecaca;
+    color: var(--error);
   }
 
   .stats {
     margin: 5px 0 0;
     white-space: pre-line;
-    font-size: 0.72rem;
+    font-size: 12px;
     line-height: 1.25;
-    color: #d1d5db;
+    color: var(--muted);
   }
 
   .quick-stats {
     display: flex;
     flex-wrap: wrap;
     gap: 6px 12px;
-    font-size: 0.72rem;
+    font-size: 12px;
     margin-bottom: 4px;
+    color: var(--text);
   }
 
   .quick-stats strong {
-    font-weight: 700;
-    color: #ffffff;
+    font-weight: 800;
+    color: var(--text);
   }
 
   .warnings {
     margin: 4px 0 0;
     padding-left: 14px;
-    color: #fde68a;
-    font-size: 0.7rem;
+    color: var(--warn);
+    font-size: 12px;
     line-height: 1.2;
     max-height: 84px;
     overflow: auto;
@@ -246,7 +228,7 @@
     display: flex;
     gap: 6px;
     align-items: center;
-    font-size: 0.75rem;
+    font-size: 12px;
   }
 
   .checkbox-label input {
@@ -259,12 +241,10 @@
     bottom: 8px;
     z-index: 700;
     width: min(380px, calc(100% - 16px));
-    background: rgba(17, 24, 39, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 6px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
     padding: 8px;
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
     box-sizing: border-box;
   }
 
@@ -273,24 +253,42 @@
   }
 
   .leaflet-control.map-action-control {
-    background: #fff;
-    border: 1px solid #cfcfcf;
+    background: var(--panel);
+    border: 1px solid var(--border);
     border-radius: 4px;
     overflow: hidden;
   }
 
   .leaflet-control.map-action-control button {
     border: 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border);
+    min-height: 24px;
     padding: 4px 7px;
-    font-size: 11px;
-    background: #fff;
-    color: #111827;
+    font-size: 12px;
+    background: var(--panel);
+    color: var(--text);
     min-width: 42px;
   }
 
   .leaflet-control.map-action-control button:last-child {
     border-bottom: 0;
+  }
+
+  @media (pointer: coarse) {
+    .leaflet-control.map-action-control button {
+      min-height: 32px;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html[data-theme="dark"] .leaflet-tile-pane {
+      filter: saturate(0.2) contrast(0.88) brightness(0.78);
+    }
+  }
+
+  html[data-theme="dark"] .leaflet-control-attribution {
+    background: color-mix(in srgb, var(--primary-bg) 80%, transparent);
+    color: var(--muted);
   }
 
   @media (max-width: 1100px) {
@@ -307,28 +305,29 @@
 </style>
 </head>
 <body>
+{% include tool-chrome.html %}
   <div class="app">
     <aside class="sidebar">
-      <h1>GeoJSON Simplifier</h1>
+      <h1 class="tool-title" id="main" data-i18n="title">geojson simplifier</h1>
 
       <section>
-        <h2>Import GeoJSON</h2>
-        <label for="fileInput">GeoJSON file</label>
+        <h2 data-i18n="import">import geojson</h2>
+        <label for="fileInput" data-i18n="file">geojson file</label>
         <input id="fileInput" type="file" accept=".geojson,.json,application/geo+json,application/json" />
         <details class="compact-details">
-          <summary>Paste GeoJSON text</summary>
-          <textarea id="geojsonText" placeholder='Paste a Feature, FeatureCollection, Polygon or MultiPolygon JSON here'></textarea>
+          <summary data-i18n="paste">paste geojson text</summary>
+          <textarea id="geojsonText" data-i18n-placeholder="paste_placeholder" placeholder="paste a Feature, FeatureCollection, Polygon or MultiPolygon JSON here"></textarea>
           <div class="row">
-            <button id="applyTextBtn" type="button">Apply</button>
-            <button id="clearTextBtn" type="button">Clear</button>
+            <button id="applyTextBtn" type="button" data-i18n="apply">apply</button>
+            <button id="clearTextBtn" type="button" data-i18n="clear">clear</button>
           </div>
         </details>
       </section>
 
       <section>
-        <h2>Simplification</h2>
-        <label for="algorithmSelect">Algorithm</label>
-        <select id="algorithmSelect">
+        <h2 data-i18n="simplification">simplification</h2>
+        <label for="algorithmSelect" data-i18n="algorithm">algorithm</label>
+        <select id="algorithmSelect" aria-describedby="algorithmHelp">
           <option value="douglas-peucker">Douglas-Peucker</option>
           <option value="snap-to-grid">Snap to Grid</option>
           <option value="visvalingam-whyatt">Visvalingam-Whyatt</option>
@@ -339,61 +338,61 @@
         <p id="algorithmHelp" class="algorithm-help"></p>
 
         <div id="distanceGroup" class="param-group">
-          <label for="distanceToleranceNumber">Distance tolerance</label>
-          <input id="distanceToleranceNumber" type="number" min="0" step="0.00001" value="0.00035" />
-          <input id="distanceToleranceRange" type="range" min="0" max="0.01" step="0.00001" value="0.00035" />
+          <label id="distance-tol-label" for="distanceToleranceNumber" data-i18n="dist_tol">distance tolerance</label>
+          <input id="distanceToleranceNumber" type="number" min="0" step="0.00001" value="0.00035" aria-labelledby="distance-tol-label" />
+          <input id="distanceToleranceRange" type="range" min="0" max="0.01" step="0.00001" value="0.00035" aria-labelledby="distance-tol-label" />
         </div>
 
         <div id="areaGroup" class="param-group" hidden>
-          <label for="areaToleranceNumber">Area tolerance (triangle area)</label>
-          <input id="areaToleranceNumber" type="number" min="0" step="0.0000001" value="0.0000002" />
-          <input id="areaToleranceRange" type="range" min="0" max="0.00005" step="0.0000001" value="0.0000002" />
+          <label id="area-tol-label" for="areaToleranceNumber" data-i18n="area_tol">area tolerance (triangle area)</label>
+          <input id="areaToleranceNumber" type="number" min="0" step="0.0000001" value="0.0000002" aria-labelledby="area-tol-label" />
+          <input id="areaToleranceRange" type="range" min="0" max="0.00005" step="0.0000001" value="0.0000002" aria-labelledby="area-tol-label" />
         </div>
 
         <div id="gridGroup" class="param-group" hidden>
-          <label for="gridSizeNumber">Grid size</label>
-          <input id="gridSizeNumber" type="number" min="0" step="0.00001" value="0.0001" />
-          <input id="gridSizeRange" type="range" min="0" max="0.01" step="0.00001" value="0.0001" />
+          <label id="grid-size-label" for="gridSizeNumber" data-i18n="grid_size">grid size</label>
+          <input id="gridSizeNumber" type="number" min="0" step="0.00001" value="0.0001" aria-labelledby="grid-size-label" />
+          <input id="gridSizeRange" type="range" min="0" max="0.01" step="0.00001" value="0.0001" aria-labelledby="grid-size-label" />
         </div>
 
         <div id="langGroup" class="param-group" hidden>
-          <label for="lookAheadNumber">Lang look-ahead</label>
-          <input id="lookAheadNumber" type="number" min="2" max="64" step="1" value="8" />
-          <input id="lookAheadRange" type="range" min="2" max="64" step="1" value="8" />
+          <label id="lookahead-label" for="lookAheadNumber" data-i18n="lookahead">lang look-ahead</label>
+          <input id="lookAheadNumber" type="number" min="2" max="64" step="1" value="8" aria-labelledby="lookahead-label" />
+          <input id="lookAheadRange" type="range" min="2" max="64" step="1" value="8" aria-labelledby="lookahead-label" />
         </div>
 
         <label class="checkbox-label" for="liveUpdateToggle">
           <input id="liveUpdateToggle" type="checkbox" checked />
-          Live update on parameter changes
+          <span data-i18n="live">live update on parameter changes</span>
         </label>
 
         <div style="height: 8px;"></div>
-        <button id="runSimplifyBtn" type="button">Run Simplification Now</button>
+        <button id="runSimplifyBtn" type="button" class="primary" data-i18n="run">run simplification now</button>
       </section>
 
       <section>
-        <h2>Export</h2>
+        <h2 data-i18n="export">export</h2>
         <div class="row">
-          <button id="downloadBtn" type="button" disabled>Download GeoJSON</button>
-          <button id="copyBtn" type="button" disabled>Copy JSON</button>
+          <button id="downloadBtn" type="button" disabled data-i18n="download">download geojson</button>
+          <button id="copyBtn" type="button" disabled data-i18n="copy">copy json</button>
         </div>
         <div style="height: 6px;"></div>
-        <button id="resetEditsBtn" type="button">Reset Edited Geometry</button>
-        <div class="hint">Use map controls for basemap and Geoman edit mode.</div>
+        <button id="resetEditsBtn" type="button" data-i18n="reset">reset edited geometry</button>
+        <div class="hint" data-i18n="map_hint">use map controls for basemap and geoman edit mode.</div>
       </section>
     </aside>
 
-    <main class="map-panel">
+    <main class="map-panel" data-i18n="map" data-i18n-attr="aria-label" aria-label="map">
       <div id="map"></div>
       <div class="status-popup">
-        <p id="message" class="message info">Import a Polygon or MultiPolygon GeoJSON to start.</p>
+        <p id="message" class="message info" role="status" aria-live="polite" aria-atomic="true" data-i18n="start">import a polygon or multipolygon geojson to start.</p>
         <div class="quick-stats">
-          <span>Input: <strong id="statInputVertices">0</strong></span>
-          <span>Output: <strong id="statOutputVertices">0</strong></span>
-          <span>Reduction: <strong id="statReduction">0.00%</strong></span>
+          <span><span data-i18n="input">input</span>: <strong id="statInputVertices">0</strong></span>
+          <span><span data-i18n="output">output</span>: <strong id="statOutputVertices">0</strong></span>
+          <span><span data-i18n="reduction">reduction</span>: <strong id="statReduction">0.00%</strong></span>
         </div>
         <div id="stats" class="stats"></div>
-        <ul id="warnings" class="warnings"></ul>
+        <ul id="warnings" class="warnings" aria-live="polite"></ul>
       </div>
     </main>
   </div>
@@ -403,6 +402,16 @@
   <script>
     (function () {
       "use strict";
+
+      function t(key, vars) {
+        return typeof window.toolT === "function" ? window.toolT(key, vars) : key;
+      }
+
+      let lastMsg = { key: "start", type: "info", vars: null };
+      function setT(key, type, vars) {
+        lastMsg = { key: key, type: type || "info", vars: vars || null };
+        setMessage(t(key, vars), type);
+      }
 
       const DISTANCE_ALGORITHMS = new Set([
         "douglas-peucker",
@@ -414,15 +423,6 @@
       const DEFAULT_VIEW = {
         center: [41.2, 28.75],
         zoom: 11
-      };
-
-      const ALGORITHM_HELP = {
-        "douglas-peucker": "Keeps points with highest distance from simplified edges. Good general-purpose shape retention.",
-        "snap-to-grid": "Snaps vertices to a regular grid. Fast and deterministic, but can collapse small details.",
-        "visvalingam-whyatt": "Removes points with the smallest triangle area first. Use area tolerance, not distance.",
-        "lang": "Local look-ahead simplification with distance tolerance. Look-ahead controls aggressiveness.",
-        "reumann-witkam": "Strip-based simplification using perpendicular distance to a moving baseline.",
-        "radial-distance": "Fast vertex reduction by removing nearby consecutive points from the last kept point."
       };
 
       const ui = {
@@ -484,20 +484,20 @@
           "Google Satellite": googleSatelliteLayer
         },
         null,
-        { position: "topright", collapsed: true }
+        { position: "topleft", collapsed: true }
       ).addTo(map);
 
-      const mapActionControl = L.control({ position: "topright" });
+      const mapButtons = { fit: null, home: null };
+      const mapActionControl = L.control({ position: "topleft" });
       mapActionControl.onAdd = function () {
         const container = L.DomUtil.create("div", "leaflet-control map-action-control");
         const fitButton = L.DomUtil.create("button", "", container);
         fitButton.type = "button";
-        fitButton.title = "Fit imported geometry";
-        fitButton.textContent = "Fit";
         const homeButton = L.DomUtil.create("button", "", container);
         homeButton.type = "button";
-        homeButton.title = "Reset default view";
-        homeButton.textContent = "Home";
+        mapButtons.fit = fitButton;
+        mapButtons.home = homeButton;
+        applyMapButtons();
 
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.on(fitButton, "click", function (event) {
@@ -510,6 +510,13 @@
         });
         return container;
       };
+      function applyMapButtons() {
+        if (!mapButtons.fit) return;
+        mapButtons.fit.textContent = t("fit");
+        mapButtons.fit.title = t("fit_title");
+        mapButtons.home.textContent = t("home");
+        mapButtons.home.title = t("home_title");
+      }
       mapActionControl.addTo(map);
 
       map.pm.setGlobalOptions({
@@ -539,9 +546,9 @@
         pmIgnore: true,
         interactive: false,
         style: {
-          color: "#2563eb",
+          color: getComputedStyle(document.documentElement).getPropertyValue("--muted-text").trim(),
           weight: 2,
-          fillColor: "#60a5fa",
+          fillColor: getComputedStyle(document.documentElement).getPropertyValue("--muted-text").trim(),
           fillOpacity: 0.08
         }
       }).addTo(map);
@@ -554,7 +561,7 @@
       }
 
       function updateAlgorithmHelp() {
-        ui.algorithmHelp.textContent = ALGORITHM_HELP[ui.algorithmSelect.value] || "";
+        ui.algorithmHelp.textContent = t("help_" + ui.algorithmSelect.value.replace(/-/g, "_"));
       }
 
       function updateAlgorithmControlVisibility() {
@@ -1606,7 +1613,7 @@
           updateStatus();
           updateExportButtons();
         } catch (error) {
-          setMessage("Edit sync failed: " + error.message, "error");
+          setT("msg_edit_fail", "error", { err: error.message });
         }
       }
 
@@ -1650,9 +1657,9 @@
         const generatedLayer = L.geoJSON(state.simplifiedGeoJSON, {
           pmIgnore: false,
           style: {
-            color: "#dc2626",
+            color: getComputedStyle(document.documentElement).getPropertyValue("--accent-color").trim(),
             weight: 2,
-            fillColor: "#f87171",
+            fillColor: getComputedStyle(document.documentElement).getPropertyValue("--accent-color").trim(),
             fillOpacity: 0.12
           }
         });
@@ -1794,26 +1801,10 @@
                 );
               }
               if (ringAreaAbs(ring) === 0) {
-                warnings.push(
-                  "Feature " +
-                  (featureIndex + 1) +
-                  ", polygon " +
-                  (polygonIndex + 1) +
-                  ", ring " +
-                  (ringIndex + 1) +
-                  " has zero area."
-                );
+                warnings.push(t("warn_zero", { f: featureIndex + 1, p: polygonIndex + 1, r: ringIndex + 1 }));
               }
               if (ringHasSelfIntersections(ring)) {
-                warnings.push(
-                  "Feature " +
-                  (featureIndex + 1) +
-                  ", polygon " +
-                  (polygonIndex + 1) +
-                  ", ring " +
-                  (ringIndex + 1) +
-                  " may self-intersect."
-                );
+                warnings.push(t("warn_intersect", { f: featureIndex + 1, p: polygonIndex + 1, r: ringIndex + 1 }));
               }
             });
           });
@@ -1826,7 +1817,7 @@
         ui.warnings.innerHTML = "";
         if (!warnings.length) {
           const clean = document.createElement("li");
-          clean.textContent = "No basic validity warnings detected.";
+          clean.textContent = t("no_warnings");
           ui.warnings.appendChild(clean);
           return;
         }
@@ -1861,9 +1852,9 @@
         ui.statReduction.textContent = reduction + "%";
 
         const statsLines = [
-          "Input features: " + (input ? input.features.length : 0),
-          "Algorithm: " + (ui.algorithmSelect.options[ui.algorithmSelect.selectedIndex] || {}).text,
-          "Output source: " + (state.editedGeoJSON ? "edited simplified geometry" : "simplified geometry")
+          t("stats_features", { n: input ? input.features.length : 0 }),
+          t("stats_algorithm", { algo: (ui.algorithmSelect.options[ui.algorithmSelect.selectedIndex] || {}).text || "" }),
+          t(state.editedGeoJSON ? "stats_source_edited" : "stats_source_simple")
         ];
         ui.stats.textContent = statsLines.join("\n");
 
@@ -1884,7 +1875,7 @@
 
       function applySimplification(fitAfterRender) {
         if (!state.originalGeoJSON) {
-          setMessage("Import GeoJSON first.", "info");
+          setT("msg_import_first", "info");
           return;
         }
 
@@ -1901,9 +1892,9 @@
           updateStatus();
 
           const selectedText = ui.algorithmSelect.options[ui.algorithmSelect.selectedIndex].text;
-          setMessage("Simplification complete (" + selectedText + ").", "success");
+          setT("msg_done", "success", { algo: selectedText });
         } catch (error) {
-          setMessage("Simplification failed: " + error.message, "error");
+          setT("msg_fail", "error", { err: error.message });
         }
       }
 
@@ -1917,10 +1908,10 @@
         }, 140);
       }
 
-      function importFromText(rawText, sourceLabel) {
+      function importFromText(rawText, sourceKey) {
         const text = rawText.trim();
         if (!text) {
-          setMessage("GeoJSON text input is empty.", "error");
+          setT("msg_empty", "error");
           return;
         }
 
@@ -1932,15 +1923,9 @@
           state.editedGeoJSON = null;
           renderOriginalLayer();
           applySimplification(true);
-          setMessage(
-            sourceLabel +
-            ": imported " +
-            normalized.features.length +
-            " Polygon/MultiPolygon feature(s).",
-            "success"
-          );
+          setT("msg_import_ok", "success", { src: t(sourceKey), n: normalized.features.length });
         } catch (error) {
-          setMessage(sourceLabel + ": " + error.message, "error");
+          setT("msg_import_err", "error", { src: t(sourceKey), err: error.message });
         }
       }
 
@@ -1954,16 +1939,16 @@
           reader.onload = function (event) {
             const text = String(event.target && event.target.result ? event.target.result : "");
             ui.geojsonText.value = text;
-            importFromText(text, "File import");
+            importFromText(text, "msg_file");
           };
           reader.onerror = function () {
-            setMessage("Failed to read the selected file.", "error");
+            setT("msg_read_fail", "error");
           };
           reader.readAsText(file);
         });
 
         ui.applyTextBtn.addEventListener("click", function () {
-          importFromText(ui.geojsonText.value, "Text import");
+          importFromText(ui.geojsonText.value, "msg_text");
         });
 
         ui.geojsonText.addEventListener("keydown", function (event) {
@@ -1972,7 +1957,7 @@
             return;
           }
           event.preventDefault();
-          importFromText(ui.geojsonText.value, "Text import");
+          importFromText(ui.geojsonText.value, "msg_text");
         });
 
         ui.clearTextBtn.addEventListener("click", function () {
@@ -2017,20 +2002,20 @@
 
         ui.resetEditsBtn.addEventListener("click", function () {
           if (!state.simplifiedGeoJSON) {
-            setMessage("Nothing to reset. Import and simplify a geometry first.", "info");
+            setT("msg_nothing_reset", "info");
             return;
           }
           state.editedGeoJSON = null;
           renderSimplifiedLayer();
           updateStatus();
           updateExportButtons();
-          setMessage("Edits reset to the latest simplification result.", "success");
+          setT("msg_edits_reset", "success");
         });
 
         ui.downloadBtn.addEventListener("click", function () {
           const output = currentOutputGeoJSON();
           if (!output) {
-            setMessage("No output to export.", "info");
+            setT("msg_no_export", "info");
             return;
           }
           const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/geo+json" });
@@ -2042,21 +2027,21 @@
           anchor.click();
           anchor.remove();
           URL.revokeObjectURL(url);
-          setMessage("GeoJSON downloaded.", "success");
+          setT("msg_downloaded", "success");
         });
 
         ui.copyBtn.addEventListener("click", async function () {
           const output = currentOutputGeoJSON();
           if (!output) {
-            setMessage("No output to copy.", "info");
+            setT("msg_no_copy", "info");
             return;
           }
           const text = JSON.stringify(output, null, 2);
           try {
             await navigator.clipboard.writeText(text);
-            setMessage("GeoJSON copied to clipboard.", "success");
+            setT("msg_copied", "success");
           } catch (error) {
-            setMessage("Clipboard copy failed. Use download instead.", "error");
+            setT("msg_copy_fail", "error");
           }
         });
       }
@@ -2065,6 +2050,13 @@
       setupEvents();
       updateExportButtons();
       updateStatus();
+
+      window.addEventListener("langchange", function () {
+        applyMapButtons();
+        updateAlgorithmHelp();
+        updateStatus();
+        setMessage(t(lastMsg.key, lastMsg.vars), lastMsg.type);
+      });
     })();
   </script>
 </body>

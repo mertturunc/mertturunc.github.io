@@ -1,0 +1,52 @@
+{% comment %}
+  Main site navigation.
+  include.active: blog | projects | tools | resume
+  include.inside: post pages — blog keeps the inside underline, nothing is current
+{% endcomment %}
+{% if current_lang == 'en' %}
+  {% assign nav_blog = '/en/' %}
+  {% assign nav_projects = '/en/projects/' %}
+  {% assign nav_tools = '/en/tools/' %}
+  {% assign nav_resume = '/en/resume/' %}
+{% else %}
+  {% assign nav_blog = '/' %}
+  {% assign nav_projects = '/projects/' %}
+  {% assign nav_tools = '/tools/' %}
+  {% assign nav_resume = '/resume/' %}
+{% endif %}
+
+<nav aria-label="{{ t.general.main_nav }}">
+<ul class="menu">
+  <li>
+    {% if include.inside %}
+      <a class="menu__item menu__item_inside" href="{{ nav_blog }}">{{ t.nav.blog }}</a>
+    {% elsif include.active == 'blog' %}
+      <a class="menu__item menu__item_selected" href="{{ nav_blog }}" aria-current="page">{{ t.nav.blog }}</a>
+    {% else %}
+      <a class="menu__item" href="{{ nav_blog }}">{{ t.nav.blog }}</a>
+    {% endif %}
+  </li>
+  <li>
+    {% if include.active == 'projects' %}
+      <a class="menu__item menu__item_selected" href="{{ nav_projects }}" aria-current="page">{{ t.nav.projects }}</a>
+    {% else %}
+      <a class="menu__item" href="{{ nav_projects }}">{{ t.nav.projects }}</a>
+    {% endif %}
+  </li>
+  <li>
+    {% if include.active == 'tools' %}
+      <a class="menu__item menu__item_selected" href="{{ nav_tools }}" aria-current="page">{{ t.nav.tools }}</a>
+    {% else %}
+      <a class="menu__item" href="{{ nav_tools }}">{{ t.nav.tools }}</a>
+    {% endif %}
+  </li>
+  <li>
+    {% if include.active == 'resume' %}
+      <a class="menu__item menu__item_selected" href="{{ nav_resume }}" aria-current="page">{{ t.nav.resume }}</a>
+    {% else %}
+      <a class="menu__item" href="{{ nav_resume }}">{{ t.nav.resume }}</a>
+    {% endif %}
+  </li>
+  <li class="spacer" aria-hidden="true"></li>
+</ul>
+</nav>

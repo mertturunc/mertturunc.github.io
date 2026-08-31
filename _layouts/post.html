@@ -3,20 +3,7 @@ layout: default
 ---
 {% include language-utils.html %}
 
-<nav aria-label="{{ t.general.main_nav }}">
-<ul class="menu">
-  {% if current_lang == 'en' %}
-    <li><a class="menu__item menu__item_inside" href="/en/">{{ t.nav.blog }}</a></li>
-    <li><a class="menu__item" href="/en/projects/">{{ t.nav.projects }}</a></li>
-    <li><a class="menu__item" href="/en/resume/">{{ t.nav.resume }}</a></li>
-  {% else %}
-    <li><a class="menu__item menu__item_inside" href="/">{{ t.nav.blog }}</a></li>
-    <li><a class="menu__item" href="/projects/">{{ t.nav.projects }}</a></li>
-    <li><a class="menu__item" href="/resume/">{{ t.nav.resume }}</a></li>
-  {% endif %}
-  <li class="spacer" aria-hidden="true"></li>
-</ul>
-</nav>
+{% include site-nav.html active="blog" inside=true %}
 
 <div class="post">
   <h1 class="r-title news__title">

@@ -5,10 +5,12 @@ title_en: karınca
 category: blender
 category_en: blender
 date: 2023-06-04
-description: Bir müşteri için Blender ortamında tasarlandı ve render alındı.
-description_en: Designed and rendered in blender for a cliet.
+description: bir müşteri için blender ortamında tasarlandı ve render alındı.
+description_en: designed and rendered in blender for a cliet.
 has_full_page: false
 lang: tr
 show_carousel: true
-carousel_images: "image1.png, image2.png, image3.png, image4.png, image5.png, image6.png, image7.png"
+carousel_images: "image1.webp, image2.webp, image3.webp, image4.webp, image5.webp, image6.webp, image7.webp"
+carousel_alts: "karınca blender modeli önden, karınca yandan, karınca detay, karınca üstten, karınca yakından, karınca gölge, karınca ortam"
+carousel_alts_en: "ant blender model front, ant side, ant detail, ant from above, ant close-up, ant shadow, ant in scene"
 ---

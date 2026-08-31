@@ -4,30 +4,81 @@ Usage: {% include image-carousel.html folder="cin-ali" images="image1.jpg,image2
 Or for auto-discovery: {% include image-carousel.html folder="cin-ali" %}
 {% endcomment %}
 
+{% include language-utils.html %}
+
 {% assign carousel_id = include.folder | slugify %}
 {% assign image_folder = include.folder %}
 {% assign images_list = include.images | split: ',' %}
+{% assign carousel_label = page.title %}
+{% if current_lang == 'en' and page.title_en %}
+  {% assign carousel_label = page.title_en %}
+{% endif %}
 
-<div class="image-carousel" id="carousel-{{ carousel_id }}">
+<div class="image-carousel" id="carousel-{{ carousel_id }}"
+     role="region"
+     aria-roledescription="{{ t.carousel.roledescription }}"
+     aria-label="{{ carousel_label | escape }}"
+     data-label-prev="{{ t.carousel.prev | escape }}"
+     data-label-next="{{ t.carousel.next | escape }}"
+     data-label-zoom-in="{{ t.carousel.zoom_in | escape }}"
+     data-label-zoom-out="{{ t.carousel.zoom_out | escape }}"
+     data-label-zoom-reset="{{ t.carousel.zoom_reset | escape }}"
+     data-label-close="{{ t.carousel.close | escape }}"
+     data-status-template="{{ t.carousel.slide_status | escape }}">
+  <p class="visually-hidden" data-carousel-status aria-live="polite" aria-atomic="true"></p>
   <div class="carousel-container">
     <div class="carousel-track">
       {% if include.images %}
         {% for image in images_list %}
           {% assign image_name = image | strip %}
-          <div class="carousel-slide">
+          <div class="carousel-slide"{% if forloop.first %} aria-hidden="false"{% else %} aria-hidden="true"{% endif %}>
             {% assign file_extension = image_name | split: '.' | last | downcase %}
             {% if file_extension == 'mp4' or file_extension == 'webm' or file_extension == 'mov' %}
-              <video src="/projects/{{ image_folder }}/{{ image_name }}" 
-                     controls
-                     preload="metadata"
+              {% assign video_label = carousel_label %}
+              {% if current_lang == 'en' and page.carousel_alts_en %}
+                {% assign video_label = page.carousel_alts_en | split: ',' | first | strip %}
+              {% elsif page.carousel_alts %}
+                {% assign video_label = page.carousel_alts | split: ',' | first | strip %}
+              {% endif %}
+              <video src="/projects/{{ image_folder }}/{{ image_name }}"
                      class="carousel-video"
-                     data-aspect-ratio="">
-                Your browser does not support the video tag.
+                     muted
+                     loop
+                     autoplay
+                     playsinline
+                     webkit-playsinline
+                     disablepictureinpicture
+                     controlslist="nodownload nofullscreen noremoteplayback"
+                     preload="metadata"
+                     data-aspect-ratio=""
+                     title="{{ video_label | escape }}"
+                     aria-label="{{ video_label | escape }}"
+                     {% if page.carousel_poster %}poster="/projects/{{ image_folder }}/{{ page.carousel_poster }}"{% endif %}>
+                {{ t.carousel.video_fallback }}
               </video>
             {% else %}
+              {% assign image_alt = "" %}
+              {% if include.alts %}
+                {% assign alt_list = include.alts | split: ',' %}
+                {% assign image_alt = alt_list[forloop.index0] | strip %}
+              {% elsif page.carousel_alts %}
+                {% if current_lang == 'en' and page.carousel_alts_en %}
+                  {% assign alt_list = page.carousel_alts_en | split: ',' %}
+                {% else %}
+                  {% assign alt_list = page.carousel_alts | split: ',' %}
+                {% endif %}
+                {% assign image_alt = alt_list[forloop.index0] | strip %}
+              {% endif %}
+              {% if image_alt == "" %}
+                {% if images_list.size > 1 %}
+                  {% assign image_alt = carousel_label | append: " (" | append: forloop.index | append: "/" | append: images_list.size | append: ")" %}
+                {% else %}
+                  {% assign image_alt = carousel_label %}
+                {% endif %}
+              {% endif %}
               <img src="/projects/{{ image_folder }}/{{ image_name }}" 
-                   alt="{{ page.title }} - Image {{ forloop.index }}"
-                   loading="lazy"
+                   alt="{{ image_alt | escape }}"
+                   {% if forloop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
                    class="carousel-image"
                    data-aspect-ratio="">
             {% endif %}
@@ -47,46 +98,50 @@ Or for auto-discovery: {% include image-carousel.html folder="cin-ali" %}
     
     {% if images_list.size > 1 or include.images == nil %}
     <!-- Navigation arrows -->
-    <button class="carousel-nav carousel-prev" aria-label="Previous image">
+    <button class="carousel-nav carousel-prev" type="button" aria-label="{{ t.carousel.prev }}">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
-    <button class="carousel-nav carousel-next" aria-label="Next image">
+    <button class="carousel-nav carousel-next" type="button" aria-label="{{ t.carousel.next }}">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
     {% endif %}
     
-    <!-- Zoom and Fullscreen Controls (always show) -->
+    <!-- Zoom and Fullscreen Controls -->
     <div class="carousel-controls">
-      <button class="carousel-control-btn zoom-reset-btn" aria-label="Reset zoom" style="display: none;">
+      {% unless images_list.size == 1 %}
+      <button class="carousel-control-btn zoom-reset-btn" type="button" aria-label="{{ t.carousel.zoom_reset }}" style="display: none;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2"/>
           <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2"/>
         </svg>
       </button>
-      <button class="carousel-control-btn zoom-out-btn" aria-label="Zoom out">
+      <button class="carousel-control-btn zoom-out-btn" type="button" aria-label="{{ t.carousel.zoom_out }}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
           <path d="M8 11h6" stroke="currentColor" stroke-width="2"/>
           <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
         </svg>
       </button>
-      <button class="carousel-control-btn zoom-in-btn" aria-label="Zoom in">
+      <button class="carousel-control-btn zoom-in-btn" type="button" aria-label="{{ t.carousel.zoom_in }}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
           <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="2"/>
           <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
         </svg>
       </button>
-      <button class="carousel-control-btn fullscreen-btn" aria-label="View fullscreen">
+      {% endunless %}
+      <button class="carousel-control-btn fullscreen-btn" type="button" aria-label="{{ t.carousel.fullscreen }}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="2"/>
         </svg>
       </button>
+      {% unless images_list.size == 1 %}
       <span class="zoom-indicator">100%</span>
+      {% endunless %}
     </div>
     
     {% if images_list.size > 1 or include.images == nil %}
@@ -96,7 +151,7 @@ Or for auto-discovery: {% include image-carousel.html folder="cin-ali" %}
       {% for i in (1..total_images) %}
         <button class="carousel-dot {% if forloop.first %}active{% endif %}" 
                 data-slide="{{ forloop.index0 }}"
-                aria-label="Go to image {{ forloop.index }}"></button>
+                aria-label="{{ t.carousel.go_to }} {{ forloop.index }}"></button>
       {% endfor %}
     </div>
     {% endif %}
@@ -118,6 +173,37 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
   const zoomResetBtn = carouselElement.querySelector('.zoom-reset-btn');
   const fullscreenBtn = carouselElement.querySelector('.fullscreen-btn');
   const zoomIndicator = carouselElement.querySelector('.zoom-indicator');
+
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function fitGifVideo(video) {
+    if (!video || video.videoWidth <= 0) return;
+    const ratio = video.videoWidth / video.videoHeight;
+    video.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+    video.style.width = '100%';
+    video.style.height = 'auto';
+    video.style.maxHeight = 'none';
+    video.setAttribute('data-aspect-ratio', ratio.toFixed(3));
+    return ratio;
+  }
+
+  function bindGifVideos() {
+    carouselElement.querySelectorAll('.carousel-video').forEach((video) => {
+      video.controls = false;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.disablePictureInPicture = true;
+      const apply = () => fitGifVideo(video);
+      video.addEventListener('loadedmetadata', apply);
+      if (video.readyState >= 1) apply();
+      if (prefersReducedMotion()) video.pause();
+      else video.play().catch(() => {});
+    });
+  }
+  bindGifVideos();
   
   let currentIndex = 0;
   let currentZoom = 1;
@@ -127,8 +213,6 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
   let translateX = 0;
   let translateY = 0;
   const totalSlides = slides.length;
-  
-  // Always show zoom controls, even for single images
   
   // Clear any existing listeners to prevent duplicates
   // Allow reinitialization for modal carousels
@@ -142,7 +226,20 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     // Update dots
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === currentIndex);
+      dot.setAttribute('aria-current', index === currentIndex ? 'true' : 'false');
     });
+    
+    slides.forEach((slide, index) => {
+      slide.setAttribute('aria-hidden', index === currentIndex ? 'false' : 'true');
+    });
+
+    const status = carouselElement.querySelector('[data-carousel-status]');
+    const template = carouselElement.dataset.statusTemplate || '%current% / %total%';
+    if (status && totalSlides > 1) {
+      status.textContent = template
+        .replace('%current%', String(currentIndex + 1))
+        .replace('%total%', String(totalSlides));
+    }
     
     // Update button states
     if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
@@ -254,36 +351,36 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     
     
     if (isConsistent && validRatios.length >= 1) {
-      // Apply consistent aspect ratio
       const avgRatio = validRatios.reduce((a, b) => a + b) / validRatios.length;
       const carouselContainer = carouselElement.querySelector('.carousel-container');
+      const mediaElements = carouselElement.querySelectorAll('.carousel-image, .carousel-video');
+      const onlyVideo = mediaElements.length === 1 && mediaElements[0].tagName === 'VIDEO';
       
       if (carouselContainer) {
-        // Calculate optimal height based on container width
         const containerWidth = carouselContainer.offsetWidth;
         const optimalHeight = containerWidth / avgRatio;
-        
-        // Don't make it too tall or too short - be more flexible for portrait content
         const minHeight = 200;
-        const maxHeight = Math.min(window.innerHeight * 0.8, containerWidth * 2); // Allow taller for portrait
+        const maxHeight = onlyVideo
+          ? Infinity
+          : Math.min(window.innerHeight * 0.8, containerWidth * 2);
         const finalHeight = Math.max(minHeight, Math.min(maxHeight, optimalHeight));
         
         carouselContainer.style.height = finalHeight + 'px';
         carouselContainer.style.overflow = 'hidden';
         
-        // Update media elements to fit perfectly
-        const mediaElements = carouselElement.querySelectorAll('.carousel-image, .carousel-video');
         mediaElements.forEach(media => {
-          media.style.height = finalHeight + 'px';
-          media.style.maxHeight = finalHeight + 'px';
-          media.style.objectFit = 'contain';
+          if (media.tagName === 'VIDEO') {
+            fitGifVideo(media);
+            media.style.height = finalHeight + 'px';
+          } else {
+            media.style.height = finalHeight + 'px';
+            media.style.maxHeight = finalHeight + 'px';
+            media.style.objectFit = 'contain';
+          }
         });
-      
         
-        // Mark as optimized
         carouselElement.setAttribute('data-aspect-optimized', 'true');
       }
-    } else {
     }
   }
   
@@ -326,10 +423,19 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     let mediaElement;
     if (currentMedia.tagName === 'VIDEO') {
       mediaElement = document.createElement('video');
-      mediaElement.src = currentMedia.src;
-      mediaElement.controls = true;
-      mediaElement.preload = 'metadata';
+      mediaElement.src = currentMedia.currentSrc || currentMedia.src;
+      mediaElement.muted = true;
+      mediaElement.loop = true;
+      mediaElement.autoplay = true;
+      mediaElement.playsInline = true;
+      mediaElement.controls = false;
+      mediaElement.preload = 'auto';
+      mediaElement.disablePictureInPicture = true;
       mediaElement.className = 'carousel-video lightbox-image';
+      if (currentMedia.getAttribute('poster')) {
+        mediaElement.poster = currentMedia.getAttribute('poster');
+      }
+      mediaElement.play().catch(() => {});
     } else {
       mediaElement = document.createElement('img');
       mediaElement.src = currentMedia.src;
@@ -341,21 +447,21 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     const lightboxControls = document.createElement('div');
     lightboxControls.className = 'lightbox-controls';
     lightboxControls.innerHTML = `
-      <button class="carousel-control-btn lightbox-zoom-out" aria-label="Zoom out">
+      <button type="button" class="carousel-control-btn lightbox-zoom-out" aria-label="${carouselElement.dataset.labelZoomOut || ''}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
           <path d="M8 11h6" stroke="currentColor" stroke-width="2"/>
           <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
         </svg>
       </button>
-      <button class="carousel-control-btn lightbox-zoom-in" aria-label="Zoom in">
+      <button type="button" class="carousel-control-btn lightbox-zoom-in" aria-label="${carouselElement.dataset.labelZoomIn || ''}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
           <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="2"/>
           <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
         </svg>
       </button>
-      <button class="carousel-control-btn lightbox-zoom-reset" aria-label="Reset zoom" style="display: none;">
+      <button type="button" class="carousel-control-btn lightbox-zoom-reset" aria-label="${carouselElement.dataset.labelZoomReset || ''}" style="display: none;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2"/>
           <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2"/>
@@ -365,11 +471,14 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     `;
     
     const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
     closeBtn.className = 'lightbox-close';
+    closeBtn.setAttribute('aria-label', carouselElement.dataset.labelClose || '');
     closeBtn.innerHTML = '×';
     closeBtn.onclick = () => {
-      document.body.removeChild(lightbox);
+      if (lightbox.parentNode) lightbox.parentNode.removeChild(lightbox);
       document.body.classList.remove('modal-open');
+      document.removeEventListener('keydown', escHandler);
     };
     
     imageContainer.appendChild(mediaElement);
@@ -386,7 +495,7 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
           <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       `;
-      lightboxPrev.setAttribute('aria-label', 'Previous image');
+      lightboxPrev.setAttribute('aria-label', carouselElement.dataset.labelPrev || '');
       
       const lightboxNext = document.createElement('button');
       lightboxNext.className = 'lightbox-nav lightbox-next';
@@ -395,7 +504,7 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
           <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       `;
-      lightboxNext.setAttribute('aria-label', 'Next image');
+      lightboxNext.setAttribute('aria-label', carouselElement.dataset.labelNext || '');
       
       lightbox.appendChild(lightboxPrev);
       lightbox.appendChild(lightboxNext);
@@ -542,7 +651,7 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     // ESC key to close
     const escHandler = (e) => {
       if (e.key === 'Escape') {
-        document.body.removeChild(lightbox);
+        if (lightbox.parentNode) lightbox.parentNode.removeChild(lightbox);
         document.body.classList.remove('modal-open');
         document.removeEventListener('keydown', escHandler);
       }
@@ -580,11 +689,6 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     if (!media) return;
     
     media.addEventListener('mousedown', (e) => {
-      // Don't interfere with video controls
-      if (media.tagName === 'VIDEO' && e.target.closest('video')) {
-        return; // Let video controls handle this
-      }
-      
       if (currentZoom > 1 && index === currentIndex) {
         isDragging = true;
         startX = e.clientX - translateX;
@@ -623,11 +727,6 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     let touchStartY = 0;
     
     media.addEventListener('touchstart', (e) => {
-      // Don't interfere with video controls
-      if (media.tagName === 'VIDEO') {
-        return; // Let video controls handle this
-      }
-      
       if (currentZoom > 1 && index === currentIndex && e.touches.length === 1) {
         isDragging = true;
         const touch = e.touches[0];
@@ -656,11 +755,6 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
     // Double-tap to zoom on mobile (but not for videos)
     let lastTap = 0;
     media.addEventListener('touchend', (e) => {
-      // Don't interfere with video controls
-      if (media.tagName === 'VIDEO') {
-        return; // Let video controls handle this
-      }
-      
       if (index === currentIndex) {
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTap;
@@ -700,28 +794,6 @@ window.initializeCarousel = window.initializeCarousel || function(carouselElemen
   function handleSwipe() {
     if (touchEndX < touchStartX - 50) nextSlide(); // Swipe left
     if (touchEndX > touchStartX + 50) prevSlide(); // Swipe right
-  }
-  
-  // Auto-play (optional) - only for non-modal carousels
-  let autoplayInterval;
-  const autoplayDelay = 5000; // 5 seconds
-  const isInModal = carouselElement.closest('.modal-overlay') !== null;
-  
-  if (!isInModal) {
-    function startAutoplay() {
-      autoplayInterval = setInterval(nextSlide, autoplayDelay);
-    }
-    
-    function stopAutoplay() {
-      clearInterval(autoplayInterval);
-    }
-    
-    // Start autoplay, pause on hover
-    carouselElement.addEventListener('mouseenter', stopAutoplay);
-    carouselElement.addEventListener('mouseleave', startAutoplay);
-    
-    // Initialize autoplay
-    startAutoplay();
   }
   
   // Initialize

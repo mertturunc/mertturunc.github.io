@@ -1,0 +1,21 @@
+---
+layout: default
+title: 404
+permalink: /404.html
+sitemap: false
+noindex: true
+---
+{% include language-utils.html %}
+{% include site-nav.html %}
+
+<div class="post">
+  <h1>404</h1>
+  <p>{{ t.general.not_found }}</p>
+  <p>
+    {% if current_lang == 'en' %}
+    <a href="{{ '/en/' | relative_url }}">{{ t.general.home }}</a>
+    {% else %}
+    <a href="{{ '/' | relative_url }}">{{ t.general.home }}</a>
+    {% endif %}
+  </p>
+</div>
