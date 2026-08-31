@@ -6,7 +6,6 @@ const matter = require('gray-matter');
 const sharp = require('sharp');
 const { Resvg } = require('@resvg/resvg-js');
 
-// CLI args
 function getArgValue(name) {
   const pref = `--${name}=`;
   const found = process.argv.find(arg => arg.startsWith(pref));
@@ -18,17 +17,37 @@ const requestedFormat = ['png', 'jpg', 'jpeg', 'svg'].includes(requestedFormatRa
   ? requestedFormatRaw
   : 'png';
 
-// Determine output directories
+const WIDTH = 1200;
+const HEIGHT = 630;
+const MAP_H = HEIGHT;
+const COLS = 240;
+const ROWS = 126;
+const CELL_X = WIDTH / COLS;
+const CELL_Y = MAP_H / ROWS;
+
+const COLOR = {
+  paper: '#282828',
+  well: '#3c3836',
+  hard: '#1d2021',
+  ink: '#ebdbb2',
+  muted: '#a89984',
+  walnut: '#504945',
+  straw: '#d5c4a1',
+  accent: '#fe8019'
+};
+
+const FONT_SANS = 'IBM Plex Sans, ui-sans-serif, sans-serif';
+const FONT_MONO = 'IBM Plex Mono, ui-monospace, monospace';
+
 const repoRoot = path.join(__dirname, '../../');
+const FONT_DIR = path.join(repoRoot, 'fonts');
 const siteDir = path.join(repoRoot, '_site');
+const sourcePlaceholdersDir = path.join(repoRoot, 'placeholders');
 const sitePlaceholdersDir = path.join(siteDir, 'placeholders');
 
-// Ensure source directory exists; also ensure _site/placeholders if _site exists (e.g., in CI workflows)
 function ensureDir(dirPath) {
   try {
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-    }
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
     return true;
   } catch (error) {
     console.error(`Error ensuring directory ${dirPath}: ${error.message}`);
@@ -36,22 +55,508 @@ function ensureDir(dirPath) {
   }
 }
 
-// Always target _site/placeholders only
+ensureDir(sourcePlaceholdersDir);
 ensureDir(siteDir);
 ensureDir(sitePlaceholdersDir);
 
-// Helper to write output to all active destinations
+function hashString(s) {
+  let h = 2166136261;
+  for (let i = 0; i < String(s).length; i++) {
+    h ^= String(s).charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function rand() {
+    a += 0x6D2B79F5;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function smoothstep(t) {
+  return t * t * (3 - 2 * t);
+}
+
+function valueNoise2(ix, iy, seed) {
+  const n = Math.imul(ix + seed, 374761393) ^ Math.imul(iy + seed * 3, 668265263);
+  return ((n ^ (n >>> 13)) >>> 0) / 4294967296;
+}
+
+function noise2(x, y, seed) {
+  const x0 = Math.floor(x);
+  const y0 = Math.floor(y);
+  const fx = smoothstep(x - x0);
+  const fy = smoothstep(y - y0);
+  const v00 = valueNoise2(x0, y0, seed);
+  const v10 = valueNoise2(x0 + 1, y0, seed);
+  const v01 = valueNoise2(x0, y0 + 1, seed);
+  const v11 = valueNoise2(x0 + 1, y0 + 1, seed);
+  return lerp(lerp(v00, v10, fx), lerp(v01, v11, fx), fy);
+}
+
+function fbm(x, y, seed) {
+  let sum = 0;
+  let amp = 1;
+  let freq = 1;
+  let norm = 0;
+  for (let o = 0; o < 5; o++) {
+    sum += (noise2(x * freq, y * freq, seed + o * 19) * 2 - 1) * amp;
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2.05;
+  }
+  return sum / norm;
+}
+
+// Quilez nested domain warp: f(p + fbm(p + fbm(p)))
+function warpedHeight(nx, ny, seed) {
+  const px = nx * 3.1;
+  const py = ny * 2.35;
+  const q0 = fbm(px, py, seed);
+  const q1 = fbm(px + 5.2, py + 1.3, seed + 7);
+  const r0 = fbm(px + 4 * q0 + 1.7, py + 4 * q1 + 9.2, seed + 13);
+  const r1 = fbm(px + 4 * q0 + 8.3, py + 4 * q1 + 2.8, seed + 19);
+  const h = fbm(px + 4 * r0, py + 4 * r1, seed + 23);
+  const ridge = 1 - Math.abs(fbm(px * 0.7, py * 0.7, seed + 31));
+  return h * 0.82 + (ridge * 2 - 1) * 0.18;
+}
+
+function hexRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function mixRgb(a, b, t) {
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t)
+  ];
+}
+
+function escapeXml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function wrapLines(text, maxChars, maxLines) {
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length <= maxChars || !current) {
+      current = next;
+      continue;
+    }
+    lines.push(current);
+    current = word;
+    if (lines.length === maxLines) {
+      current = '';
+      break;
+    }
+  }
+  if (current && lines.length < maxLines) lines.push(current);
+  if (!lines.length) return [String(text || '')];
+  const consumed = lines.join(' ');
+  if (consumed.length < words.join(' ').length) {
+    lines[lines.length - 1] = lines[lines.length - 1].replace(/[.,;:\s]+$/, '') + '…';
+  }
+  return lines;
+}
+
+function buildHeight(seed) {
+  const grid = [];
+  let min = Infinity;
+  let max = -Infinity;
+  for (let y = 0; y <= ROWS; y++) {
+    grid[y] = [];
+    for (let x = 0; x <= COLS; x++) {
+      const h = warpedHeight(x / COLS, y / ROWS, seed);
+      grid[y][x] = h;
+      min = Math.min(min, h);
+      max = Math.max(max, h);
+    }
+  }
+  const span = max - min || 1;
+  for (let y = 0; y <= ROWS; y++) {
+    for (let x = 0; x <= COLS; x++) {
+      grid[y][x] = (grid[y][x] - min) / span;
+    }
+  }
+  return grid;
+}
+
+function sampleGrid(grid, fx, fy) {
+  const x = Math.max(0, Math.min(COLS, fx));
+  const y = Math.max(0, Math.min(ROWS, fy));
+  const x0 = Math.floor(x);
+  const y0 = Math.floor(y);
+  const x1 = Math.min(x0 + 1, COLS);
+  const y1 = Math.min(y0 + 1, ROWS);
+  const tx = x - x0;
+  const ty = y - y0;
+  return lerp(
+    lerp(grid[y0][x0], grid[y0][x1], tx),
+    lerp(grid[y1][x0], grid[y1][x1], tx),
+    ty
+  );
+}
+
+function cell(grid, x, y) {
+  return grid[Math.max(0, Math.min(ROWS, y))][Math.max(0, Math.min(COLS, x))];
+}
+
+function buildShade(grid) {
+  const exag = 22;
+  const alt = 45 * Math.PI / 180;
+  const az = 315 * Math.PI / 180;
+  const lx = Math.cos(alt) * Math.sin(az);
+  const ly = Math.cos(alt) * Math.cos(az);
+  const lz = Math.sin(alt);
+  const shade = [];
+  for (let y = 0; y <= ROWS; y++) {
+    shade[y] = [];
+    for (let x = 0; x <= COLS; x++) {
+      const a = cell(grid, x - 1, y - 1);
+      const b = cell(grid, x, y - 1);
+      const c = cell(grid, x + 1, y - 1);
+      const d = cell(grid, x - 1, y);
+      const f = cell(grid, x + 1, y);
+      const g = cell(grid, x - 1, y + 1);
+      const h = cell(grid, x, y + 1);
+      const i = cell(grid, x + 1, y + 1);
+      const dzdx = ((c + 2 * f + i) - (a + 2 * d + g)) / 8 * exag;
+      const dzdy = ((g + 2 * h + i) - (a + 2 * b + c)) / 8 * exag;
+      const nx = -dzdx;
+      const ny = -dzdy;
+      const nz = 1;
+      const len = Math.hypot(nx, ny, nz) || 1;
+      shade[y][x] = Math.max(0, (nx * lx + ny * ly + nz * lz) / len);
+    }
+  }
+  return shade;
+}
+
+async function renderReliefPng(height, shade) {
+  const paper = hexRgb(COLOR.paper);
+  const hard = hexRgb(COLOR.hard);
+  const straw = hexRgb(COLOR.straw);
+  const walnut = hexRgb(COLOR.walnut);
+  const buf = Buffer.alloc(WIDTH * MAP_H * 3);
+  for (let py = 0; py < MAP_H; py++) {
+    for (let px = 0; px < WIDTH; px++) {
+      const gx = px / CELL_X;
+      const gy = py / CELL_Y;
+      const h = sampleGrid(height, gx, gy);
+      const s = sampleGrid(shade, gx, gy);
+      let rgb = mixRgb(paper, hard, (1 - s) * 0.72 + (1 - h) * 0.18);
+      rgb = mixRgb(rgb, straw, s * 0.26);
+      rgb = mixRgb(rgb, walnut, h * 0.1);
+      const tooth = ((Math.imul(px * 374761393 ^ py * 668265263, 1597334677) >>> 0) / 4294967296 - 0.5) * 9;
+      const dusk = smoothstep(Math.max(0, (py - (MAP_H - 220)) / 220)) * 0.42;
+      rgb = mixRgb(rgb, hard, dusk);
+      const i = (py * WIDTH + px) * 3;
+      buf[i] = Math.max(0, Math.min(255, rgb[0] + tooth));
+      buf[i + 1] = Math.max(0, Math.min(255, rgb[1] + tooth));
+      buf[i + 2] = Math.max(0, Math.min(255, rgb[2] + tooth * 0.85));
+    }
+  }
+  return sharp(buf, { raw: { width: WIDTH, height: MAP_H, channels: 3 } }).png().toBuffer();
+}
+
+function marchingSegments(grid, level) {
+  const segs = [];
+  const interp = (ax, ay, av, bx, by, bv) => {
+    const t = Math.abs(bv - av) < 1e-6 ? 0.5 : (level - av) / (bv - av);
+    return [lerp(ax, bx, t), lerp(ay, by, t)];
+  };
+
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const x0 = x * CELL_X;
+      const y0 = y * CELL_Y;
+      const x1 = x0 + CELL_X;
+      const y1 = y0 + CELL_Y;
+      const tl = grid[y][x];
+      const tr = grid[y][x + 1];
+      const br = grid[y + 1][x + 1];
+      const bl = grid[y + 1][x];
+      const idx =
+        (tl >= level ? 8 : 0) |
+        (tr >= level ? 4 : 0) |
+        (br >= level ? 2 : 0) |
+        (bl >= level ? 1 : 0);
+      if (idx === 0 || idx === 15) continue;
+
+      const top = () => interp(x0, y0, tl, x1, y0, tr);
+      const right = () => interp(x1, y0, tr, x1, y1, br);
+      const bottom = () => interp(x0, y1, bl, x1, y1, br);
+      const left = () => interp(x0, y0, tl, x0, y1, bl);
+
+      const pair = (a, b) => segs.push([a(), b()]);
+      switch (idx) {
+        case 1: case 14: pair(left, bottom); break;
+        case 2: case 13: pair(bottom, right); break;
+        case 3: case 12: pair(left, right); break;
+        case 4: case 11: pair(top, right); break;
+        case 6: case 9: pair(top, bottom); break;
+        case 7: case 8: pair(left, top); break;
+        case 5:
+          pair(left, top);
+          pair(bottom, right);
+          break;
+        case 10:
+          pair(left, bottom);
+          pair(top, right);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  return segs;
+}
+
+function keyPoint(p) {
+  return `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+}
+
+function stitch(segments) {
+  const unused = segments.map(([a, b]) => ({ a, b, used: false }));
+  const buckets = new Map();
+  unused.forEach((seg, i) => {
+    const ka = keyPoint(seg.a);
+    const kb = keyPoint(seg.b);
+    if (!buckets.has(ka)) buckets.set(ka, []);
+    if (!buckets.has(kb)) buckets.set(kb, []);
+    buckets.get(ka).push(i);
+    buckets.get(kb).push(i);
+  });
+
+  function takeFrom(point) {
+    const list = buckets.get(keyPoint(point));
+    if (!list) return null;
+    for (const i of list) {
+      const seg = unused[i];
+      if (seg.used) continue;
+      if (keyPoint(seg.a) === keyPoint(point)) {
+        seg.used = true;
+        return seg.b;
+      }
+      if (keyPoint(seg.b) === keyPoint(point)) {
+        seg.used = true;
+        return seg.a;
+      }
+    }
+    return null;
+  }
+
+  const paths = [];
+  for (const start of unused) {
+    if (start.used) continue;
+    start.used = true;
+    const pts = [start.a, start.b];
+    let guard = 0;
+    while (guard++ < 40000) {
+      const next = takeFrom(pts[pts.length - 1]);
+      if (!next) break;
+      pts.push(next);
+    }
+    paths.push(pts);
+  }
+  return paths;
+}
+
+function chaikin(pts, iterations) {
+  let out = pts;
+  for (let n = 0; n < iterations; n++) {
+    if (out.length < 3) break;
+    const next = [out[0]];
+    for (let i = 0; i < out.length - 1; i++) {
+      const a = out[i];
+      const b = out[i + 1];
+      next.push([0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]]);
+      next.push([0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]]);
+    }
+    next.push(out[out.length - 1]);
+    out = next;
+  }
+  return out;
+}
+
+function pathD(pts) {
+  if (!pts.length) return '';
+  let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    d += ` L ${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)}`;
+  }
+  return d;
+}
+
+function traceStream(grid, startX, startY) {
+  const pts = [];
+  let x = startX;
+  let y = startY;
+  const seen = new Set();
+  for (let step = 0; step < 500; step++) {
+    pts.push([x * CELL_X, y * CELL_Y]);
+    const key = `${x},${y}`;
+    if (seen.has(key)) break;
+    seen.add(key);
+    let bestX = x;
+    let bestY = y;
+    let bestH = grid[y][x];
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx > COLS || ny > ROWS) continue;
+        if (grid[ny][nx] < bestH) {
+          bestH = grid[ny][nx];
+          bestX = nx;
+          bestY = ny;
+        }
+      }
+    }
+    if (bestX === x && bestY === y) break;
+    x = bestX;
+    y = bestY;
+  }
+  return pts;
+}
+
+function pickStreams(grid, seed) {
+  const rand = mulberry32(seed + 99);
+  const candidates = [];
+  for (let y = 4; y < ROWS - 4; y += 3) {
+    for (let x = 4; x < COLS - 4; x += 3) {
+      if (grid[y][x] > 0.72) candidates.push([x, y, grid[y][x]]);
+    }
+  }
+  candidates.sort((a, b) => b[2] - a[2]);
+  const starts = [];
+  for (const c of candidates) {
+    if (starts.length >= 2) break;
+    if (starts.every(s => Math.hypot(s[0] - c[0], s[1] - c[1]) > 28)) {
+      starts.push(c);
+    }
+  }
+  while (starts.length < 2) {
+    starts.push([
+      20 + Math.floor(rand() * (COLS - 40)),
+      12 + Math.floor(rand() * (ROWS - 24))
+    ]);
+  }
+  return starts.map(([x, y]) => chaikin(traceStream(grid, x, y), 2)).filter(p => p.length > 8);
+}
+
+async function generatePlaceholderSVG(post) {
+  try {
+    const title = (post && post.title) ? String(post.title) : 'buralarda iken';
+    const seed = hashString(title);
+    const rand = mulberry32(seed);
+    const height = buildHeight(seed);
+    const shade = buildShade(height);
+    const reliefPng = await renderReliefPng(height, shade);
+    const reliefHref = `data:image/png;base64,${reliefPng.toString('base64')}`;
+
+    const levelCount = 11;
+    const contourPaths = [];
+    for (let i = 1; i < levelCount; i++) {
+      const level = i / levelCount;
+      const isIndex = i % 5 === 0;
+      const paths = stitch(marchingSegments(height, level));
+      const color = isIndex ? COLOR.ink : COLOR.muted;
+      const width = isIndex ? 1.8 : 0.7;
+      const opacity = isIndex ? 0.48 : 0.22;
+      paths.forEach(raw => {
+        if (raw.length < 4) return;
+        const pts = chaikin(raw, 2);
+        contourPaths.push(
+          `<path d="${pathD(pts)}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}"/>`
+        );
+      });
+    }
+
+    const accentLevel = 0.38 + rand() * 0.18;
+    const accentPath = stitch(marchingSegments(height, accentLevel))
+      .filter(pts => pts.length > 16)
+      .sort((a, b) => b.length - a.length)[0];
+    if (accentPath) {
+      contourPaths.push(
+        `<path d="${pathD(chaikin(accentPath, 2))}" fill="none" stroke="${COLOR.accent}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>`
+      );
+    }
+
+    const streams = pickStreams(height, seed).map(pts => (
+      `<path d="${pathD(pts)}" fill="none" stroke="${COLOR.ink}" stroke-width="6" stroke-linecap="round" opacity="0.1"/>`
+    ));
+
+    const compassX = 1118;
+    const compassY = 568;
+    const compass = `
+      <g fill="none" stroke="${COLOR.ink}" stroke-width="1.2">
+        <circle cx="${compassX}" cy="${compassY}" r="22" opacity="0.4"/>
+        <line x1="${compassX}" y1="${compassY - 22}" x2="${compassX}" y2="${compassY + 22}" opacity="0.32"/>
+        <line x1="${compassX - 22}" y1="${compassY}" x2="${compassX + 22}" y2="${compassY}" opacity="0.32"/>
+      </g>
+      <polygon points="${compassX},${compassY - 18} ${compassX - 5},${compassY - 2} ${compassX + 5},${compassY - 2}" fill="${COLOR.accent}"/>
+      <text x="${compassX}" y="${compassY - 28}" text-anchor="middle" fill="${COLOR.accent}" font-size="16" font-family="${FONT_MONO}">n</text>
+    `;
+
+    const dateLabel = post && post.date ? escapeXml(post.date) : '';
+    const mark = escapeXml(post && post.siteTitle ? post.siteTitle : 'buralarda iken');
+    const postTitle = String(title || '').toLowerCase();
+    const showPostTitle = postTitle && postTitle !== 'buralarda iken';
+    const lines = wrapLines(postTitle, 28, 2);
+    const titleX = 48;
+    const titleTs = lines.map((line, i) => (
+      `<tspan x="${titleX}" dy="${i === 0 ? 0 : 68}">${escapeXml(line)}</tspan>`
+    )).join('');
+    const titleY = lines.length > 1 ? 512 : 580;
+    const typeStroke = `stroke="${COLOR.hard}" stroke-width="10" stroke-linejoin="round" paint-order="stroke fill"`;
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <image href="${reliefHref}" xlink:href="${reliefHref}" width="${WIDTH}" height="${MAP_H}" preserveAspectRatio="none"/>
+  ${streams.join('\n  ')}
+  ${contourPaths.join('\n  ')}
+  ${compass}
+  <text x="48" y="72" fill="${COLOR.ink}" font-size="48" font-weight="700" font-family="${FONT_SANS}" ${typeStroke}>${mark}</text>
+  ${dateLabel ? `<text x="1152" y="72" text-anchor="end" fill="${COLOR.straw}" font-size="48" font-weight="700" font-family="${FONT_SANS}" ${typeStroke}>${dateLabel}</text>` : ''}
+  ${showPostTitle ? `<text x="${titleX}" y="${titleY}" fill="${COLOR.ink}" font-size="60" font-weight="700" font-family="${FONT_SANS}" ${typeStroke}>${titleTs}</text>` : ''}
+</svg>`;
+  } catch (error) {
+    console.error(`Error generating SVG for ${post && post.title ? post.title : 'unknown post'}: ${error.message}`);
+    return null;
+  }
+}
+
 async function writeOutputFiles(baseName, svgString, rasterBuffer, extension) {
   const outputs = [];
-  const fileName = `${baseName}.${extension}`;
-  const dests = [path.join(sitePlaceholdersDir, fileName)];
+  const dests = [
+    path.join(sourcePlaceholdersDir, `${baseName}.${extension}`),
+    path.join(sitePlaceholdersDir, `${baseName}.${extension}`)
+  ];
   for (const dest of dests) {
     try {
-      if (extension === 'svg') {
-        fs.writeFileSync(dest, svgString);
-      } else if (Buffer.isBuffer(rasterBuffer)) {
-        fs.writeFileSync(dest, rasterBuffer);
-      }
+      if (extension === 'svg') fs.writeFileSync(dest, svgString);
+      else if (Buffer.isBuffer(rasterBuffer)) fs.writeFileSync(dest, rasterBuffer);
       outputs.push(dest);
     } catch (err) {
       console.error(`Failed writing ${dest}: ${err.message}`);
@@ -60,502 +565,139 @@ async function writeOutputFiles(baseName, svgString, rasterBuffer, extension) {
   return outputs;
 }
 
-// Function to generate procedural topographic SVG and return as string
-function generatePlaceholderSVG(post) {
-  try {
-    const title = post && post.title ? post.title : 'Blog Post';
-    
-    // Generate a hash from the title for consistent colors
-    const hash = title.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    
-    // Generate colors based on title hash - using more traditional topographic map colors
-    const baseHue = Math.abs(hash) % 60; // Limit hue to earthy tones (0-60 degrees: red to yellow)
-    const bgColor = `hsl(${baseHue + 40}, 30%, 95%)`; // Very light cream/beige background
-    const gridColor = `hsl(${baseHue + 40}, 10%, 85%)`; // Subtle grid
-    const contourColor = `hsl(${baseHue}, 40%, 35%)`; // Brown contours
-    const indexContourColor = `hsl(${baseHue}, 60%, 25%)`; // Darker brown for index contours
-    const waterColor = `hsl(200, 70%, 75%)`; // Blue for water features
-    const roadColor = `hsl(0, 70%, 45%)`; // Red for roads
-
-    // Generate elevation contour lines - more realistic topographic style
-    const contours = [];
-    const elevationLevels = 15 + (Math.abs(hash) % 10); // Number of elevation levels
-    const contourSpacing = 8; // Spacing between contour lines (elevation step)
-    
-    // Create a 2D elevation map using Perlin-like noise
-    const mapWidth = 1200;
-    const mapHeight = 630;
-    const elevationMap = [];
-    
-    // Initialize the elevation map with base values
-    for (let y = 0; y < mapHeight; y++) {
-      elevationMap[y] = [];
-      for (let x = 0; x < mapWidth; x++) {
-        // Base elevation using multiple sine waves for natural-looking terrain
-        let elevation = 0;
-        
-        // Use multiple frequencies for natural terrain
-        const frequencies = [0.005, 0.01, 0.02, 0.04];
-        const amplitudes = [100, 50, 25, 12.5];
-        
-        for (let f = 0; f < frequencies.length; f++) {
-          const freq = frequencies[f];
-          const amp = amplitudes[f];
-          elevation += Math.sin(x * freq + hash * 0.1) * Math.cos(y * freq + hash * 0.2) * amp;
-        }
-        
-        // Add some randomized terrain features based on hash
-        if ((x + y + hash) % 100 < 10) {
-          elevation += ((x + y + hash) % 100) * 2;
-        }
-        
-        elevationMap[y][x] = elevation;
-      }
+async function rasterize(svgString) {
+  const resvg = new Resvg(svgString, {
+    fitTo: { mode: 'width', value: WIDTH },
+    background: COLOR.paper,
+    font: {
+      fontDirs: [FONT_DIR],
+      defaultFontFamily: 'IBM Plex Sans',
+      sansSerifFamily: 'IBM Plex Sans',
+      monospaceFamily: 'IBM Plex Mono',
+      loadSystemFonts: true
     }
-    
-    // Generate contour lines for each elevation level
-    for (let level = 0; level < elevationLevels; level++) {
-      const elevationThreshold = level * contourSpacing;
-      const isIndex = level % 5 === 0; // Every 5th contour is an index contour
-      const strokeWidth = isIndex ? 2 : 0.8;
-      const color = isIndex ? indexContourColor : contourColor;
-      
-      // Find contour segments
-      const segments = [];
-      
-      // Simplified contour finding algorithm - horizontal scan
-      for (let y = 0; y < mapHeight; y += 4) { // Step by 4 for performance
-        let inSegment = false;
-        let currentSegment = '';
-        
-        for (let x = 0; x < mapWidth; x += 4) { // Step by 4 for performance
-          const elevation = elevationMap[y][x];
-          
-          if (Math.abs(elevation - elevationThreshold) < 2) {
-            // We're on a contour line
-            if (!inSegment) {
-              inSegment = true;
-              currentSegment = `M ${x} ${y}`;
-            } else {
-              currentSegment += ` L ${x} ${y}`;
-            }
-          } else if (inSegment) {
-            // End of a segment
-            inSegment = false;
-            segments.push(currentSegment);
-            currentSegment = '';
-          }
-        }
-        
-        // Don't forget the last segment in a row
-        if (inSegment) {
-          segments.push(currentSegment);
-        }
-      }
-      
-      // Add all segments for this contour level
-      segments.forEach(segment => {
-        contours.push(`<path d="${segment}" stroke="${color}" stroke-width="${strokeWidth}" fill="none"/>`);
+  });
+  const pngData = resvg.render();
+  const basePng = pngData.asPng();
+  let image = sharp(basePng).resize(WIDTH, HEIGHT, { fit: 'cover' });
+  if (requestedFormat === 'png') {
+    return image.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
+  }
+  return image.flatten({ background: COLOR.paper }).jpeg({ quality: 86, mozjpeg: true }).toBuffer();
+}
+
+function slugFromUrl(url) {
+  const parts = String(url || '').split('/').filter(Boolean);
+  return parts[parts.length - 1] || parts[parts.length - 2] || null;
+}
+
+function dateFromFilename(fileBase) {
+  const match = fileBase.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
+
+function collectSlugs(frontMatter, postFile) {
+  const slugSet = new Set();
+  const addSlug = s => { if (s && typeof s === 'string') slugSet.add(s.toLowerCase()); };
+  const lang = frontMatter.lang || 'tr';
+
+  if (frontMatter.translations) {
+    try {
+      const translations = Array.isArray(frontMatter.translations)
+        ? frontMatter.translations
+        : JSON.parse(frontMatter.translations);
+      translations.forEach(t => {
+        if (t && (t.lang === lang || !t.lang)) addSlug(slugFromUrl(t.url));
       });
+    } catch (parseError) {
+      console.warn(`Error parsing translations for ${postFile}: ${parseError.message}`);
     }
-  
-    // Generate grid (UTM/coordinate grid common in topo maps)
-    const gridLines = [];
-    const gridSpacing = 100; // Wider spacing for topo map look
-    
-    // Vertical grid lines
-    for (let x = 0; x <= 1200; x += gridSpacing) {
-      gridLines.push(`<line x1="${x}" y1="0" x2="${x}" y2="630" stroke="${gridColor}" stroke-width="0.5" opacity="0.4"/>`);
-    }
-    
-    // Horizontal grid lines
-    for (let y = 0; y <= 630; y += gridSpacing) {
-      gridLines.push(`<line x1="0" y1="${y}" x2="1200" y2="${y}" stroke="${gridColor}" stroke-width="0.5" opacity="0.4"/>`);
-    }
-    
-    // Add coordinate labels at grid intersections
-    const labels = [];
-    for (let x = gridSpacing; x < 1200; x += gridSpacing) {
-      for (let y = gridSpacing; y < 630; y += gridSpacing) {
-        // Generate coordinate-like labels based on position and hash
-        const eastingLabel = Math.floor(((x / 1200) * 5) + (hash % 30)) * 100;
-        const northingLabel = Math.floor(((y / 630) * 5) + ((hash >> 8) % 40)) * 100;
-        
-        // Only add labels at some intersections to avoid clutter
-        if ((x + y + hash) % 300 < 100) {
-          labels.push(`<text x="${x + 5}" y="${y - 5}" fill="${indexContourColor}" font-size="8" font-family="monospace">${eastingLabel}E ${northingLabel}N</text>`);
-        }
-      }
-    }
-  
-    // Generate feature lines (like rivers, roads, trails)
-    const features = [];
-    
-    // Generate a river (blue, meandering line)
-    const riverSeed = hash + 137;
-    let riverPath = `M ${riverSeed % 300} 0`; // Start from top edge
-    let riverX = riverSeed % 300;
-    let riverY = 0;
-    
-    // Create a meandering river path
-    while (riverY < 630) {
-      // Rivers tend to flow downward with some meandering
-      riverY += 10 + (Math.sin(riverY * 0.05 + riverSeed) * 5);
-      riverX += Math.sin(riverY * 0.03 + riverSeed) * 15;
-      
-      // Keep river within bounds
-      riverX = Math.max(0, Math.min(1200, riverX));
-      
-      riverPath += ` L ${riverX} ${riverY}`;
-      
-      // Occasionally create a tributary
-      if (riverY % 100 < 10 && riverY > 100) {
-        const tributaryLength = 50 + (riverSeed % 100);
-        let tribX = riverX;
-        let tribY = riverY;
-        let tributaryPath = `M ${tribX} ${tribY}`;
-        
-        for (let t = 0; t < tributaryLength; t += 10) {
-          tribX += (Math.sin(t * 0.1 + riverSeed) * 10) - 5;
-          tribY += (Math.sin(t * 0.2 + riverSeed) * 6) - 3;
-          tributaryPath += ` L ${tribX} ${tribY}`;
-        }
-        
-        features.push(`<path d="${tributaryPath}" stroke="${waterColor}" stroke-width="1.5" fill="none" opacity="0.7"/>`);
-      }
-    }
-    
-    features.push(`<path d="${riverPath}" stroke="${waterColor}" stroke-width="3" fill="none" opacity="0.8"/>`);
-    
-    // Add a road (red line with consistent style)
-    const roadSeed = hash + 257;
-    let roadPath = `M 0 ${200 + (roadSeed % 200)}`;
-    
-    // Create a winding road that follows terrain somewhat
-    for (let x = 0; x <= 1200; x += 20) {
-      // Roads tend to have smoother curves than rivers
-      const y = 200 + (roadSeed % 200) +
-                Math.sin(x * 0.002 + roadSeed) * 100 +
-                Math.sin(x * 0.0005 + roadSeed * 0.3) * 50;
-      roadPath += ` L ${x} ${y}`;
-      
-      // Occasionally add small side roads
-      if (x % 200 < 20 && x > 100 && x < 1000) {
-        const sideRoadLength = 30 + (roadSeed % 50);
-        const angle = (roadSeed + x) % 360 * (Math.PI / 180);
-        let sideX = x;
-        let sideY = y;
-        let sideRoadPath = `M ${sideX} ${sideY}`;
-        
-        for (let s = 0; s < sideRoadLength; s += 5) {
-          sideX += Math.cos(angle) * 5;
-          sideY += Math.sin(angle) * 5;
-          sideRoadPath += ` L ${sideX} ${sideY}`;
-        }
-        
-        features.push(`<path d="${sideRoadPath}" stroke="${roadColor}" stroke-width="1.5" fill="none" stroke-dasharray="5,2" opacity="0.7"/>`);
-      }
-    }
-    
-    features.push(`<path d="${roadPath}" stroke="${roadColor}" stroke-width="2.5" fill="none" opacity="0.8"/>`);
-    
-    // Add hiking trails (dotted lines)
-    const trailSeed = hash + 373;
-    let trailPath = `M ${trailSeed % 1000} 0`;
-    
-    // Create a winding trail
-    for (let y = 0; y <= 630; y += 15) {
-      const x = (trailSeed % 1000) +
-                Math.sin(y * 0.01 + trailSeed) * 100 +
-                Math.sin(y * 0.03 + trailSeed * 0.7) * 50;
-      trailPath += ` L ${x} ${y}`;
-    }
-    
-    features.push(`<path d="${trailPath}" stroke="${indexContourColor}" stroke-width="1" fill="none" stroke-dasharray="2,4" opacity="0.7"/>`);
-  
-    // Add topographic map symbols
-    const symbols = [];
-    
-    // Add mountain peaks with elevation markers
-    const numPeaks = 2 + (Math.abs(hash) % 3);
-    for (let p = 0; p < numPeaks; p++) {
-      const peakSeed = hash + p * 97;
-      const peakX = 200 + (peakSeed % 800);
-      const peakY = 150 + (peakSeed % 300);
-      
-      // Triangle symbol for peak
-      const triangleSize = 8;
-      const trianglePoints = `${peakX},${peakY-triangleSize} ${peakX-triangleSize},${peakY+triangleSize} ${peakX+triangleSize},${peakY+triangleSize}`;
-      
-      // Generate an elevation number
-      const elevation = 1000 + (peakSeed % 3000);
-      
-      symbols.push(`<polygon points="${trianglePoints}" fill="${indexContourColor}" stroke="none"/>`);
-      symbols.push(`<text x="${peakX + 10}" y="${peakY}" fill="${indexContourColor}" font-size="8" font-family="monospace">${elevation}m</text>`);
-    }
-    
-    // Add some vegetation symbols
-    const numVegPatches = 5 + (Math.abs(hash) % 10);
-    for (let v = 0; v < numVegPatches; v++) {
-      const vegSeed = hash + v * 123;
-      const centerX = 100 + (vegSeed % 1000);
-      const centerY = 100 + (vegSeed % 430);
-      const patchSize = 30 + (vegSeed % 50);
-      
-      // Create a cluster of small circles representing vegetation
-      for (let i = 0; i < 10; i++) {
-        const offsetX = (vegSeed + i * 7) % patchSize - (patchSize / 2);
-        const offsetY = (vegSeed + i * 13) % patchSize - (patchSize / 2);
-        const dotSize = 1 + (i % 2);
-        
-        symbols.push(`<circle cx="${centerX + offsetX}" cy="${centerY + offsetY}" r="${dotSize}" fill="green" opacity="0.5"/>`);
-      }
-    }
-    
-    // Add some settlement markers
-    const numSettlements = 1 + (Math.abs(hash) % 3);
-    for (let s = 0; s < numSettlements; s++) {
-      const settleSeed = hash + s * 211;
-      const settleX = 300 + (settleSeed % 600);
-      const settleY = 200 + (settleSeed % 200);
-      
-      // Square symbol for settlement
-      symbols.push(`<rect x="${settleX-4}" y="${settleY-4}" width="8" height="8" fill="${roadColor}" stroke="none"/>`);
-      
-      // Settlement name
-      const settlementNames = ['Hillcrest', 'Riverdale', 'Oakwood', 'Pineville', 'Meadowbrook', 'Lakeview'];
-      const nameIndex = settleSeed % settlementNames.length;
-      
-      symbols.push(`<text x="${settleX + 10}" y="${settleY + 4}" fill="${indexContourColor}" font-size="10" font-family="serif">${settlementNames[nameIndex]}</text>`);
-    }
-    
-    // Add a compass rose
-    const compassX = 1100;
-    const compassY = 550;
-    const compassSize = 40;
-    
-    symbols.push(`<circle cx="${compassX}" cy="${compassY}" r="${compassSize}" fill="none" stroke="${indexContourColor}" stroke-width="1"/>`);
-    symbols.push(`<line x1="${compassX}" y1="${compassY-compassSize}" x2="${compassX}" y2="${compassY+compassSize}" stroke="${indexContourColor}" stroke-width="1"/>`);
-    symbols.push(`<line x1="${compassX-compassSize}" y1="${compassY}" x2="${compassX+compassSize}" y2="${compassY}" stroke="${indexContourColor}" stroke-width="1"/>`);
-    symbols.push(`<text x="${compassX}" y="${compassY-compassSize-5}" text-anchor="middle" fill="${indexContourColor}" font-size="12" font-family="serif">N</text>`);
-    symbols.push(`<text x="${compassX+compassSize+5}" y="${compassY}" text-anchor="start" fill="${indexContourColor}" font-size="12" font-family="serif">E</text>`);
-    symbols.push(`<text x="${compassX}" y="${compassY+compassSize+12}" text-anchor="middle" fill="${indexContourColor}" font-size="12" font-family="serif">S</text>`);
-    symbols.push(`<text x="${compassX-compassSize-5}" y="${compassY}" text-anchor="end" fill="${indexContourColor}" font-size="12" font-family="serif">W</text>`);
-  
-    // Create SVG content with title
-    const mapTitle = post.title || 'Topographic Map';
-    const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="1200" height="630" fill="${bgColor}"/>
-  
-  <!-- Map border -->
-  <rect x="10" y="10" width="1180" height="610" fill="none" stroke="${indexContourColor}" stroke-width="2"/>
-  
-  <!-- Grid -->
-  ${gridLines.join('\n  ')}
-  
-  <!-- Grid labels -->
-  ${labels.join('\n  ')}
-  
-  <!-- Contour lines -->
-  ${contours.join('\n  ')}
-  
-  <!-- Feature lines (rivers, roads, trails) -->
-  ${features.join('\n  ')}
-  
-  <!-- Map symbols -->
-  ${symbols.join('\n  ')}
-  
-  <!-- Title -->
-  <rect x="400" y="20" width="400" height="40" fill="${bgColor}" stroke="${indexContourColor}" stroke-width="1"/>
-  <text x="600" y="45" text-anchor="middle" fill="${indexContourColor}" font-size="16" font-family="serif">${mapTitle}</text>
-  
-  <!-- Scale bar -->
-  <line x1="50" y1="580" x2="250" y2="580" stroke="${indexContourColor}" stroke-width="2"/>
-  <line x1="50" y1="575" x2="50" y2="585" stroke="${indexContourColor}" stroke-width="2"/>
-  <line x1="150" y1="575" x2="150" y2="585" stroke="${indexContourColor}" stroke-width="2"/>
-  <line x1="250" y1="575" x2="250" y2="585" stroke="${indexContourColor}" stroke-width="2"/>
-  <text x="150" y="570" text-anchor="middle" fill="${indexContourColor}" font-size="10" font-family="monospace">5 km</text>
-</svg>`;
-
-    return svg;
-  } catch (error) {
-    console.error(`Error generating SVG for ${post && post.title ? post.title : 'unknown post'}: ${error.message}`);
-    return null;
   }
+
+  const fileBase = postFile.replace(/\.md$/, '');
+  const parts = fileBase.split('-');
+  const noDate = parts.length > 3 ? parts.slice(3).join('-') : fileBase;
+  addSlug(noDate);
+  return slugSet;
 }
 
-// Function to parse front matter
-function parseFrontMatter(content) {
-  if (!content || typeof content !== 'string') {
-    console.warn('Invalid content provided to parseFrontMatter');
-    return {};
+async function emit(baseName, svgString) {
+  if (requestedFormat === 'svg') {
+    await writeOutputFiles(baseName, svgString, null, 'svg');
+    console.log(`Generated ${baseName}.svg`);
+    return;
   }
-
-  const lines = content.split('\n');
-  const frontMatter = {};
-  let inFrontMatter = false;
-  let frontMatterEnd = 0;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    
-    if (line === '---') {
-      if (!inFrontMatter) {
-        inFrontMatter = true;
-      } else {
-        frontMatterEnd = i;
-        break;
-      }
-    } else if (inFrontMatter && line.includes(':')) {
-      try {
-        const [key, ...valueParts] = line.split(':');
-        if (key) {
-          const value = valueParts.join(':').trim().replace(/^["']|["']$/g, '');
-          frontMatter[key.trim()] = value;
-        }
-      } catch (err) {
-        console.warn(`Error parsing front matter line: ${line}`);
-      }
-    }
-  }
-  
-  return frontMatter;
+  const ext = requestedFormat === 'jpeg' ? 'jpg' : requestedFormat;
+  const buffer = await rasterize(svgString);
+  await writeOutputFiles(baseName, null, buffer, ext);
+  console.log(`Generated ${baseName}.${ext}`);
 }
 
-// Function to process blog posts
 async function processBlogPosts() {
-  try {
-    const postsDir = path.join(__dirname, '../../_posts');
-    console.log('Posts directory:', postsDir);
-    
-    if (!fs.existsSync(postsDir)) {
-      console.error('Posts directory does not exist:', postsDir);
-      return;
-    }
-    
-    const posts = fs.readdirSync(postsDir).filter(file => file.endsWith('.md'));
-    console.log(`Found ${posts.length} posts`);
-    
-    for (const postFile of posts) {
+  const postsDir = path.join(repoRoot, '_posts');
+  console.log('Posts directory:', postsDir);
+
+  if (!fs.existsSync(postsDir)) {
+    console.error('Posts directory does not exist:', postsDir);
+    return;
+  }
+
+  const posts = fs.readdirSync(postsDir).filter(file => file.endsWith('.md'));
+  console.log(`Found ${posts.length} posts`);
+
+  const homeSvg = await generatePlaceholderSVG({
+    title: 'buralarda iken',
+    date: null,
+    siteTitle: 'buralarda iken'
+  });
+  if (homeSvg) {
+    await emit('index-placeholder', homeSvg);
+    await emit('home-placeholder', homeSvg);
+  }
+
+  for (const postFile of posts) {
+    try {
+      const postPath = path.join(postsDir, postFile);
+      const postContent = fs.readFileSync(postPath, 'utf8');
+      let frontMatter = {};
       try {
-        console.log(`Processing ${postFile}...`);
-        const postPath = path.join(postsDir, postFile);
-        
-        // Safely read file
-        let postContent;
-        try {
-          postContent = fs.readFileSync(postPath, 'utf8');
-        } catch (readError) {
-          console.error(`Error reading ${postFile}: ${readError.message}`);
-          continue;
-        }
-
-        // Prefer robust front matter parsing via gray-matter
-        let frontMatter = {};
-        try {
-          const parsed = matter(postContent);
-          frontMatter = Object.assign({}, parsed.data || {});
-        } catch (mmErr) {
-          console.warn(`gray-matter failed for ${postFile}, falling back to custom parser: ${mmErr.message}`);
-          frontMatter = parseFrontMatter(postContent);
-        }
-        
-        // Skip if post has a header image
-        if (frontMatter.header) {
-          console.log(`Skipping ${postFile} - has header image`);
-          continue;
-        }
-        
-        // Skip if post has no title
-        if (!frontMatter.title) {
-          console.warn(`Skipping ${postFile} - no title found in front matter`);
-          continue;
-        }
-        
-        // Build a set of all expected slugs (all translations + title + filename without date)
-        const slugSet = new Set();
-        const addSlug = s => { if (s && typeof s === 'string') slugSet.add(s.toLowerCase()); };
-        const slugFromUrl = url => {
-          const parts = String(url || '').split('/').filter(Boolean);
-          return parts[parts.length - 1] || parts[parts.length - 2] || null;
-        };
-        const slugify = txt => String(txt || '')
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .trim();
-
-        // From translations (all langs)
-        if (frontMatter.translations) {
-          try {
-            const translations = Array.isArray(frontMatter.translations)
-              ? frontMatter.translations
-              : JSON.parse(frontMatter.translations);
-            translations.forEach(t => addSlug(slugFromUrl(t && t.url)));
-          } catch (parseError) {
-            console.warn(`Error parsing translations for ${postFile}: ${parseError.message}`);
-          }
-        }
-
-        // From title
-        addSlug(slugify(frontMatter.title));
-
-        // From filename (strip date prefix if present)
-        const fileBase = postFile.replace(/\.md$/, '');
-        const parts = fileBase.split('-');
-        const noDate = parts.length > 3 ? parts.slice(3).join('-') : fileBase;
-        addSlug(noDate);
-
-        const svgString = generatePlaceholderSVG({
-          title: frontMatter.title || postFile,
-          date: frontMatter.date ? new Date(frontMatter.date).toLocaleDateString() : null
-        });
-        if (!svgString) {
-          console.warn(`Skipping ${postFile} - failed to generate SVG string`);
-          continue;
-        }
-
-        // Generate for each slug
-        for (const slug of slugSet) {
-          const baseName = `${slug}-placeholder`;
-          if (requestedFormat === 'svg') {
-            await writeOutputFiles(baseName, svgString, null, 'svg');
-            console.log(`Generated placeholder for ${postFile}: ${baseName}.svg`);
-          } else {
-            try {
-              const resvg = new Resvg(svgString, { fitTo: { mode: 'width', value: 1200 } });
-              const pngData = resvg.render();
-              const basePng = pngData.asPng();
-              let image = sharp(basePng).resize(1200, 630, { fit: 'cover' });
-              let buffer;
-              if (requestedFormat === 'png') {
-                buffer = await image.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
-              } else {
-                buffer = await image.flatten({ background: '#ffffff' }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
-              }
-              await writeOutputFiles(baseName, null, buffer, requestedFormat === 'jpeg' ? 'jpg' : requestedFormat);
-              console.log(`Generated placeholder for ${postFile}: ${baseName}.${requestedFormat === 'jpeg' ? 'jpg' : requestedFormat}`);
-            } catch (rasError) {
-              console.error(`Error rasterizing SVG for ${postFile} (${slug}): ${rasError.message}`);
-            }
-          }
-        }
-      } catch (postError) {
-        console.error(`Error processing post ${postFile}: ${postError.message}`);
+        frontMatter = Object.assign({}, matter(postContent).data || {});
+      } catch (mmErr) {
+        console.warn(`gray-matter failed for ${postFile}: ${mmErr.message}`);
+        continue;
       }
+
+      if (frontMatter.published === false || frontMatter.hidden === true) {
+        console.log(`Skipping ${postFile} - unpublished`);
+        continue;
+      }
+      if (frontMatter.header) {
+        console.log(`Skipping ${postFile} - has header image`);
+        continue;
+      }
+      if (!frontMatter.title) {
+        console.warn(`Skipping ${postFile} - no title`);
+        continue;
+      }
+
+      const fileBase = postFile.replace(/\.md$/, '');
+      const svgString = await generatePlaceholderSVG({
+        title: frontMatter.title,
+        date: dateFromFilename(fileBase),
+        siteTitle: 'buralarda iken'
+      });
+      if (!svgString) continue;
+
+      for (const slug of collectSlugs(frontMatter, postFile)) {
+        await emit(`${slug}-placeholder`, svgString);
+      }
+    } catch (postError) {
+      console.error(`Error processing post ${postFile}: ${postError.message}`);
     }
-  } catch (error) {
-    console.error(`Error in processBlogPosts: ${error.message}`);
   }
 }
 
-// Run the script
 (async () => {
   try {
     await processBlogPosts();

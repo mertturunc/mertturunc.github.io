@@ -2,35 +2,37 @@ name: Generate Placeholder Images
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
     paths:
       - '_posts/**'
-      - '_layouts/**'
+      - '.github/scripts/generate-placeholders.js'
+      - '.github/workflows/generate-placeholders.yml'
+  pull_request:
+    paths:
+      - '_posts/**'
+      - '.github/scripts/generate-placeholders.js'
       - '.github/workflows/generate-placeholders.yml'
 
 jobs:
   generate-placeholders:
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        
+
     - name: Install dependencies
-      run: |
-        npm install
-        
+      run: npm install
+
     - name: Generate placeholder images
+      run: node .github/scripts/generate-placeholders.js
+
+    - name: Confirm output
       run: |
-        node .github/scripts/generate-placeholders.js
-        
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./placeholders
+        test -d _site/placeholders
+        test "$(ls -1 _site/placeholders | wc -l)" -gt 0
+        ls -la _site/placeholders
