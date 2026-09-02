@@ -1,0 +1,134 @@
+---
+layout: null
+title: slit scan
+tool: slit-scan
+description: turn a video sample into a slit-scan image — a line through time.
+permalink: /tools/slit-scan/
+---
+{% include language-utils.html %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>slit scan @ {{ t.site_title }}</title>
+<meta name="description" content="{{ page.description }}" />
+{% include tool-head.html %}
+<link rel="stylesheet" href="{{ '/tools/slit-scan/assets/css/styles.css' | relative_url }}" />
+</head>
+<body>
+{% include tool-chrome.html %}
+  <div class="app">
+    <aside class="sidebar">
+      <h1 class="tool-title" id="main" data-i18n="title">slit scan</h1>
+      <p class="tool-lede" data-i18n="lede">a line through video · turned into a picture of time</p>
+
+      <section>
+        <h2 data-i18n="source">source</h2>
+        <label class="filebtn" data-dropzone>
+          <input type="file" accept="video/*,.mp4,.m4v,.webm,.mov,.mkv,.avi,.ogv,.ogg,.3gp,.3g2,.wmv,.flv,.ts,.mts,.m2ts,.asf,.mpg,.mpeg" data-file />
+          <span data-filelabel data-i18n="drop">drop a video</span>
+        </label>
+        <p class="hint" data-i18n="formats_hint">mp4 · mov · webm · mkv · avi · …</p>
+      </section>
+
+      <section>
+        <h2 data-i18n="scan_line">scan line</h2>
+        <div class="seg shape" role="group" data-i18n="shape_group" data-i18n-attr="aria-label" aria-label="shape">
+          <button class="segbtn on" type="button" data-shape="v" aria-pressed="true"
+            data-i18n="shape_v_aria" data-i18n-attr="aria-label" aria-label="vertical">|</button>
+          <button class="segbtn" type="button" data-shape="h" aria-pressed="false"
+            data-i18n="shape_h_aria" data-i18n-attr="aria-label" aria-label="horizontal">—</button>
+          <button class="segbtn" type="button" data-shape="diag" aria-pressed="false"
+            data-i18n="shape_diag_aria" data-i18n-attr="aria-label" aria-label="diagonal">/</button>
+          <button class="segbtn" type="button" data-shape="adiag" aria-pressed="false"
+            data-i18n="shape_adiag_aria" data-i18n-attr="aria-label" aria-label="anti-diagonal">\</button>
+          <button class="segbtn" type="button" data-shape="sine" aria-pressed="false"
+            data-i18n="shape_sine_aria" data-i18n-attr="aria-label" aria-label="wave">~</button>
+          <button class="segbtn" type="button" data-shape="free" aria-pressed="false"
+            data-i18n="shape_free">draw</button>
+        </div>
+        <p class="hint" data-drawhint hidden data-i18n="draw_hint">draw on the video</p>
+        <div class="actions drawrow" data-drawrow hidden>
+          <button class="ghost" type="button" data-clearpath data-i18n="clear_path">clear</button>
+        </div>
+        <div class="flowwrap">
+          <span class="fieldlabel" data-i18n="direction">direction</span>
+          <div class="seg flow" role="group" data-i18n="flow_group" data-i18n-attr="aria-label" aria-label="slit scan direction">
+            <button class="segbtn on" type="button" data-flow="lr" aria-pressed="true" data-i18n="flow_lr">→ left→right</button>
+            <button class="segbtn" type="button" data-flow="rl" aria-pressed="false" data-i18n="flow_rl">← right→left</button>
+            <button class="segbtn" type="button" data-flow="ud" aria-pressed="false" data-i18n="flow_ud">↑ upward</button>
+            <button class="segbtn" type="button" data-flow="du" aria-pressed="false" data-i18n="flow_du">↓ downward</button>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="capture">capture</h2>
+        <label class="slider">
+          <span class="fieldlabel"><span data-i18n="scale">scale</span> <em data-scale>0.5×</em></span>
+          <input type="range" min="0.25" max="1" step="0.25" value="0.5" data-scaleinput />
+        </label>
+        <div class="actions capture">
+          <button class="primary" type="button" data-live disabled data-i18n="go_live">start</button>
+          <button class="ghost" type="button" data-oneshot disabled data-i18n="go_oneshot">render</button>
+          <button class="ghost" type="button" data-stop disabled data-i18n="stop_capture">stop</button>
+        </div>
+        <div class="flowwrap">
+          <span class="fieldlabel" data-i18n="export_fmt">format</span>
+          <div class="seg exportfmt" role="group" data-i18n="export_fmt_group" data-i18n-attr="aria-label" aria-label="export format">
+            <button class="segbtn on" type="button" data-fmt="png" aria-pressed="true">png</button>
+            <button class="segbtn" type="button" data-fmt="jpg" aria-pressed="false">jpg</button>
+            <button class="segbtn" type="button" data-fmt="webp" aria-pressed="false">webp</button>
+            <button class="segbtn" type="button" data-fmt="webm" aria-pressed="false">webm</button>
+            <button class="segbtn" type="button" data-fmt="mp4" aria-pressed="false">mp4</button>
+          </div>
+        </div>
+        <div class="actions ship">
+          <button class="ghost" type="button" data-reset disabled data-i18n="reset">reset</button>
+          <button class="primary" type="button" data-download disabled data-i18n="download">download</button>
+        </div>
+      </section>
+    </aside>
+
+    <main class="stage-panel">
+      <section class="stageblock">
+        <div class="panelhead">
+          <h2 data-i18n="preview">preview</h2>
+          <span class="srcname" data-srcname hidden></span>
+        </div>
+        <div class="empty" data-empty data-dropzone data-i18n="empty">drop a video into source to begin.</div>
+        <div class="stage" data-stage tabindex="0"
+          data-i18n="stage_aria" data-i18n-attr="aria-label"
+          aria-label="video. use arrows to move the line; freehand needs a pointer." hidden>
+          <video data-video muted playsinline preload="auto" loop></video>
+          <canvas class="pathov" data-pathov width="4" height="4" aria-hidden="true"></canvas>
+        </div>
+      </section>
+
+      <section class="outputblock">
+        <div class="panelhead">
+          <h2 data-i18n="output">output</h2>
+          <span class="direction" data-direction>vertical line · left → right</span>
+        </div>
+        <div class="outputwrap">
+          <canvas class="out" data-out width="4" height="4" role="img"
+            data-i18n="out_aria" data-i18n-attr="aria-label"
+            aria-label="generated slit-scan image"></canvas>
+          <p class="outputbed" data-outputbed data-i18n="awaiting">no output yet</p>
+        </div>
+        <div class="progress" data-progress hidden
+          role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+          data-i18n="progress_aria" data-i18n-attr="aria-label" aria-label="capture progress">
+          <div class="bar" data-bar style="transform: scaleX(0)"></div>
+        </div>
+        <div class="metaline" data-meta hidden>sampling axis position 50%</div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" role="status" data-toast hidden></div>
+
+  <script type="module" src="{{ '/tools/slit-scan/assets/js/app.js' | relative_url }}"></script>
+</body>
+</html>

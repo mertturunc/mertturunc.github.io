@@ -17,3 +17,9 @@
   title_tr: geojson simplifier
   year: 2026
   url: /tools/simplify/
+
+- id: slit-scan
+  title: slit scan
+  title_tr: slit scan
+  year: 2026
+  url: /tools/slit-scan/

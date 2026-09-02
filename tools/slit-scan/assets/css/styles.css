@@ -1,0 +1,502 @@
+/* Slit scan — sits on the shared tools paper (shell.css). */
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--sans);
+  line-height: 1.3;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+}
+
+.sidebar {
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+  padding: 10px 10px 56px;
+}
+
+.stage-panel {
+  display: grid;
+  /* Stacked: wide preview for the source, solid band for the growing strip. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1.7fr) minmax(200px, 1fr);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px 10px 56px;
+  gap: 10px;
+}
+
+section {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: var(--panel);
+}
+
+.stageblock,
+.outputblock {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar section h2,
+.panelhead h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+.panelhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.panelhead h2 {
+  margin: 0;
+}
+
+.srcname,
+.direction {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srcname[hidden] { display: none !important; }
+
+.empty[hidden],
+.stage[hidden],
+.outputbed[hidden],
+.progress[hidden],
+.metaline[hidden],
+.toast[hidden] {
+  display: none !important;
+}
+
+/* ---- Stage ---- */
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #000;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  margin-top: 8px;
+}
+
+.stage video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.pathov {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.stage.drawing {
+  cursor: crosshair;
+}
+
+.hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.hint[hidden],
+.drawrow[hidden] {
+  display: none !important;
+}
+
+.drawrow {
+  margin-top: 6px;
+}
+
+.seg.shape .segbtn {
+  flex: 1 1 calc(33.333% - 4px);
+  min-width: 2.5rem;
+  font-family: var(--mono);
+  font-size: 15px;
+}
+
+.empty {
+  display: grid;
+  place-items: center;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 8px;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 16px;
+}
+
+.empty em {
+  color: var(--accent);
+  font-style: normal;
+}
+
+/* ---- Output ---- */
+.outputwrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  overflow: auto;
+}
+
+.outputwrap:has(canvas.out:not([style*="display: none"])) {
+  justify-content: flex-start;
+}
+
+.outputbed {
+  flex: 1 1 auto;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: center;
+  padding: 12px;
+}
+
+.outputwrap canvas.out {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  align-self: center;
+  background: #1d2021;
+  border-radius: 4px;
+  image-rendering: auto;
+}
+
+.outputwrap canvas.out[style*="display: none"] {
+  display: none !important;
+}
+
+.outputwrap canvas.live {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+
+.progress {
+  height: 4px;
+  margin-top: 10px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress .bar {
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  transition: transform 0.1s linear;
+}
+
+.metaline {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- Controls ---- */
+.seg {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.segbtn {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.segbtn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.segbtn.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--primary-bg);
+}
+
+.segbtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.segbtn[hidden] {
+  display: none !important;
+}
+
+.flow .segbtn { flex-basis: 44%; }
+
+.exportfmt .segbtn {
+  flex: 1 1 calc(20% - 5px);
+  min-width: 3.2rem;
+  font-family: var(--mono);
+  text-transform: lowercase;
+}
+
+.flowwrap { margin-top: 10px; }
+
+.fieldlabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.fieldlabel em {
+  font-family: var(--mono);
+  font-style: normal;
+  color: var(--accent);
+  font-weight: 400;
+}
+
+.slider {
+  display: block;
+  margin-bottom: 8px;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 0 0 8px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.filebtn { display: block; position: relative; }
+
+.filebtn input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.filebtn span {
+  display: block;
+  text-align: center;
+  padding: 10px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--surface-2);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.filebtn span:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filebtn.dragover span,
+.empty.dragover {
+  border-color: var(--accent);
+  color: var(--accent);
+  border-style: solid;
+}
+
+.filebtn input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.actions > button {
+  flex: 1;
+  min-height: 32px;
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--btn-bg);
+  color: var(--text);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--primary-bg);
+}
+
+button.primary:disabled {
+  background: var(--btn-bg);
+  border-color: var(--border);
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+button.ghost:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---- Toast ---- */
+.toast {
+  position: fixed;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  background: var(--code-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress .bar { transition: none; }
+}
+
+@media (max-width: 1100px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    height: auto;
+    min-height: 100%;
+  }
+
+  html, body {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stage-panel {
+    overflow: visible;
+    height: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .stageblock,
+  .outputblock {
+    overflow: visible;
+  }
+
+  .stage,
+  .empty {
+    flex: none;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
+
+  .outputwrap {
+    flex: none;
+    min-height: 180px;
+  }
+
+  .outputbed {
+    min-height: 120px;
+  }
+
+  .outputwrap canvas.out {
+    max-height: 50vh;
+  }
+}
+
+@media (pointer: coarse) {
+  .segbtn,
+  .actions > button,
+  .filebtn span {
+    min-height: 40px;
+  }
+
+  .seg.shape .segbtn {
+    min-height: 40px;
+    min-width: 2.75rem;
+  }
+
+  input[type="range"] {
+    min-height: 40px;
+  }
+}
