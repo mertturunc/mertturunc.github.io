@@ -6,15 +6,53 @@
 //  - drive animation playback and loop-timing so the GIF is seamless.
 //  - sample frames into the ASCII rasterizer and export a looping GIF.
 
-import * as THREE from 'three';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { USDLoader } from 'three/addons/loaders/USDLoader.js';
+import {
+  WebGLRenderer,
+  Scene,
+  Object3D,
+  PerspectiveCamera,
+  DirectionalLight,
+  AmbientLight,
+  Box3,
+  Vector3,
+  AnimationMixer,
+} from 'three';
 import { createAsciiRasterizer } from './renderer/ascii.js';
-import { encodeAsciiGif, encodeAsciiGifAsync } from './gif/gifExport.js';
 
 const RESOURCE_EXT = /\.(gltf|bin|png|jpe?g|webp|ktx2|dds|exr|basis|json)$/i;
+
+/** Lazy-load a Three.js addon loader once and cache the constructor. */
+const loaderCache = new Map();
+async function getLoader(kind) {
+  let pending = loaderCache.get(kind);
+  if (!pending) {
+    pending = (async () => {
+      if (kind === 'fbx') {
+        const { FBXLoader } = await import('three/addons/loaders/FBXLoader.js');
+        return FBXLoader;
+      }
+      if (kind === 'obj') {
+        const { OBJLoader } = await import('three/addons/loaders/OBJLoader.js');
+        return OBJLoader;
+      }
+      if (kind === 'gltf') {
+        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+        return GLTFLoader;
+      }
+      if (kind === 'usd') {
+        const { USDLoader } = await import('three/addons/loaders/USDLoader.js');
+        return USDLoader;
+      }
+      throw new Error('Unknown loader: ' + kind);
+    })();
+    loaderCache.set(kind, pending);
+  }
+  return pending;
+}
+
+async function getGifExport() {
+  return import('./gif/gifExport.js');
+}
 
 /** Normalise a posix-style path: collapse //, resolve . and .. segments. */
 function normalizePath(p) {
@@ -70,16 +108,24 @@ export const DEFAULT_SETTINGS = {
   delay: 80, // ms per frame
   fps: 12,
   duration: 1.5, // seconds (GIF length)
-  spinSpeed: 45, // deg/sec auto-spin for static models
   lightAzimuth: 45,
   lightElevation: 40,
+  // Object base orientation (Euler ω/φ/κ → X/Y/Z, degrees). Spin adds to φ (Y).
+  objectOmega: 0,
+  objectPhi: 0,
+  objectKappa: 0,
+  // Camera rig orientation (Euler ω/φ/κ → X/Y/Z, degrees) around the origin.
+  cameraOmega: 0,
+  cameraPhi: 0,
+  cameraKappa: 0,
+  cameraDistance: 4, // camera Z offset on the rig (larger = zoomed out)
 };
 
 /**
  * Create the engine. It renders ASCII into `monitor` canvas.
  */
 export function createEngine(monitor) {
-  const renderer = new THREE.WebGLRenderer({
+  const renderer = new WebGLRenderer({
     antialias: true,
     alpha: true,
     preserveDrawingBuffer: true,
@@ -87,9 +133,14 @@ export function createEngine(monitor) {
   renderer.setPixelRatio(1);
   renderer.setClearColor(0x000000, 0);
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 1000);
+  const scene = new Scene();
+  // Camera sits on a rig at the origin so ω/φ/κ orbit/tilt/roll around the model
+  // while the lens stays aimed at the origin.
+  const cameraRig = new Object3D();
+  scene.add(cameraRig);
+  const camera = new PerspectiveCamera(40, 1, 0.01, 1000);
   camera.position.set(0, 0, 4);
+  cameraRig.add(camera);
 
   const ascii = createAsciiRasterizer(monitor);
 
@@ -97,10 +148,14 @@ export function createEngine(monitor) {
   // kept LOW so faces turned away from the key genuinely fall below the color
   // threshold — otherwise the whole model sits in one luminance band and the
   // shadow color never shows.
-  const key = new THREE.DirectionalLight(0xffffff, 1.8);
-  const ambient = new THREE.AmbientLight(0xffffff, 0.22);
-  const fill = new THREE.DirectionalLight(0xffffff, 0.3);
-  scene.add(key, ambient, fill);
+  const key = new DirectionalLight(0xffffff, 1.8);
+  const ambient = new AmbientLight(0xffffff, 0.22);
+  const fill = new DirectionalLight(0xffffff, 0.3);
+  // DirectionalLight aims from its position at its target; the target must be
+  // in the scene or matrixWorld never updates and the key direction sticks.
+  key.target.position.set(0, 0, 0);
+  fill.target.position.set(0, 0, 0);
+  scene.add(key, key.target, ambient, fill, fill.target);
 
   let group = null; // loaded model group
   let mixer = null; // animation mixer (when animated)
@@ -128,16 +183,52 @@ export function createEngine(monitor) {
     modelReady = false;
   }
 
+  function deg(v) {
+    return ((Number(v) || 0) * Math.PI) / 180;
+  }
+
   function applyLights(settings) {
-    const az = (settings.lightAzimuth * Math.PI) / 180;
-    const el = (settings.lightElevation * Math.PI) / 180;
+    const az = deg(settings.lightAzimuth);
+    const el = deg(settings.lightElevation);
     const r = 6;
+    // Spherical placement: azimuth around Y, elevation above the XZ plane.
     key.position.set(
       r * Math.cos(el) * Math.cos(az),
       r * Math.sin(el),
       r * Math.cos(el) * Math.sin(az)
     );
-    fill.position.set(-3, 1, -3);
+    // Soft fill opposite the key so both sides stay readable.
+    fill.position.set(
+      -r * Math.cos(el) * Math.cos(az) * 0.5,
+      Math.max(0.5, r * Math.sin(el) * 0.35),
+      -r * Math.cos(el) * Math.sin(az) * 0.5
+    );
+  }
+
+  /** Apply camera ω/φ/κ (X/Y/Z Euler, degrees) and distance on the orbit rig. */
+  function applyCameraOrientation(settings) {
+    cameraRig.rotation.order = 'XYZ';
+    cameraRig.rotation.set(
+      deg(settings.cameraOmega),
+      deg(settings.cameraPhi),
+      deg(settings.cameraKappa)
+    );
+    const dist = Math.max(0.5, Number(settings.cameraDistance) || 4);
+    camera.position.set(0, 0, dist);
+  }
+
+  /**
+   * Apply object ω/φ/κ (X/Y/Z Euler, degrees). Optional `spinY` (radians) is
+   * added to φ so turntable spin keeps the base pose.
+   */
+  function applyObjectOrientation(settings, spinY = 0) {
+    if (!group) return;
+    group.rotation.order = 'XYZ';
+    group.rotation.set(
+      deg(settings.objectOmega),
+      deg(settings.objectPhi) + spinY,
+      deg(settings.objectKappa)
+    );
   }
 
   function readonlyifyMats(obj) {
@@ -155,9 +246,9 @@ export function createEngine(monitor) {
   }
 
   function centerModel(obj) {
-    const box = new THREE.Box3().setFromObject(obj);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
+    const box = new Box3().setFromObject(obj);
+    const size = new Vector3();
+    const center = new Vector3();
     box.getSize(size);
     box.getCenter(center);
     const maxDim = Math.max(size.x, size.y, size.z) || 1;
@@ -185,14 +276,17 @@ export function createEngine(monitor) {
     let loaded;
     try {
       if (ext === 'fbx') {
+        const FBXLoader = await getLoader('fbx');
         loaded = await new Promise((res, rej) =>
           new FBXLoader().load(url, res, undefined, rej)
         );
       } else if (ext === 'obj') {
+        const OBJLoader = await getLoader('obj');
         loaded = await new Promise((res, rej) =>
           new OBJLoader().load(url, res, undefined, rej)
         );
       } else if (ext === 'gltf' || ext === 'glb') {
+        const GLTFLoader = await getLoader('gltf');
         const gltf = await new Promise((res, rej) =>
           new GLTFLoader().load(url, res, undefined, rej)
         );
@@ -201,6 +295,7 @@ export function createEngine(monitor) {
         group.animations = gltf.animations || [];
         loaded = group;
       } else if (ext === 'usdz' || ext === 'usd' || ext === 'usda' || ext === 'usdc') {
+        const USDLoader = await getLoader('usd');
         loaded = await new Promise((res, rej) =>
           new USDLoader().load(url, res, undefined, rej)
         );
@@ -256,6 +351,7 @@ export function createEngine(monitor) {
         }
       }
 
+      const GLTFLoader = await getLoader('gltf');
       const loaded = await new GLTFLoader().parseAsync(json, '');
       const scene = loaded.scene;
       scene.animations = loaded.animations || [];
@@ -270,6 +366,8 @@ export function createEngine(monitor) {
     group = loaded;
     centerModel(group);
     applyLights(settings);
+    applyCameraOrientation(settings);
+    applyObjectOrientation(settings, 0);
     readonlyifyMats(group);
     scene.add(group);
 
@@ -281,7 +379,7 @@ export function createEngine(monitor) {
     if (!hasAnimation) motionMode = 'auto';
 
     if (hasAnimation) {
-      mixer = new THREE.AnimationMixer(group);
+      mixer = new AnimationMixer(group);
       // Pre-create actions but don't play yet; play on first render.
       group.__actions = animations.map((clip) => mixer.clipAction(clip));
     }
@@ -332,10 +430,12 @@ export function createEngine(monitor) {
     let loaded;
     try {
       if (ext === 'fbx') {
+        const FBXLoader = await getLoader('fbx');
         loaded = await new Promise((res, rej) =>
           new FBXLoader().load(url, res, undefined, rej)
         );
       } else {
+        const GLTFLoader = await getLoader('gltf');
         const gltf = await new Promise((res, rej) =>
           new GLTFLoader().load(url, res, undefined, rej)
         );
@@ -362,6 +462,8 @@ export function createEngine(monitor) {
 
   function setSettings(settings) {
     applyLights(settings);
+    applyCameraOrientation(settings);
+    applyObjectOrientation(settings, 0);
   }
 
   /**
@@ -380,6 +482,9 @@ export function createEngine(monitor) {
       act &&
       (motionMode === 'animation' || (motionMode === 'auto' && hasAnimation));
 
+    applyLights(settings);
+    applyCameraOrientation(settings);
+
     if (useAnim) {
       const clipDur = act.getClip().duration || dur;
       // Map GIF progress -> clip progress over one full cycle.
@@ -388,9 +493,11 @@ export function createEngine(monitor) {
       // in the mixer's active set, so a stopped action would never drive the bones.
       if (!act.isRunning()) act.play();
       mixer.setTime(t);
+      // Keep the user-set base pose while the clip drives bones/meshes.
+      applyObjectOrientation(settings, 0);
     } else {
-      // Seamless turntable: one full revolution over the GIF window.
-      if (group) group.rotation.y = (time / dur) * Math.PI * 2;
+      // Seamless turntable: one full revolution over the GIF window, on top of φ.
+      applyObjectOrientation(settings, (time / dur) * Math.PI * 2);
     }
 
     // Resize renderer to the ASCII grid size; the luminance grid is one sample per
@@ -506,9 +613,9 @@ export function createEngine(monitor) {
   /**
    * Capture a seamless looping GIF.
    * @param {object} settings
-   * @returns {Uint8Array}
+   * @returns {Promise<Uint8Array>}
    */
-  function capture(settings) {
+  async function capture(settings) {
     const fps = Math.max(2, Math.min(60, settings.fps));
     const frames = Math.max(2, Math.round(settings.duration * fps));
 
@@ -533,6 +640,7 @@ export function createEngine(monitor) {
     }
     framesList.pop(); // drop the duplicate loop-back frame
 
+    const { encodeAsciiGif } = await getGifExport();
     return encodeAsciiGif({
       frames: framesList,
       colors: bandColorsFor(settings),
@@ -568,6 +676,7 @@ export function createEngine(monitor) {
     }
     framesList.pop(); // drop the duplicate loop-back frame
 
+    const { encodeAsciiGifAsync } = await getGifExport();
     return encodeAsciiGifAsync({
       frames: framesList,
       colors: bandColorsFor(settings),

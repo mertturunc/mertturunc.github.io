@@ -7,7 +7,6 @@
 
 import { createEngine } from './engine.js';
 import { createState, SETTING_DEFS, INK_PALETTES } from './state.js';
-import { downloadGif } from './gif/gifExport.js';
 
 const monitor = document.getElementById('ascii-canvas');
 const state = createState();
@@ -35,8 +34,17 @@ const motionRow = document.getElementById('motion-row');
 const spinHint = document.getElementById('spin-hint');
 const exportBtn = document.getElementById('export-btn');
 const exportRow = document.getElementById('export-row');
-const previewImg = document.getElementById('preview-img');
 const previewWrap = document.getElementById('preview-wrap');
+let previewImg = null;
+
+function ensurePreviewImg() {
+  if (previewImg) return previewImg;
+  previewImg = document.createElement('img');
+  previewImg.id = 'preview-img';
+  previewImg.alt = tt('preview_alt');
+  previewWrap.appendChild(previewImg);
+  return previewImg;
+}
 
 const emptyState = document.getElementById('empty-state');
 const loadedUI = document.getElementById('loaded-ui');
@@ -45,6 +53,28 @@ const controlsPanel = document.getElementById('controls-panel');
 const controlsBody = controlsPanel.querySelector('.controls-body');
 const toast = document.getElementById('toast');
 const removeModelBtn = document.getElementById('remove-model-btn');
+const replaceHint = document.getElementById('replace-hint');
+const frame = dropZone.closest('.frame');
+
+function openFilePicker() {
+  fileInput.click();
+}
+
+function handleDroppedFiles(files) {
+  if (!files || !files.length) return;
+  const hasGltf = [...files].some((f) => /\.gltf$/i.test(f.name));
+  const isFolder = [...files].some((f) => f.webkitRelativePath);
+  if (hasGltf && (files.length > 1 || isFolder)) {
+    importGltfFolder(files);
+    return;
+  }
+  loadMainModel(files[0]);
+}
+
+function setDropDragging(on) {
+  dropZone.classList.toggle('dragging', on);
+  if (frame) frame.classList.toggle('dragging', on);
+}
 
 // ---------- Sliders (rendered by Jekyll template) ----------
 // Each `<input type="range" data-key="...">` row is rendered server-side from
@@ -64,7 +94,24 @@ function syncSliderValue(key) {
   entry.val.textContent = formatValue(key, v);
 }
 
+/** Push every control to match `state` (after reset or per-model restore). */
+function syncAllControls() {
+  for (const [key, entry] of sliderRows) {
+    const v = state.get(key);
+    if (v !== undefined && v !== null) entry.range.value = v;
+    syncSliderValue(key);
+  }
+  colorAInput.value = state.get('colorA');
+  colorBInput.value = state.get('colorB');
+  colorCInput.value = state.get('colorC');
+  syncPaletteChips();
+  syncInkUI();
+  syncDitherUI();
+}
+
 for (const [key, entry] of sliderRows) {
+  const stored = state.get(key);
+  if (stored !== undefined && stored !== null) entry.range.value = stored;
   syncSliderValue(key);
   entry.range.addEventListener('input', () => {
     let v = parseFloat(entry.range.value);
@@ -142,9 +189,17 @@ function applyPalette(id) {
   refresh();
 }
 
+function syncTogglePressed(els, isActive) {
+  for (const el of els) {
+    const on = !!isActive(el);
+    el.classList.toggle('active', on);
+    el.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+}
+
 function syncPaletteChips() {
   const active = state.get('paletteId');
-  paletteChips.forEach((chip, id) => chip.classList.toggle('active', id === active));
+  syncTogglePressed([...paletteChips.values()], (chip) => chip.dataset.palette === active);
 }
 
 // Threshold / split sliders for which band visibility depends on ink count.
@@ -153,7 +208,7 @@ const splitSlider = controlsBody.querySelector('input[data-key="split"]').closes
 
 function syncInkUI() {
   const n = state.get('colorMode');
-  inkBtns.forEach((b) => b.classList.toggle('active', Number(b.dataset.ink) === n));
+  syncTogglePressed(inkBtns, (b) => Number(b.dataset.ink) === n);
   thresholdSlider.classList.toggle('hidden', n === 1);
   splitSlider.classList.toggle('hidden', n !== 3);
   colorAItem.classList.toggle('hidden', false);
@@ -166,14 +221,7 @@ function syncInkUI() {
 }
 
 function syncSliderUI() {
-  const thr = controlsBody.querySelector('input[data-key="threshold"]');
-  const thrVal = controlsBody.querySelector('.slider-value[data-val="threshold"]');
-  thr.value = state.get('threshold');
-  thrVal.textContent = formatValue('threshold', state.get('threshold'));
-  const sp = controlsBody.querySelector('input[data-key="split"]');
-  const spVal = controlsBody.querySelector('.slider-value[data-val="split"]');
-  sp.value = state.get('split');
-  spVal.textContent = formatValue('split', state.get('split'));
+  syncAllControls();
 }
 
 function setInkMode(n) {
@@ -200,7 +248,7 @@ inkBtns.forEach((b) => b.addEventListener('click', () => setInkMode(Number(b.dat
 // ---------- Dither ----------
 function syncDitherUI() {
   const mode = state.get('dither');
-  ditherBtns.forEach((b) => b.classList.toggle('active', b.dataset.dither === mode));
+  syncTogglePressed(ditherBtns, (b) => b.dataset.dither === mode);
 }
 
 ditherBtns.forEach((b) =>
@@ -215,15 +263,25 @@ ditherBtns.forEach((b) =>
 // ---------- File import ----------
 let mainModelInfo = null;
 
-dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('click', () => {
+  // When loaded, only the replace chip is the click target.
+  if (dropZone.classList.contains('loaded')) return;
+  openFilePicker();
+});
 dropZone.addEventListener('keydown', (e) => {
+  if (dropZone.classList.contains('loaded')) return;
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
-    fileInput.click();
+    openFilePicker();
   }
+});
+replaceHint.addEventListener('click', (e) => {
+  e.stopPropagation();
+  openFilePicker();
 });
 fileInput.addEventListener('change', () => {
   const f = fileInput.files && fileInput.files[0];
+  fileInput.value = '';
   if (f) loadMainModel(f);
 });
 
@@ -235,39 +293,53 @@ gltfFolderInput.addEventListener('change', () => {
   }
 });
 
-dropZone.addEventListener('dragover', (e) => {
+// Drag-and-drop stays on the frame so replace still works after the hit
+// target collapses to the top chip.
+const dropTarget = frame || dropZone;
+dropTarget.addEventListener('dragover', (e) => {
   e.preventDefault();
-  dropZone.classList.add('dragging');
+  setDropDragging(true);
 });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
-dropZone.addEventListener('drop', (e) => {
+dropTarget.addEventListener('dragleave', (e) => {
+  if (e.target !== dropTarget) return;
+  setDropDragging(false);
+});
+dropTarget.addEventListener('drop', (e) => {
   e.preventDefault();
-  dropZone.classList.remove('dragging');
-  const files = e.dataTransfer.files;
-  if (!files || !files.length) return;
-  // Multiply-file drop with .gltf (folder drag) -> folder import.
-  const hasGltf = [...files].some((f) => /\.gltf$/i.test(f.name));
-  const isFolder = [...files].some((f) => f.webkitRelativePath);
-  if (hasGltf && (files.length > 1 || isFolder)) {
-    importGltfFolder(files);
-    return;
+  setDropDragging(false);
+  handleDroppedFiles(e.dataTransfer.files);
+});
+
+function setImportBusy(busy) {
+  dropZone.setAttribute('aria-busy', busy ? 'true' : 'false');
+  frame.classList.toggle('importing', busy);
+  if (busy && !mainModelInfo) {
+    dropZone.querySelector('.drop-message').textContent = tt('loading_model');
   }
-  loadMainModel(files[0]);
-});
+}
 
 async function loadMainModel(file) {
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   if (!['fbx', 'obj', 'gltf', 'glb', 'usdz', 'usd', 'usda', 'usdc'].includes(ext)) {
-    showError('That file type isn’t supported. Use .fbx, .obj, .gltf/.glb or .usd/.usdz — or import a whole folder for multi-file .gltf scenes.');
+    showError(tt('err_bad_type'));
     return;
   }
+  setImportBusy(true);
   try {
+    // Restore this file's last settings (or a clean framing pose on first open)
+    // before the engine applies lights / orientation.
+    if (state.setActiveModel(file.name)) syncAllControls();
     const info = await engine.loadModel(file, state.settings);
     mainModelInfo = info;
     onModelLoaded(file.name);
   } catch (err) {
     console.error(err);
-    showError('Couldn’t load that model. ' + err.message + ' Try another file.');
+    showError(tt('err_load_model', { err: err.message }));
+    if (!mainModelInfo) {
+      dropZone.querySelector('.drop-message').textContent = tt('drop');
+    }
+  } finally {
+    setImportBusy(false);
   }
 }
 
@@ -276,14 +348,22 @@ async function loadMainModel(file) {
  * @param {FileList|File[]} files
  */
 async function importGltfFolder(files) {
+  setImportBusy(true);
   try {
+    const gltf = [...files].find((f) => /\.gltf$/i.test(f.name));
+    const displayName = gltf ? gltf.name : 'glTF scene';
+    if (state.setActiveModel(displayName)) syncAllControls();
     const info = await engine.loadGltfFolder(files, state.settings);
     mainModelInfo = info;
-    const gltf = [...files].find((f) => /\.gltf$/i.test(f.name));
-    onModelLoaded(gltf ? gltf.name : 'glTF scene');
+    onModelLoaded(displayName);
   } catch (err) {
     console.error(err);
-    showError('Couldn’t read that glTF folder. ' + err.message + ' Check that it contains the .gltf file and its .bin/texture files.');
+    showError(tt('err_load_folder', { err: err.message }));
+    if (!mainModelInfo) {
+      dropZone.querySelector('.drop-message').textContent = tt('drop');
+    }
+  } finally {
+    setImportBusy(false);
   }
 }
 
@@ -294,7 +374,8 @@ function onModelLoaded(displayName) {
   mainFileLabel.textContent = displayName;
   mainFileChip.classList.remove('hidden');
   dropZone.classList.add('loaded');
-  dropZone.querySelector('.drop-message').textContent = tt('replace_drop');
+  dropZone.removeAttribute('role');
+  dropZone.removeAttribute('tabindex');
   monitor.setAttribute('aria-label', tt('canvas_of', { name: displayName }));
 
   refreshAnimationUI();
@@ -306,6 +387,7 @@ function onModelLoaded(displayName) {
 }
 
 function resetToEmptyState() {
+  state.clearActiveModel();
   engine.clearModel();
   mainModelInfo = null;
   mainFileChip.classList.add('hidden');
@@ -315,7 +397,15 @@ function resetToEmptyState() {
   animFileBtn.classList.add('hidden');
   exportRow.classList.add('hidden');
   previewWrap.classList.add('hidden');
-  previewImg.removeAttribute('src');
+  if (previewImg) {
+    if (previewImg.dataset.objectUrl) {
+      try {
+        URL.revokeObjectURL(previewImg.dataset.objectUrl);
+      } catch (_) {}
+    }
+    previewImg.remove();
+    previewImg = null;
+  }
   spinHint.classList.add('hidden');
   motionSelect.value = 'auto';
   syncMotionSegs();
@@ -323,6 +413,8 @@ function resetToEmptyState() {
   dropZone.querySelector('.drop-message').textContent = tt('drop');
   dropZone.querySelector('.drop-sub').textContent = tt('drop_sub');
   dropZone.classList.remove('loaded');
+  dropZone.setAttribute('role', 'button');
+  dropZone.setAttribute('tabindex', '0');
   emptyState.classList.remove('hidden');
   loadedUI.classList.add('hidden');
   monitor.setAttribute('aria-label', tt('canvas_aria'));
@@ -330,6 +422,13 @@ function resetToEmptyState() {
 }
 
 removeModelBtn.addEventListener('click', resetToEmptyState);
+
+const resetSettingsBtn = document.getElementById('reset-settings-btn');
+resetSettingsBtn.addEventListener('click', () => {
+  state.reset();
+  syncAllControls();
+  refresh();
+});
 
 function refreshAnimationUI() {
   const hasAnim = mainModelInfo.hasAnimation;
@@ -353,7 +452,12 @@ function prefersReducedMotion() {
 }
 
 function updateSpinHint() {
-  if (prefersReducedMotion() && mainModelInfo) {
+  // Empty canvas: the drop copy already explains motion — don't show a status chip.
+  if (!mainModelInfo) {
+    spinHint.classList.add('hidden');
+    return;
+  }
+  if (prefersReducedMotion()) {
     spinHint.classList.remove('hidden');
     spinHint.textContent = tt('motion_reduced');
     return;
@@ -378,7 +482,7 @@ animFileInput.addEventListener('change', async () => {
   animFileInput.value = '';
   if (!f) return;
   if (!mainModelInfo) {
-    showError('Load a model first to attach an animation.');
+    showError(tt('err_need_model'));
     return;
   }
   try {
@@ -394,7 +498,7 @@ animFileInput.addEventListener('change', async () => {
     refresh();
   } catch (err) {
     console.error(err);
-    showError('Animation import failed. ' + err.message);
+    showError(tt('err_load_anim', { err: err.message }));
   }
 });
 
@@ -415,7 +519,7 @@ function setMotion(mode) {
 }
 
 function syncMotionSegs() {
-  motionSegs.forEach((b) => b.classList.toggle('active', b.dataset.motion === engine.motionMode));
+  syncTogglePressed(motionSegs, (b) => b.dataset.motion === engine.motionMode);
 }
 
 motionSegs.forEach((b) =>
@@ -441,6 +545,13 @@ function tick(now) {
     ticking = false;
     return;
   }
+  // No model: one still frame is enough — don't keep the WebGL/ASCII loop hot.
+  if (!mainModelInfo) {
+    engine.renderPreview(0, state.settings);
+    ticking = false;
+    startTime = null;
+    return;
+  }
   const reduced = prefersReducedMotion();
   const t = reduced ? 0 : (now - startTime) / 1000;
   engine.renderPreview(t, state.settings);
@@ -462,6 +573,7 @@ exportBtn.addEventListener('click', async () => {
   if (!mainModelInfo) return;
   try {
     exportBtn.disabled = true;
+    exportBtn.setAttribute('aria-busy', 'true');
     exportBtn.textContent = tt('rendering');
 
     const bytes = await engine.captureAsync(state.settings, () => {});
@@ -469,16 +581,25 @@ exportBtn.addEventListener('click', async () => {
     // Build a data URL for preview.
     const blob = new Blob([bytes], { type: 'image/gif' });
     const url = URL.createObjectURL(blob);
-    previewImg.src = url;
+    const img = ensurePreviewImg();
+    if (img.dataset.objectUrl) {
+      try {
+        URL.revokeObjectURL(img.dataset.objectUrl);
+      } catch (_) {}
+    }
+    img.dataset.objectUrl = url;
+    img.src = url;
     previewWrap.classList.remove('hidden');
 
     await sleep(50);
+    const { downloadGif } = await import('./gif/gifExport.js');
     downloadGif(bytes, (mainModelInfo.name || 'ascii').replace(/\.[^.]+$/, '') + '.gif');
   } catch (err) {
     console.error(err);
-    showError('Export failed. ' + err.message);
+    showError(tt('err_export', { err: err.message }));
   } finally {
     exportBtn.disabled = false;
+    exportBtn.removeAttribute('aria-busy');
     exportBtn.textContent = tt('export');
   }
 });
@@ -489,7 +610,20 @@ function formatValue(key, v) {
   if (key === 'cellSize') return Math.round(v) + 'px';
   if (key === 'gridWidth' || key === 'gridHeight' || key === 'fps') return String(Math.round(v));
   if (key === 'duration') return v.toFixed(2) + 's';
+  if (key === 'cameraDistance') return v.toFixed(2);
   if (key === 'contrast') return (v > 0 ? '+' : '') + Math.round(v);
+  if (
+    key === 'objectOmega' ||
+    key === 'objectPhi' ||
+    key === 'objectKappa' ||
+    key === 'cameraOmega' ||
+    key === 'cameraPhi' ||
+    key === 'cameraKappa' ||
+    key === 'lightAzimuth' ||
+    key === 'lightElevation'
+  ) {
+    return Math.round(v) + '°';
+  }
   return v;
 }
 

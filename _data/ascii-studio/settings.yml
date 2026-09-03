@@ -1,67 +1,132 @@
-# Settings sliders rendered server-side by _includes/ascii-studio-app.html from this data file.
-# Mirrors SETTING_DEFS in tools/ascii-studio/_src/state.js — keep the keys in sync.
-- key: gridWidth
-  label: grid width
-  min: 32
-  max: 220
-  step: 2
+# Settings panel: grouped sliders rendered by _includes/ascii-studio-app.html.
+# Mirrors SETTING_DEFS keys in tools/ascii-studio/_src/state.js — keep in sync.
+#
+# Groups follow the task path: shape the GIF → frame the model → shade the inks.
 
-- key: gridHeight
-  label: grid height
-  min: 20
-  max: 140
-  step: 2
+- id: output
+  label: output
+  settings:
+    - key: gridWidth
+      label: grid width
+      min: 32
+      max: 220
+      step: 2
+      default: 96
 
-- key: cellSize
-  label: character size (px)
-  min: 4
-  max: 16
-  step: 1
+    - key: gridHeight
+      label: grid height
+      min: 20
+      max: 140
+      step: 2
+      default: 54
 
-- key: fps
-  label: fps
-  min: 4
-  max: 30
-  step: 1
+    - key: cellSize
+      label: character size (px)
+      min: 4
+      max: 16
+      step: 1
+      default: 8
 
-- key: duration
-  label: duration (s)
-  min: 0.5
-  max: 4
-  step: 0.25
+    - key: fps
+      label: fps
+      min: 4
+      max: 30
+      step: 1
+      default: 12
 
-- key: spinSpeed
-  label: spin speed (deg/s)
-  min: 0
-  max: 180
-  step: 5
+    - key: duration
+      label: duration (s)
+      min: 0.5
+      max: 4
+      step: 0.25
+      default: 1.5
 
-- key: threshold
-  label: color threshold
-  min: 0
-  max: 1
-  step: 0.01
+- id: framing
+  label: framing
+  settings:
+    - key: cameraDistance
+      label: camera distance
+      min: 1.5
+      max: 10
+      step: 0.25
+      default: 4
 
-- key: split
-  label: mid split
-  min: 0
-  max: 1
-  step: 0.01
+    - key: objectOmega
+      label: object ω (°)
+      min: -180
+      max: 180
+      step: 5
+      default: 0
 
-- key: contrast
-  label: contrast
-  min: -50
-  max: 50
-  step: 5
+    - key: objectPhi
+      label: object φ (°)
+      min: -180
+      max: 180
+      step: 5
+      default: 0
 
-- key: lightAzimuth
-  label: light azimuth (°)
-  min: 0
-  max: 360
-  step: 5
+    - key: objectKappa
+      label: object κ (°)
+      min: -180
+      max: 180
+      step: 5
+      default: 0
 
-- key: lightElevation
-  label: light elevation (°)
-  min: 0
-  max: 90
-  step: 5
+    - key: cameraOmega
+      label: camera ω (°)
+      min: -180
+      max: 180
+      step: 5
+      default: 0
+
+    - key: cameraPhi
+      label: camera φ (°)
+      min: -180
+      max: 180
+      step: 5
+      default: 0
+
+    - key: cameraKappa
+      label: camera κ (°)
+      min: -180
+      max: 180
+      step: 5
+      default: 0
+
+    - key: lightAzimuth
+      label: light azimuth (°)
+      min: 0
+      max: 360
+      step: 5
+      default: 45
+
+    - key: lightElevation
+      label: light elevation (°)
+      min: 0
+      max: 90
+      step: 5
+      default: 40
+
+- id: shading
+  label: shading
+  settings:
+    - key: threshold
+      label: color threshold
+      min: 0
+      max: 1
+      step: 0.01
+      default: 0.5
+
+    - key: split
+      label: mid split
+      min: 0
+      max: 1
+      step: 0.01
+      default: 0.67
+
+    - key: contrast
+      label: contrast
+      min: -50
+      max: 50
+      step: 5
+      default: 0

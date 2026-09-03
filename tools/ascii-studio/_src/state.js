@@ -1,4 +1,6 @@
 // Central app state: user-adjustable settings for rendering + GIF export.
+// Global prefs live in localStorage; each loaded model also keeps its own
+// snapshot so reopening a file restores the same pose / lights / inks.
 
 import { DEFAULT_SETTINGS } from './engine.js';
 
@@ -19,7 +21,13 @@ export const SETTING_DEFS = [
   { key: 'cellSize', label: 'character size (px)', min: 4, max: 16, step: 1 },
   { key: 'fps', label: 'fps', min: 4, max: 30, step: 1 },
   { key: 'duration', label: 'duration (s)', min: 0.5, max: 4, step: 0.25 },
-  { key: 'spinSpeed', label: 'spin speed (deg/s)', min: 0, max: 180, step: 5 },
+  { key: 'cameraDistance', label: 'camera distance', min: 1.5, max: 10, step: 0.25 },
+  { key: 'objectOmega', label: 'object ω (°)', min: -180, max: 180, step: 5 },
+  { key: 'objectPhi', label: 'object φ (°)', min: -180, max: 180, step: 5 },
+  { key: 'objectKappa', label: 'object κ (°)', min: -180, max: 180, step: 5 },
+  { key: 'cameraOmega', label: 'camera ω (°)', min: -180, max: 180, step: 5 },
+  { key: 'cameraPhi', label: 'camera φ (°)', min: -180, max: 180, step: 5 },
+  { key: 'cameraKappa', label: 'camera κ (°)', min: -180, max: 180, step: 5 },
   { key: 'threshold', label: 'color threshold', min: 0, max: 1, step: 0.01 },
   { key: 'split', label: 'mid split', min: 0, max: 1, step: 0.01 },
   { key: 'contrast', label: 'contrast', min: -50, max: 50, step: 5 },
@@ -27,7 +35,22 @@ export const SETTING_DEFS = [
   { key: 'lightElevation', label: 'light elevation (°)', min: 0, max: 90, step: 5 },
 ];
 
+// Framing keys reset on first open of a model so a new file doesn't inherit
+// another model's pose / camera / lights.
+const FRAMING_KEYS = [
+  'cameraDistance',
+  'objectOmega',
+  'objectPhi',
+  'objectKappa',
+  'cameraOmega',
+  'cameraPhi',
+  'cameraKappa',
+  'lightAzimuth',
+  'lightElevation',
+];
+
 const SETTINGS_KEY = 'ascii-studio-settings';
+const MODEL_SETTINGS_KEY = 'ascii-studio-model-settings';
 
 // Old default colors that shipped before the current high-visibility defaults.
 // If a user still has one of these stored (because settings persist in
@@ -38,13 +61,34 @@ const OLD_DEFAULT_COLORS = {
   colorB: ['#fafafa', '#4a5f8f'],
 };
 
-export function createState(initial = {}) {
-  let saved = {};
+function readJson(key, fallback) {
   try {
-    saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    const raw = localStorage.getItem(key);
+    if (raw == null || raw === '') return fallback;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : fallback;
   } catch {
-    saved = {};
+    return fallback;
   }
+}
+
+function writeJson(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // storage unavailable (private mode, quota); non-fatal
+  }
+}
+
+function framingDefaults() {
+  const out = {};
+  for (const key of FRAMING_KEYS) out[key] = DEFAULT_SETTINGS[key];
+  return out;
+}
+
+export function createState(initial = {}) {
+  let saved = readJson(SETTINGS_KEY, {});
+  if (!saved || typeof saved !== 'object') saved = {};
 
   // Migrate stale color defaults -> current defaults.
   let migrated = false;
@@ -58,27 +102,39 @@ export function createState(initial = {}) {
       }
     }
   }
-  // Save the migrated settings back so the fix is permanent.
-  if (migrated) {
-    try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(saved));
-    } catch {}
+  // Drop obsolete keys that no longer drive the engine.
+  if ('spinSpeed' in saved) {
+    delete saved.spinSpeed;
+    migrated = true;
   }
+  if (migrated) writeJson(SETTINGS_KEY, saved);
 
   const settings = { ...DEFAULT_SETTINGS, ...saved, ...initial };
   const listeners = new Set();
+  let activeModel = null; // basename of the loaded model, or null
+  let modelStore = readJson(MODEL_SETTINGS_KEY, {});
+  if (!modelStore || typeof modelStore !== 'object') modelStore = {};
 
   function save() {
-    try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    } catch {
-      // storage unavailable (private mode, quota); non-fatal
-    }
+    writeJson(SETTINGS_KEY, settings);
+  }
+
+  function persistActiveModel() {
+    if (!activeModel) return;
+    modelStore[activeModel] = { ...settings };
+    writeJson(MODEL_SETTINGS_KEY, modelStore);
+  }
+
+  function notify() {
+    for (const fn of listeners) fn(settings);
   }
 
   return {
     get settings() {
       return settings;
+    },
+    get activeModel() {
+      return activeModel;
     },
     get(key) {
       return settings[key];
@@ -86,14 +142,52 @@ export function createState(initial = {}) {
     set(patch) {
       Object.assign(settings, patch);
       save();
-      this.notify();
+      persistActiveModel();
+      notify();
+    },
+    /** Restore factory defaults for the current session (and active model). */
+    reset() {
+      Object.assign(settings, { ...DEFAULT_SETTINGS });
+      save();
+      persistActiveModel();
+      notify();
+    },
+    /**
+     * Bind settings to a model file name. Saves the previous model's snapshot,
+     * then restores this model's saved settings (or resets framing on first open).
+     * @returns {boolean} true when live settings changed and the UI should sync
+     */
+    setActiveModel(name) {
+      if (!name) {
+        this.clearActiveModel();
+        return false;
+      }
+      if (activeModel === name) return false;
+
+      if (activeModel) persistActiveModel();
+      activeModel = name;
+
+      const stored = modelStore[name];
+      if (stored && typeof stored === 'object') {
+        Object.assign(settings, { ...DEFAULT_SETTINGS, ...stored });
+      } else {
+        // First open: keep ink/grid prefs, but start from a clean framing pose
+        // so every new model opens consistently.
+        Object.assign(settings, framingDefaults());
+        persistActiveModel();
+      }
+      save();
+      notify();
+      return true;
+    },
+    clearActiveModel() {
+      if (activeModel) persistActiveModel();
+      activeModel = null;
     },
     subscribe(fn) {
       listeners.add(fn);
       return () => listeners.delete(fn);
     },
-    notify() {
-      for (const fn of listeners) fn(settings);
-    },
+    notify,
   };
 }

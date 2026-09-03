@@ -1,5 +1,5 @@
 {% include language-utils.html %}
-<div class="app" role="application" data-i18n="title" data-i18n-attr="aria-label" aria-label="ascii gif studio">
+<div class="app" data-i18n="title" data-i18n-attr="aria-label" aria-label="ascii gif studio">
 
     <header class="topbar">
       <div class="brand">
@@ -15,7 +15,7 @@
             <p class="drop-message" data-i18n="drop">drop a model here</p>
             <p class="drop-sub" data-i18n="drop_sub">FBX · OBJ · glTF / GLB · USD — it auto-spins or plays its animation in a seamless looping GIF, shaded in one, two, or three inks over transparency.</p>
           </div>
-          <div id="replace-hint" class="replace-hint" data-i18n="replace_hint">drop another model to replace</div>
+          <button type="button" id="replace-hint" class="replace-hint" data-i18n="replace_hint">drop another model to replace</button>
           <input id="file-input" type="file" accept=".fbx,.obj,.gltf,.glb,.usdz,.usd,.usda,.usdc" hidden />
         </div>
 
@@ -34,9 +34,9 @@
 
             <div id="motion-row" class="field-card hidden">
               <div class="motion-btns" role="group" data-i18n="motion" data-i18n-attr="aria-label" aria-label="motion">
-                <button type="button" class="seg" data-motion="auto" data-i18n="auto">auto</button>
-                <button type="button" class="seg" data-motion="animation" data-i18n="animation">animation</button>
-                <button type="button" class="seg" data-motion="spin" data-i18n="spin">spin</button>
+                <button type="button" class="seg" data-motion="auto" aria-pressed="false" data-i18n="auto">auto</button>
+                <button type="button" class="seg" data-motion="animation" aria-pressed="false" data-i18n="animation">animation</button>
+                <button type="button" class="seg" data-motion="spin" aria-pressed="false" data-i18n="spin">spin</button>
               </div>
               <select id="motion-select" class="sr-only" tabindex="-1">
                 <option value="auto" data-i18n="auto">auto</option>
@@ -66,66 +66,75 @@
                 <div class="controls-hr"></div>
 
                 {% comment %}
-                  Sliders are rendered server-side from _data/ascii-studio/settings.yml so the
-                  controls are part of the Jekyll template, not injected by JS.
+                  Grouped sliders from _data/ascii-studio/settings.yml.
+                  Task path: output → framing → shading (+ ink controls).
                 {% endcomment %}
-                {% for def in site.data.ascii-studio.settings %}
-                  <label class="slider-row">
-                    <span class="slider-label" data-i18n="set_{{ def.key }}">{{ def.label }}</span>
-                    <input type="range" data-key="{{ def.key }}" min="{{ def.min }}" max="{{ def.max }}" step="{{ def.step }}" value="{% case def.key %}{% when 'gridWidth' %}96{% when 'gridHeight' %}54{% when 'cellSize' %}8{% when 'fps' %}12{% when 'duration' %}1.5{% when 'spinSpeed' %}45{% when 'threshold' %}0.5{% when 'split' %}0.67{% when 'contrast' %}0{% when 'lightAzimuth' %}45{% when 'lightElevation' %}40{% endcase %}">
-                    <span class="slider-value" data-val="{{ def.key }}"></span>
-                  </label>
+                {% for group in site.data.ascii-studio.settings %}
+                  <section class="settings-group" data-group="{{ group.id }}">
+                    <h2 class="settings-group-label" data-i18n="group_{{ group.id }}">{{ group.label }}</h2>
+                    {% for def in group.settings %}
+                      <label class="slider-row">
+                        <span class="slider-label" data-i18n="set_{{ def.key }}">{{ def.label }}</span>
+                        <input type="range" data-key="{{ def.key }}" min="{{ def.min }}" max="{{ def.max }}" step="{{ def.step }}" value="{{ def.default }}">
+                        <span class="slider-value" data-val="{{ def.key }}"></span>
+                      </label>
+                    {% endfor %}
+
+                    {% if group.id == 'shading' %}
+                      <div class="color-row" id="color-row">
+                        <label class="color-item" id="color-a-item">
+                          <span id="color-a-label" data-i18n="shadow_color">shadow color</span>
+                          <input type="color" id="color-a" />
+                        </label>
+                        <label class="color-item" id="color-b-item">
+                          <span id="color-b-label" data-i18n="highlight_color">highlight color</span>
+                          <input type="color" id="color-b" />
+                        </label>
+                        <label class="color-item hidden" id="color-c-item">
+                          <span id="color-c-label" data-i18n="mid_color">mid color</span>
+                          <input type="color" id="color-c" />
+                        </label>
+                      </div>
+
+                      <div class="style-rows">
+                        <div class="style-field">
+                          <span class="style-label" data-i18n="ink_palette">ink palette</span>
+                          <div class="palette-grid" id="palette-grid" role="group" data-i18n="ink_palette" data-i18n-attr="aria-label" aria-label="ink palette">
+                            {% for p in site.data.ascii-studio.palettes %}
+                              <button type="button" class="palette-chip" data-palette="{{ p.id }}" aria-label="{{ p.name }}" title="{{ p.name }}" aria-pressed="false">
+                                <span class="pc-swatches" aria-hidden="true">
+                                  <span style="background:{{ p.shadow }}"></span>
+                                  <span style="background:{{ p.mid }}"></span>
+                                  <span style="background:{{ p.highlight }}"></span>
+                                </span>
+                                <span class="pc-name">{{ p.name }}</span>
+                              </button>
+                            {% endfor %}
+                          </div>
+                        </div>
+                        <div class="style-field">
+                          <span class="style-label" data-i18n="ink_colors">ink colors</span>
+                          <div class="motion-btns inks-btns" role="group" data-i18n="ink_colors" data-i18n-attr="aria-label" aria-label="ink colors">
+                            <button type="button" class="seg" data-ink="1" aria-pressed="false">1</button>
+                            <button type="button" class="seg" data-ink="2" aria-pressed="false">2</button>
+                            <button type="button" class="seg" data-ink="3" aria-pressed="false">3</button>
+                          </div>
+                        </div>
+                        <div class="style-field">
+                          <span class="style-label" data-i18n="dither">dither (ink mixing)</span>
+                          <div class="motion-btns inks-btns" role="group" data-i18n="dither" data-i18n-attr="aria-label" aria-label="dither">
+                            <button type="button" class="seg" data-dither="none" aria-pressed="false" data-i18n="dither_off">off</button>
+                            <button type="button" class="seg" data-dither="bayer4x4" aria-pressed="false">4×4</button>
+                            <button type="button" class="seg" data-dither="bayer8x8" aria-pressed="false">8×8</button>
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  </section>
                 {% endfor %}
 
-                <div class="color-row" id="color-row">
-                  <label class="color-item" id="color-a-item">
-                    <span id="color-a-label" data-i18n="shadow_color">shadow color</span>
-                    <input type="color" id="color-a" />
-                  </label>
-                  <label class="color-item" id="color-b-item">
-                    <span id="color-b-label" data-i18n="highlight_color">highlight color</span>
-                    <input type="color" id="color-b" />
-                  </label>
-                  <label class="color-item hidden" id="color-c-item">
-                    <span id="color-c-label" data-i18n="mid_color">mid color</span>
-                    <input type="color" id="color-c" />
-                  </label>
-                </div>
-
-                <div class="style-rows">
-                  <div class="controls-hr"></div>
-                  <div class="style-field">
-                    <span class="style-label" data-i18n="ink_palette">ink palette</span>
-                    <div class="palette-grid" id="palette-grid" role="group" data-i18n="ink_palette" data-i18n-attr="aria-label" aria-label="ink palette">
-                      {% for p in site.data.ascii-studio.palettes %}
-                        <button type="button" class="palette-chip" data-palette="{{ p.id }}" aria-label="{{ p.name }}" title="{{ p.name }}">
-                          <span class="pc-swatches" aria-hidden="true">
-                            <span style="background:{{ p.shadow }}"></span>
-                            <span style="background:{{ p.mid }}"></span>
-                            <span style="background:{{ p.highlight }}"></span>
-                          </span>
-                          <span class="pc-name">{{ p.name }}</span>
-                        </button>
-                      {% endfor %}
-                    </div>
-                  </div>
-                  <div class="style-field">
-                    <span class="style-label" data-i18n="ink_colors">ink colors</span>
-                    <div class="motion-btns inks-btns" role="group" data-i18n="ink_colors" data-i18n-attr="aria-label" aria-label="ink colors">
-                      <button type="button" class="seg" data-ink="1">1</button>
-                      <button type="button" class="seg" data-ink="2">2</button>
-                      <button type="button" class="seg" data-ink="3">3</button>
-                    </div>
-                  </div>
-                  <div class="style-field">
-                    <span class="style-label" data-i18n="dither">dither (ink mixing)</span>
-                    <div class="motion-btns inks-btns" role="group" data-i18n="dither" data-i18n-attr="aria-label" aria-label="dither">
-                      <button type="button" class="seg" data-dither="none" data-i18n="dither_off">off</button>
-                      <button type="button" class="seg" data-dither="bayer4x4">4×4</button>
-                      <button type="button" class="seg" data-dither="bayer8x8">8×8</button>
-                    </div>
-                  </div>
-                </div>
+                <div class="controls-hr"></div>
+                <button type="button" id="reset-settings-btn" class="ghost-btn reset-settings-btn" data-i18n="reset_settings">reset settings</button>
 
               </div>
             </details>
@@ -136,9 +145,7 @@
           </div>
         </div>
 
-        <div id="preview-wrap" class="preview-wrap hidden">
-          <img id="preview-img" data-i18n="preview_alt" data-i18n-attr="alt" alt="generated gif preview" />
-        </div>
+        <div id="preview-wrap" class="preview-wrap hidden"></div>
       </div>
     </main>
   </div>

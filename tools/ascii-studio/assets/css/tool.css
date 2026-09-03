@@ -18,9 +18,14 @@ body {
 
 .app {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   padding: 12px 12px 20px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-right: max(12px, env(safe-area-inset-right));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  padding-left: max(12px, env(safe-area-inset-left));
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -64,6 +69,7 @@ body {
   border: 1px solid var(--line);
   border-radius: 4px;
   overflow: hidden;
+  contain: layout paint;
 }
 
 #ascii-canvas {
@@ -93,6 +99,55 @@ body {
   background: color-mix(in srgb, var(--accent-color) 12%, transparent);
 }
 
+/* When a model is loaded, the full-frame hit target collapses so the preview
+   stays the focus; replace is a compact control at the top. */
+.drop-zone.loaded {
+  inset: auto;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  height: auto;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.drop-zone.loaded:focus-visible {
+  outline: none;
+}
+
+.drop-zone.loaded.dragging {
+  /* Keep drag affordance over the whole frame via .frame.dragging */
+  box-shadow: none;
+  background: transparent;
+}
+
+.frame.dragging {
+  box-shadow: inset 0 0 0 2px var(--accent-deep);
+}
+
+.frame.importing {
+  cursor: progress;
+}
+
+.frame.importing .empty-motif span {
+  animation: motif-pulse 0.9s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+}
+
+.frame.importing .empty-motif span:nth-child(1) { animation-delay: 0s; }
+.frame.importing .empty-motif span:nth-child(2) { animation-delay: 0.05s; }
+.frame.importing .empty-motif span:nth-child(3) { animation-delay: 0.1s; }
+.frame.importing .empty-motif span:nth-child(4) { animation-delay: 0.15s; }
+.frame.importing .empty-motif span:nth-child(5) { animation-delay: 0.2s; }
+.frame.importing .empty-motif span:nth-child(6) { animation-delay: 0.25s; }
+.frame.importing .empty-motif span:nth-child(7) { animation-delay: 0.3s; }
+
+@keyframes motif-pulse {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
 /* Empty prompt */
 .empty-state {
   position: absolute;
@@ -104,7 +159,7 @@ body {
   gap: 10px;
   padding: 24px;
   text-align: center;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
@@ -144,27 +199,44 @@ body {
   color: var(--muted);
   font-size: 12px;
   max-width: 46ch;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* "Drop another to replace" — shown only when a model is loaded */
 .replace-hint {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  display: none;
   font-size: 12px;
+  font-family: var(--sans);
   color: var(--muted);
   background: var(--surface);
   border: 1px solid var(--line);
-  padding: 4px 12px;
+  padding: 10px 14px;
   border-radius: 4px;
-  display: none;
-  pointer-events: none;
+  min-height: 44px;
+  cursor: pointer;
+  pointer-events: auto;
   z-index: 6;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.replace-hint:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.replace-hint:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
 }
 
 .drop-zone.loaded .replace-hint {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Spin hint */
@@ -258,16 +330,26 @@ body {
   border: none;
   background: transparent;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 4px;
 }
 
 .chip-remove:hover {
   color: var(--text);
   background: var(--surface);
+}
+
+.chip-remove:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
 }
 
 .chip:not(.hidden) {
@@ -288,7 +370,8 @@ body {
   font-size: 14px;
   font-weight: 400;
   color: var(--muted);
-  padding: 7px 2px;
+  padding: 10px 8px;
+  min-height: 44px;
   user-select: none;
 }
 
@@ -299,7 +382,7 @@ body {
 .settings summary .chev {
   color: var(--dim);
   font-size: 12px;
-  transition: transform 0.2s;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .settings[open] summary .chev {
@@ -313,14 +396,17 @@ body {
 .controls-body {
   position: absolute;
   right: 0;
-  bottom: 40px;
+  bottom: calc(100% + 8px);
   width: 320px;
   max-height: min(58vh, 560px);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 4px;
   padding: 6px 14px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) var(--surface);
 }
 
 /* Motion segmented control */
@@ -340,11 +426,16 @@ body {
   color: var(--muted);
   font-size: 12px;
   font-weight: 400;
-  padding: 6px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
+  min-width: 44px;
   border-radius: 4px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .seg:hover {
@@ -352,7 +443,8 @@ body {
   border-color: var(--line-strong);
 }
 
-.seg.active {
+.seg.active,
+.seg[aria-pressed='true'] {
   color: var(--primary-bg);
   background: var(--accent-btn);
   border-color: var(--accent-btn);
@@ -366,7 +458,8 @@ body {
 #anim-row select {
   width: auto;
   min-width: 120px;
-  padding: 6px 9px;
+  min-height: 44px;
+  padding: 10px 12px;
   font-size: 12px;
 }
 
@@ -404,6 +497,8 @@ body {
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
   text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .ghost-btn:hover {
@@ -419,18 +514,56 @@ body {
   color: var(--dim);
 }
 
+.reset-settings-btn {
+  width: 100%;
+  text-align: center;
+}
+
 .controls-hr {
   border-top: 1px solid var(--line);
   margin: 10px 0;
+}
+
+/* Settings groups: task path = output → framing → shading */
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 4px 0 2px;
+}
+
+.settings-group + .settings-group {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.settings-group-label {
+  margin: 2px 0 6px;
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.settings-group .color-row {
+  margin-top: 6px;
+}
+
+.settings-group .style-rows {
+  margin-top: 4px;
 }
 
 /* Sliders */
 .slider-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 10px;
+  gap: 6px 10px;
   align-items: center;
-  padding: 8px 0;
+  padding: 5px 0;
 }
 
 .slider-label {
@@ -447,16 +580,32 @@ body {
   background: var(--line);
   border-radius: 4px;
   outline: none;
+  accent-color: var(--accent);
 }
 
 .slider-row input[type='range']::-webkit-slider-thumb {
   appearance: none;
-  width: 13px;
-  height: 13px;
+  width: 18px;
+  height: 18px;
   background: var(--accent);
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid var(--surface);
+}
+
+.slider-row input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--surface);
+}
+
+.slider-row input[type='range']::-moz-range-track {
+  height: 4px;
+  background: var(--line);
+  border-radius: 4px;
 }
 
 .slider-value {
@@ -489,7 +638,7 @@ body {
 
 .color-item input[type='color'] {
   width: 100%;
-  height: 30px;
+  height: 44px;
   border: 1px solid var(--line-strong);
   border-radius: 4px;
   background: var(--surface-2);
@@ -533,7 +682,8 @@ body {
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 4px;
-  padding: 6px;
+  padding: 8px;
+  min-height: 44px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -542,9 +692,10 @@ body {
   border-color: var(--line-strong);
 }
 
-.palette-chip.active {
+.palette-chip.active,
+.palette-chip[aria-pressed='true'] {
   border-color: var(--accent-deep);
-  box-shadow: 0 0 0 1px var(--accent-deep) inset;
+  box-shadow: inset 0 0 0 1px var(--accent-deep);
 }
 
 .palette-chip:focus-visible {
@@ -577,7 +728,7 @@ body {
 
 .inks-btns .seg {
   flex: 1;
-  min-width: 0;
+  min-width: 44px;
 }
 
 /* Export */
@@ -592,21 +743,23 @@ body {
   color: var(--primary-bg);
   border: none;
   border-radius: 4px;
-  padding: 8px 16px;
-  min-height: 32px;
+  padding: 10px 16px;
+  min-height: 44px;
   font-size: 14px;
   font-weight: 400;
   cursor: pointer;
   font-family: var(--sans);
+  transition: background 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.export-btn:hover {
+.export-btn:hover:not(:disabled) {
   background: var(--accent-deep);
 }
 
-.export-btn:disabled {
+.export-btn:disabled,
+.export-btn[aria-busy='true'] {
   opacity: 0.6;
-  cursor: not-allowed;
+  cursor: progress;
 }
 
 /* Preview : small thumbnail top-right */
@@ -620,6 +773,7 @@ body {
   border-radius: 4px;
   padding: 6px;
   pointer-events: auto;
+  contain: layout paint;
 }
 
 #preview-img {
@@ -635,7 +789,7 @@ body {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 22px;
+  bottom: max(22px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   max-width: min(90vw, 440px);
   background: var(--surface-2);
@@ -646,12 +800,13 @@ body {
   font-size: 12px;
   line-height: 1.45;
   z-index: 60;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toast.hide {
   opacity: 0;
   transform: translate(-50%, 8px);
-  transition: opacity 0.25s, transform 0.25s;
 }
 
 .hidden {
@@ -681,24 +836,151 @@ input[type='range']:focus-visible,
   outline-offset: 2px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .empty-state,
+  .toast,
+  .toast.hide,
+  .settings summary .chev,
+  .seg,
+  .ghost-btn,
+  .palette-chip,
+  .export-btn,
+  .frame.importing .empty-motif span {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Mouse/trackpad: denser chrome; touch keeps the 44px floor above. */
+@media (pointer: fine) {
+  .seg {
+    min-height: 32px;
+    min-width: 0;
+    padding: 6px 12px;
+  }
+
+  .inks-btns .seg {
+    min-width: 0;
+  }
+
+  .chip-remove {
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 14px;
+  }
+
+  .settings summary {
+    min-height: 36px;
+    padding: 7px 2px;
+  }
+
+  .export-btn {
+    min-height: 36px;
+    padding: 8px 16px;
+  }
+
+  .palette-chip {
+    min-height: 0;
+    padding: 6px;
+  }
+
+  .color-item input[type='color'] {
+    height: 30px;
+  }
+
+  .slider-row input[type='range']::-webkit-slider-thumb {
+    width: 13px;
+    height: 13px;
+  }
+
+  .slider-row input[type='range']::-moz-range-thumb {
+    width: 13px;
+    height: 13px;
+  }
+
+  .replace-hint {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+
+  #anim-row select {
+    min-height: 32px;
+    padding: 6px 9px;
+  }
+}
+
 @media (max-width: 820px) {
   .app {
     height: auto;
     min-height: 100vh;
+    min-height: 100dvh;
   }
   html,
   body {
     overflow: auto;
   }
   .frame {
-    min-height: 420px;
+    min-height: min(56vh, 480px);
+  }
+  .hint {
+    bottom: auto;
+    top: 58px;
+    white-space: normal;
+    max-width: calc(100% - 24px);
+    text-align: center;
+  }
+  .tray {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .tray-left,
+  .tray-right {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tray-right {
+    justify-content: stretch;
+  }
+  .tray-right .settings {
+    flex: 1;
+  }
+  .export-row {
+    width: 100%;
+  }
+  .export-btn {
+    width: 100%;
+  }
+  .chip {
+    max-width: 100%;
+    flex: 1;
+  }
+  .motion-btns {
+    width: 100%;
+  }
+  .motion-btns .seg {
+    flex: 1;
   }
   .controls-body {
     position: fixed;
     right: auto;
     left: 50%;
     transform: translateX(-50%);
-    bottom: 104px;
+    bottom: max(168px, calc(env(safe-area-inset-bottom) + 148px));
     width: min(320px, calc(100vw - 32px));
+    max-height: min(48vh, 420px);
+  }
+}
+
+@media (max-width: 480px) {
+  .drop-sub {
+    font-size: 12px;
+    max-width: 34ch;
+  }
+  .palette-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
