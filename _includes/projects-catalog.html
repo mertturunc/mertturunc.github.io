@@ -4,13 +4,22 @@
     // Cache the collapsible elements with accordion behavior and URL hash support
     document.addEventListener('DOMContentLoaded', function() {
       const coll = document.getElementsByClassName("collapsible");
+
+      function projectContent(el) {
+        const row = el.closest('.collapsible-row');
+        return row ? row.nextElementSibling : el.nextElementSibling;
+      }
+      function projectMaxBtn(el) {
+        const row = el.closest('.collapsible-row');
+        return row ? row.querySelector('.maximize-btn') : el.querySelector('.maximize-btn');
+      }
       
       // Function to close all containers
       function closeAllContainers() {
         for (let j = 0; j < coll.length; j++) {
           coll[j].classList.remove("active");
-          const content = coll[j].nextElementSibling;
-          content.classList.remove("content-open");
+          const content = projectContent(coll[j]);
+          if (content) content.classList.remove("content-open");
         }
       }
       
@@ -18,8 +27,8 @@
       function openContainer(index) {
         if (index >= 0 && index < coll.length) {
           coll[index].classList.add("active");
-          const content = coll[index].nextElementSibling;
-          content.classList.add("content-open");
+          const content = projectContent(coll[index]);
+          if (content) content.classList.add("content-open");
         }
       }
       
@@ -34,12 +43,14 @@
       
       // Set up click handlers
       for (let i = 0; i < coll.length; i++) {
-        const projectTitle = coll[i].textContent;
+        const titleEl = coll[i].querySelector('.collapsible-title');
+        const projectTitle = titleEl ? titleEl.textContent : coll[i].textContent;
         const projectHash = generateHash(projectTitle);
         coll[i].setAttribute('data-hash', projectHash);
         
         coll[i].addEventListener("click", function() {
-          const content = this.nextElementSibling;
+          const content = projectContent(this);
+          if (!content) return;
           const isCurrentlyOpen = content.classList.contains("content-open");
           
           // Close all other collapsible content with animation
@@ -91,37 +102,9 @@
             closeAllContainers();
             // Remove hash from URL when closing with ESC
             history.pushState(null, null, window.location.pathname);
-            // Hide maximize buttons after closing
-            showMaximizeButtons();
           }
         }
       });
-
-      // Maximize/minimize modal logic from scratch
-      function showMaximizeButtons() {
-        document.querySelectorAll('.collapsible').forEach(function(coll) {
-          const maxBtn = coll.querySelector('.maximize-btn');
-          if (maxBtn) {
-            if (coll.classList.contains('active')) {
-              maxBtn.style.display = 'inline-block';
-              maxBtn.style.pointerEvents = 'auto';
-            } else {
-              maxBtn.style.display = 'none';
-              maxBtn.style.pointerEvents = 'none';
-            }
-          }
-        });
-      }
-      // Update maximize button visibility on open/close
-      document.querySelectorAll('.collapsible').forEach(function(coll) {
-        coll.addEventListener('click', function() {
-          setTimeout(showMaximizeButtons, 10);
-        });
-      });
-      window.addEventListener('hashchange', function() {
-        setTimeout(showMaximizeButtons, 10);
-      });
-      showMaximizeButtons();
 
       // Modal maximize logic (refined close button + ESC support)
       let escListener = null;
@@ -136,6 +119,8 @@
         // Add close button positioned over the top right corner of modal content
         const closeBtn = document.createElement('button');
         closeBtn.className = 'modal-close-btn';
+        closeBtn.type = 'button';
+        closeBtn.setAttribute('aria-label', {{ t.carousel.close | jsonify }});
         closeBtn.innerHTML = '&times;';
         closeBtn.onclick = function(e) {
           e.stopPropagation();
@@ -498,8 +483,8 @@
       }
       // Attach maximize button logic
       document.querySelectorAll('.collapsible').forEach(function(coll) {
-        const maxBtn = coll.querySelector('.maximize-btn');
-        const content = coll.nextElementSibling;
+        const maxBtn = projectMaxBtn(coll);
+        const content = projectContent(coll);
         if (maxBtn && content) {
           maxBtn.onclick = function(e) {
             e.stopPropagation();
@@ -526,6 +511,12 @@
 
   .kategori{ display: grid;}
 
+  .collapsible-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 10px;
+  }
   .collapsible {
     position: relative;
     display: flex;
@@ -533,13 +524,15 @@
     min-height: 44px;
     padding: 0 18px;
     font-size: 15px;
-    margin-top: 10px;
-    transition: all 0.3s ease;
-    border-radius: 4px 4px 0 0;
+    margin-top: 0;
+    transition: background-color 0.2s ease;
+    border-radius: 4px;
     background-color: var(--code-bg);
     color: var(--primary-text);
     cursor: pointer;
-    width: 100%;
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
     border: none;
     text-align: left;
     outline: none;
@@ -563,32 +556,27 @@
     font-size: 0.85em;
     font-weight: 300;
     margin-left: 12px;
-    margin-right: 8px;
+    margin-right: 0;
     opacity: 0.8;
   }
   .maximize-btn {
-    background: var(--btn-bg);
-    color: var(--primary-text);
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    font-size: 18px;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: auto;
     padding: 0;
-    margin-left: auto;
-    margin-right: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-    flex-shrink: 0;
-  }
-
-  .active, .collapsible:hover {
-    background-color: var(--border-color);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 0;
+    background: var(--border-color);
+    color: var(--muted-text);
+    border: none;
+    border-left: 1px solid color-mix(in srgb, var(--primary-text) 14%, transparent);
+    border-radius: 0 4px 0 0;
+    cursor: pointer;
+    box-shadow: none;
+    font: inherit;
+    line-height: 0;
   }
 
   .content {
@@ -624,7 +612,7 @@
     color: var(--primary-text);
     background: transparent;
     text-decoration: none;
-    font-size: 0.85em;
+    font-size: 1em;
     font-weight: 400;
     margin: 5px 8px 5px 0;
     display: inline-block;
@@ -642,11 +630,13 @@
 
   .project-description {
     margin: 15px 0 10px 0;
+    font-size: 15px;
     animation: fadeInUp 0.5s ease-out 0.2s both;
   }
 
   .project-description p {
     margin-bottom: 12px;
+    font-size: 1em;
   }
 
   .project-buttons {
@@ -673,27 +663,25 @@
     background-color: var(--border-color);
   }
 
-  .active {
+  .collapsible.active {
     background-color: var(--border-color);
-    border-radius: 4px 4px 0 0;
+    border-radius: 4px 0 0 0;
   }
 
   /* Smooth iframe loading animation */
   .sketchfab-embed-wrapper {
     animation: fadeInUp 0.6s ease-out 0.3s both;
   }
-  .collapsible {
-    position: relative;
-  }
-  .collapsible.active .maximize-btn {
-    display: flex !important;
-    opacity: 1;
-    pointer-events: auto;
+  .collapsible-row:has(.collapsible.active) .maximize-btn {
+    display: flex;
   }
   .maximize-btn:hover {
-    background: var(--btn-hover);
-    color: var(--primary-bg);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    color: var(--accent-color);
+    background: var(--border-color);
+  }
+  .maximize-btn:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
   }
   /* Modal overlay for maximized view */
   :root {
@@ -726,7 +714,7 @@
     color: var(--primary-text);
     z-index: 9999;
     box-shadow: 0 8px 40px rgba(0,0,0,0.25);
-    border-radius: 10px;
+    border-radius: 4px;
     overflow-y: auto;
     opacity: 1;
     padding: 40px 40px 30px 40px;
@@ -738,22 +726,23 @@
   }
   .modal-close-btn {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    z-index: 99999;
-    width: 36px;
-    height: 36px;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--btn-bg);
     color: var(--primary-text);
     border: 1px solid var(--border-color);
-    border-radius: 50%;
-    font-size: 22px;
+    border-radius: 4px;
+    font-size: 20px;
+    line-height: 1;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    box-shadow: none;
+    transition: color 0.2s, border-color 0.2s;
     outline: none;
   }
   .modal-close-btn:focus-visible {
@@ -761,13 +750,13 @@
     outline-offset: 2px;
   }
   .modal-close-btn:hover {
-    background: var(--btn-hover);
-    color: var(--primary-bg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    background: var(--btn-bg);
   }
-  .modal-overlay { /* ensure close btn is always above modal content */
-    padding-top: 32px;
-    padding-right: 40px;
+  .modal-overlay {
+    padding-top: 16px;
+    padding-right: 16px;
     box-sizing: border-box;
   }
   .minimize-btn { display: none !important; } /* Hide old minimize button */
@@ -949,11 +938,17 @@
       {% endif %}
     {% endif %}
     
+    <div class="collapsible-row">
     <button type="button" class="collapsible">
       <span class="collapsible-title">{{ display_title }}{% if project.has_full_page %} <span class="language-indicator">{{ lang_indicators }}</span>{% endif %}</span>
       <span class="project-date">{{ project.date | date: "%Y" }}</span>
-      <span class="maximize-btn" style="display:none;">⛶</span>
     </button>
+    <button type="button" class="maximize-btn" aria-label="{{ t.project.maximize }}">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+        <path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/>
+      </svg>
+    </button>
+    </div>
     <div class="content">
       {% if project.show_carousel and project.carousel_images %}
         {% comment %} Split the project URL to get the folder name {% endcomment %}
@@ -972,11 +967,7 @@
         {% endif %}
         <div class="project-buttons">
           {% if project.has_full_page %}
-          {% if current_lang == 'en' %}
-          <a href="/en{{ project.url }}" class="project-link">{{ t.project.view_project }}</a>
-          {% else %}
           <a href="{{ project.url }}" class="project-link">{{ t.project.view_project }}</a>
-          {% endif %}
           {% endif %}
           {% if project.site_url %}
           <a href="{{ project.site_url }}" class="project-link" target="_blank" rel="noopener noreferrer">{{ t.project.visit_site }}</a>

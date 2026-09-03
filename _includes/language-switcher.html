@@ -21,23 +21,23 @@
   <div class="language-switcher__menu" id="lang-menu" hidden>
     <div class="language-switcher__section">
       {% if current_lang == 'tr' %}
-        <a href="{{ alternate_url }}" class="language-switcher__link" lang="en" hreflang="en">🇺🇸 {{ t.general.english }}</a>
+        <a href="{{ alternate_url }}" class="language-switcher__link" lang="en" hreflang="en">{{ t.general.english }}</a>
       {% else %}
-        <a href="{{ alternate_url }}" class="language-switcher__link" lang="tr" hreflang="tr">🇹🇷 {{ t.general.turkish }}</a>
+        <a href="{{ alternate_url }}" class="language-switcher__link" lang="tr" hreflang="tr">{{ t.general.turkish }}</a>
       {% endif %}
     </div>
   </div>
 </div>
 
-<!-- Minimal Language Switcher (Mobile) -->
+<!-- Minimal Language Switcher (Mobile): label is the destination language -->
 <a
   href="{{ alternate_url }}"
   class="language-switcher-minimal"
   hreflang="{% if current_lang == 'tr' %}en{% else %}tr{% endif %}"
   lang="{% if current_lang == 'tr' %}en{% else %}tr{% endif %}"
-  aria-label="{% if current_lang == 'tr' %}{{ t.general.english }}{% else %}{{ t.general.turkish }}{% endif %}"
+  aria-label="{% if current_lang == 'tr' %}{{ t.general.switch_to_en }} (EN){% else %}{{ t.general.switch_to_tr }} (TR){% endif %}"
 >
-  {% if current_lang == 'tr' %}TR{% else %}EN{% endif %}
+  {% if current_lang == 'tr' %}EN{% else %}TR{% endif %}
 </a>
 
 <script>

@@ -3,11 +3,7 @@
 <html lang="{{ current_lang }}" prefix="og: http://ogp.me/ns#" xmlns:og="http://opengraphprotocol.org/schema/">
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
-  {% if page.class == "page_wide" %}
-    <meta name="viewport" content="width=900" />
-  {% else %}
-    <meta name="viewport" content="width=640" />
-  {% endif %}
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#282828">
   <link href="/favicon.ico" rel="icon">
   <link href="/i/favicon.png" rel="icon" type="image/png" sizes="32x32">
@@ -24,7 +20,7 @@
     })();
   </script>
 
-  <link href='/style.css?v=20260831-6' rel='stylesheet' type='text/css' />
+  <link href='/style.css?v=20260903-12' rel='stylesheet' type='text/css' />
   {% include syntax-highlighting.html %}
   <title>{{ page.title }} @ {{ t.site_title }}</title>
 
@@ -118,16 +114,16 @@
 
   {% comment %} Alternate language links — live host, not github.io {% endcomment %}
   {% if page.collection == 'projects' %}
-    <link rel="alternate" hreflang="tr" href="{{ site.url }}{{ page.url }}" />
+    <link rel="alternate" hreflang="en" href="{{ site.url }}{{ page.url }}" />
     <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url }}" />
   {% elsif current_lang == 'tr' %}
     <link rel="alternate" hreflang="tr" href="{{ site.url }}{{ page.url }}" />
-    <link rel="alternate" hreflang="en" href="{{ site.url }}/en{{ page.url }}" />
-    <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url }}" />
+    <link rel="alternate" hreflang="en" href="{{ site.url }}{{ page.url | replace_first: '/tr', '/en' }}" />
+    <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url | replace_first: '/tr', '/en' }}" />
   {% else %}
     <link rel="alternate" hreflang="en" href="{{ site.url }}{{ page.url }}" />
-    <link rel="alternate" hreflang="tr" href="{{ site.url }}{{ page.url | remove: '/en' }}" />
-    <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url | remove: '/en' }}" />
+    <link rel="alternate" hreflang="tr" href="{{ site.url }}{{ page.url | replace_first: '/en', '/tr' }}" />
+    <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url }}" />
   {% endif %}
 </head>
 <body{% if page.layout == 'project' or page.layout == 'post' %} class="post-layout"{% endif %}>

@@ -1,11 +1,15 @@
 {% comment %}
-Language utility functions for the multilingual Jekyll site
+Language utility functions for the multilingual Jekyll site.
+English lives under /en/, Turkish under /tr/. Unprefixed catalog URLs
+redirect to /en/. Posts and live tools keep their own permalinks.
 {% endcomment %}
 
 {% comment %} Detect current language from page properties first, then URL {% endcomment %}
 {% assign current_lang = site.default_lang %}
 {% if page.lang %}
   {% assign current_lang = page.lang %}
+{% elsif page.url contains '/tr/' or page.url == '/tr' %}
+  {% assign current_lang = 'tr' %}
 {% elsif page.url contains '/en/' %}
   {% assign current_lang = 'en' %}
 {% endif %}
@@ -39,60 +43,60 @@ Language utility functions for the multilingual Jekyll site
   {% comment %} If no specific translation found, fall back to projects index or homepage {% endcomment %}
   {% unless page_exists %}
     {% if page.collection == 'projects' %}
-      {% if alternate_lang == 'en' %}
-        {% assign alternate_url = '/en/projects/' %}
+      {% if alternate_lang == 'tr' %}
+        {% assign alternate_url = '/tr/projects/' %}
       {% else %}
-        {% assign alternate_url = '/projects/' %}
+        {% assign alternate_url = '/en/projects/' %}
       {% endif %}
-    {% elsif alternate_lang == 'en' %}
-      {% assign alternate_url = '/en/' %}
+    {% elsif alternate_lang == 'tr' %}
+      {% assign alternate_url = '/tr/' %}
     {% else %}
-      {% assign alternate_url = '/' %}
+      {% assign alternate_url = '/en/' %}
     {% endif %}
     {% assign page_exists = true %}
   {% endunless %}
 {% else %}
   {% comment %} Static page language switching logic {% endcomment %}
-  {% if current_lang == 'tr' %}
-    {% assign alternate_lang = 'en' %}
-    {% if current_url == '/' %}
-      {% assign alternate_url = '/en/' %}
+  {% if current_lang == 'en' %}
+    {% assign alternate_lang = 'tr' %}
+    {% if current_url == '/en/' or current_url == '/' %}
+      {% assign alternate_url = '/tr/' %}
       {% assign page_exists = true %}
-    {% elsif current_url == '/projects/' %}
-      {% assign alternate_url = '/en/projects/' %}
+    {% elsif current_url == '/en/projects/' or current_url == '/projects/' %}
+      {% assign alternate_url = '/tr/projects/' %}
       {% assign page_exists = true %}
-    {% elsif current_url == '/tools/' %}
-      {% assign alternate_url = '/en/tools/' %}
+    {% elsif current_url == '/en/tools/' or current_url == '/tools/' %}
+      {% assign alternate_url = '/tr/tools/' %}
       {% assign page_exists = true %}
-    {% elsif current_url == '/resume/' %}
-      {% assign alternate_url = '/en/resume/' %}
-      {% assign page_exists = false %}
+    {% elsif current_url == '/en/resume/' or current_url == '/resume/' %}
+      {% assign alternate_url = '/tr/resume/' %}
+      {% assign page_exists = true %}
     {% elsif page.collection == 'projects' %}
-      {% assign alternate_url = '/en/projects/' %}
+      {% assign alternate_url = '/tr/projects/' %}
       {% assign page_exists = true %}
     {% else %}
-      {% assign alternate_url = '/en/' %}
+      {% assign alternate_url = '/tr/' %}
       {% assign page_exists = true %}
     {% endif %}
   {% else %}
-    {% assign alternate_lang = 'tr' %}
-    {% if current_url == '/en/' %}
-      {% assign alternate_url = '/' %}
+    {% assign alternate_lang = 'en' %}
+    {% if current_url == '/tr/' %}
+      {% assign alternate_url = '/en/' %}
       {% assign page_exists = true %}
-    {% elsif current_url == '/en/projects/' %}
-      {% assign alternate_url = '/projects/' %}
+    {% elsif current_url == '/tr/projects/' %}
+      {% assign alternate_url = '/en/projects/' %}
       {% assign page_exists = true %}
-    {% elsif current_url == '/en/tools/' %}
-      {% assign alternate_url = '/tools/' %}
+    {% elsif current_url == '/tr/tools/' %}
+      {% assign alternate_url = '/en/tools/' %}
       {% assign page_exists = true %}
-    {% elsif current_url == '/en/resume/' %}
-      {% assign alternate_url = '/resume/' %}
+    {% elsif current_url == '/tr/resume/' %}
+      {% assign alternate_url = '/en/resume/' %}
       {% assign page_exists = true %}
     {% elsif page.collection == 'projects' %}
-      {% assign alternate_url = '/projects/' %}
+      {% assign alternate_url = '/en/projects/' %}
       {% assign page_exists = true %}
     {% else %}
-      {% assign alternate_url = '/' %}
+      {% assign alternate_url = '/en/' %}
       {% assign page_exists = true %}
     {% endif %}
   {% endif %}
@@ -103,4 +107,4 @@ Language utility functions for the multilingual Jekyll site
   {% assign has_translations = true %}
 {% else %}
   {% assign has_translations = false %}
-{% endif %} 
+{% endif %}

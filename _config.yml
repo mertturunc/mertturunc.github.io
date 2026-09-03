@@ -11,6 +11,7 @@ sitemap:
     - "/script/"
     - "/vendor/"
     - "/resume/"
+    - "/tr/resume/"
     - "/en/resume/"
     - "*.json"
     - "*.xml"
@@ -20,7 +21,7 @@ sitemap:
 
 # Site configuration
 url: "https://blog.atr0p.dev"
-default_lang: "tr"
+default_lang: "en"
 mapbox_access_token: ""
 
 # Collections configuration

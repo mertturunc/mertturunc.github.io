@@ -2,14 +2,26 @@
 <meta name="theme-color" content="#282828">
 <link href="/favicon.ico" rel="icon">
 <link href="/i/favicon.png" rel="icon" type="image/png" sizes="32x32">
-<link rel="stylesheet" href="{{ '/tools/assets/css/shell.css' | relative_url }}?v=20260831-8">
+<link rel="stylesheet" href="{{ '/tools/assets/css/shell.css' | relative_url }}?v=20260903-12">
 <script>
   (function () {
     var savedTheme = localStorage.getItem('theme') || 'dark';
     if (savedTheme === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
     }
-    var savedLang = localStorage.getItem('lang');
+    var qLang = null;
+    try { qLang = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+    var fromRef = null;
+    try {
+      if (document.referrer) {
+        var p = new URL(document.referrer).pathname;
+        if (p === '/tr' || p.indexOf('/tr/') === 0) fromRef = 'tr';
+        else if (p === '/en' || p.indexOf('/en/') === 0) fromRef = 'en';
+      }
+    } catch (e) {}
+    var savedLang = (qLang === 'en' || qLang === 'tr')
+      ? qLang
+      : (fromRef || localStorage.getItem('lang'));
     if (savedLang === 'en' || savedLang === 'tr') {
       document.documentElement.setAttribute('data-lang', savedLang);
     }

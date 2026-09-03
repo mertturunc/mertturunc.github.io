@@ -41,6 +41,7 @@ tr:
     available_in: "bu proje şu dillerde mevcut:"
     original_lang: "orijinal dil:"
     return_to_projects: "projelere dön"
+    maximize: "büyüt"
   carousel:
     roledescription: "slayt gösterisi"
     prev: "önceki görsel"
@@ -63,6 +64,8 @@ tr:
     language: "dil"
     turkish: "türkçe"
     english: "ingilizce"
+    switch_to_en: "ingilizceye geç"
+    switch_to_tr: "türkçeye geç"
     skip_to_content: "içeriğe geç"
     main_nav: "ana menü"
     theme_toggle: "tema değiştir"
@@ -131,6 +134,7 @@ en:
     available_in: "this project is available in:"
     original_lang: "original language:"
     return_to_projects: "return to projects"
+    maximize: "expand"
   carousel:
     roledescription: "carousel"
     prev: "previous image"
@@ -153,6 +157,8 @@ en:
     language: "language"
     turkish: "turkish"
     english: "english"
+    switch_to_en: "switch to english"
+    switch_to_tr: "switch to turkish"
     skip_to_content: "Skip to content"
     main_nav: "Main menu"
     theme_toggle: "Toggle theme"

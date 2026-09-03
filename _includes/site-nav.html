@@ -3,16 +3,16 @@
   include.active: blog | projects | tools | resume
   include.inside: post pages — blog keeps the inside underline, nothing is current
 {% endcomment %}
-{% if current_lang == 'en' %}
+{% if current_lang == 'tr' %}
+  {% assign nav_blog = '/tr/' %}
+  {% assign nav_projects = '/tr/projects/' %}
+  {% assign nav_tools = '/tr/tools/' %}
+  {% assign nav_resume = '/tr/resume/' %}
+{% else %}
   {% assign nav_blog = '/en/' %}
   {% assign nav_projects = '/en/projects/' %}
   {% assign nav_tools = '/en/tools/' %}
   {% assign nav_resume = '/en/resume/' %}
-{% else %}
-  {% assign nav_blog = '/' %}
-  {% assign nav_projects = '/projects/' %}
-  {% assign nav_tools = '/tools/' %}
-  {% assign nav_resume = '/resume/' %}
 {% endif %}
 
 <nav aria-label="{{ t.general.main_nav }}">

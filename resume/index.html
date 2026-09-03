@@ -1,46 +1,6 @@
 ---
-layout: default
-title: özgeçmiş
-summary: özgeçmiş talep üzerine paylaşılır
+title: resume
 sitemap: false
 noindex: true
+redirect_to: /en/resume/
 ---
-{% include language-utils.html %}
-
-<style>
-  .resume-stub {
-    max-width: 640px;
-    margin: 48px auto 80px;
-    padding: 0 20px;
-  }
-
-  .resume-stub h1 {
-    font-size: 1.6em;
-    font-weight: 700;
-    margin: 0 0 12px;
-    color: var(--primary-text);
-  }
-
-  .resume-stub p {
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--secondary-text);
-    margin: 0 0 8px;
-  }
-
-  .resume-stub a {
-    color: var(--accent-color);
-    text-decoration: none;
-    border-bottom: 1px solid var(--accent-color);
-  }
-</style>
-
-{% include site-nav.html active="resume" %}
-
-{% include resume.html %}
-
-<div class="resume-stub">
-  <h1>özgeçmiş</h1>
-  <p>cv talep üzerine paylaşılır.</p>
-  <p><a href="mailto:info@atr0p.dev">info[at]atr0p[dot]dev</a></p>
-</div>

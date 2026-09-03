@@ -4,7 +4,7 @@
   <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="true" aria-label="{{ t.general.theme_toggle }}">
     <span id="theme-icon" aria-hidden="true">☀️</span>
   </button>
-  <button class="lang-toggle" id="tool-lang-toggle" type="button" lang="tr" aria-label="{{ t.general.english }}">TR</button>
+  <button class="lang-toggle" id="tool-lang-toggle" type="button" lang="tr" aria-label="{{ t.general.switch_to_tr }} (TR)">TR</button>
 </div>
 <script type="application/json" id="tool-i18n">
 {
@@ -13,19 +13,21 @@
     "nav_tools": {{ site.data.translations.tr.nav.tools | jsonify }},
     "skip": {{ site.data.translations.tr.general.skip_to_content | jsonify }},
     "theme": {{ site.data.translations.tr.general.theme_toggle | jsonify }},
-    "switch_to": {{ site.data.translations.tr.general.english | jsonify }},
+    "switch_to": {{ site.data.translations.tr.general.switch_to_en | jsonify }},
+    "switch_code": "EN",
     "collapse": {{ site.data.translations.tr.general.collapse_panel | jsonify }},
     "expand": {{ site.data.translations.tr.general.expand_panel | jsonify }},
     "code": "TR",
-    "home": {{ '/' | relative_url | jsonify }},
-    "catalog": {{ '/tools/' | relative_url | jsonify }}
+    "home": {{ '/tr/' | relative_url | jsonify }},
+    "catalog": {{ '/tr/tools/' | relative_url | jsonify }}
   },
   "en": {
     "site_title": {{ site.data.translations.en.site_title | jsonify }},
     "nav_tools": {{ site.data.translations.en.nav.tools | jsonify }},
     "skip": {{ site.data.translations.en.general.skip_to_content | jsonify }},
     "theme": {{ site.data.translations.en.general.theme_toggle | jsonify }},
-    "switch_to": {{ site.data.translations.en.general.turkish | jsonify }},
+    "switch_to": {{ site.data.translations.en.general.switch_to_tr | jsonify }},
+    "switch_code": "TR",
     "collapse": {{ site.data.translations.en.general.collapse_panel | jsonify }},
     "expand": {{ site.data.translations.en.general.expand_panel | jsonify }},
     "code": "EN",
@@ -102,9 +104,9 @@
     });
     if (themeToggle) themeToggle.setAttribute('aria-label', s.theme);
     if (langToggle) {
-      langToggle.textContent = s.code;
-      langToggle.setAttribute('lang', lang);
-      langToggle.setAttribute('aria-label', s.switch_to);
+      langToggle.textContent = s.switch_code;
+      langToggle.setAttribute('lang', lang === 'en' ? 'tr' : 'en');
+      langToggle.setAttribute('aria-label', s.switch_to + ' (' + s.switch_code + ')');
     }
     var pageTitle = dock && dock.getAttribute('data-page-title');
     if (pageTitle) document.title = pageTitle + ' @ ' + s.site_title;
@@ -179,9 +181,20 @@
   try {
     fromQuery = new URLSearchParams(location.search).get('lang');
   } catch (err) {}
+  var fromRef = null;
+  try {
+    if (document.referrer) {
+      var refPath = new URL(document.referrer).pathname;
+      if (refPath === '/tr' || refPath.indexOf('/tr/') === 0) fromRef = 'tr';
+      else if (refPath === '/en' || refPath.indexOf('/en/') === 0) fromRef = 'en';
+    }
+  } catch (err) {}
+  var fromDoc = html.getAttribute('lang') === 'tr' ? 'tr' : (html.getAttribute('lang') === 'en' ? 'en' : null);
+  var stored = null;
+  try { stored = localStorage.getItem('lang'); } catch (err) {}
   var initialLang = (fromQuery === 'en' || fromQuery === 'tr')
     ? fromQuery
-    : (localStorage.getItem('lang') || 'tr');
+    : (fromRef || (stored === 'en' || stored === 'tr' ? stored : null) || fromDoc || 'en');
   applyLang(initialLang);
   applyDock(localStorage.getItem('tool-dock') === 'collapsed');
 

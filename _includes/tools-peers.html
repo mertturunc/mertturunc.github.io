@@ -10,10 +10,10 @@
     {% endif %}
   {% endfor %}
 {% endunless %}
-{% if current_lang == 'en' %}
-  {% assign tools_index_url = '/en/tools/' %}
+{% if current_lang == 'tr' %}
+  {% assign tools_index_url = '/tr/tools/' %}
 {% else %}
-  {% assign tools_index_url = '/tools/' %}
+  {% assign tools_index_url = '/en/tools/' %}
 {% endif %}
 <div class="tool-dock" data-page-title="{{ page.title | escape }}">
   <p class="tool-home">

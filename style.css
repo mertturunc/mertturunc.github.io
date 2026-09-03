@@ -103,8 +103,8 @@ html[data-theme="dark"] {
 /* Top Controls Container */
 .top-controls {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  left: max(20px, env(safe-area-inset-left, 0px));
   display: flex;
   flex-direction: row;
   gap: 8px;
@@ -141,7 +141,11 @@ html[data-theme="dark"] {
   border-radius: 4px;
   width: 32px;
   height: 32px;
-  font-size: 14px;
+  font-family: mono, "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -149,13 +153,46 @@ html[data-theme="dark"] {
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  border-bottom: none;
 }
 
-.language-switcher-minimal:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.language-switcher-minimal:visited {
+  color: var(--primary-bg);
   text-decoration: none;
   border-bottom: none;
+}
+
+@media (hover: hover) {
+  .language-switcher-minimal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    border-bottom: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .theme-toggle,
+  .language-switcher-minimal {
+    width: 44px;
+    height: 44px;
+  }
+
+  .filter-btn {
+    min-height: 44px;
+  }
+
+  .post-language-switcher__link {
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+}
+
+@media (hover: none) {
+  .theme-toggle:hover,
+  .language-switcher-minimal:hover {
+    transform: none;
+  }
 }
 
 .r-link {
@@ -213,6 +250,7 @@ html[data-theme="dark"] {
 html {
     background-color: var(--primary-bg);
     overflow-y: scroll; /* Always show scrollbar for consistent layout */
+    overflow-x: hidden;
     scrollbar-gutter: stable; /* Reserve space for scrollbar even when not needed */
 }
 
@@ -226,9 +264,20 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    margin: 50px auto;
+    margin: max(24px, env(safe-area-inset-top, 0px)) auto max(80px, calc(env(safe-area-inset-bottom, 0px) + 56px));
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     height: 100%;
+}
+
+@media (min-width: 600px) {
+  body {
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
 }
 
 pre,
@@ -242,6 +291,8 @@ span {
 
 .page {
     width: 600px;
+    max-width: 100%;
+    box-sizing: border-box;
     margin: 0 auto;
     padding: 0 0 0 2px;
 }
@@ -249,18 +300,24 @@ span {
 /* Blog posts get wider page width */
 body.post-layout .page {
     width: 800px;
+    max-width: 100%;
 }
 
 .page_wide {
     width: 810px;
+    max-width: 100%;
 }
 
 .menu {
     width: 544px;
+    max-width: 100%;
+    box-sizing: border-box;
     margin: 0 auto 50px auto;
     padding: 0 0 0 2px;
     vertical-align: top;
     display: flex;
+    flex-wrap: wrap;
+    row-gap: 8px;
 }
 
 .menu>li {
@@ -305,6 +362,8 @@ a.menu__item_inside {
 
 .post {
   width: 544px;
+  max-width: 100%;
+  box-sizing: border-box;
   margin: 15px auto;
   position: relative; /* Allow absolute positioning of child elements */
 }
@@ -312,6 +371,7 @@ a.menu__item_inside {
 /* Blog posts get wider post width */
 body.post-layout .post {
   width: 700px;
+  max-width: 100%;
 }
 
 /* Post title specific spacing */
@@ -1361,6 +1421,8 @@ sub {
   border-radius: 4px;
   padding: 10px 20px;
   margin: -12px -22px;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 
 .about_inner>p {
@@ -1451,6 +1513,19 @@ sub {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .about_inner {
+    margin: 0;
+    padding: 12px 14px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .about_inner > p:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
   .about-image {
     position: static;
     text-align: center;
@@ -1608,25 +1683,30 @@ sub {
 .post-filters {
   margin: 25px 0;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .post-filters .tooltip {
   display: inline-flex;
-  width: 80px; /* Increased width to accommodate "tümü" */
+  width: auto;
+}
+
+.post-filters .tooltip:first-child .filter-btn {
+  min-width: 4.75em;
 }
 
 .filter-btn {
-  padding: 6px 16px;
+  padding: 6px 12px;
   border: 1px solid var(--muted-text);
   background: var(--primary-bg);
   color: var(--muted-text);
   cursor: pointer;
   font-size: 14px;
   border-radius: 4px;
-  width: 100%;
+  width: auto;
+  min-width: 32px;
   min-height: 0;
   text-align: center;
   transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
@@ -1723,6 +1803,24 @@ sub {
   right: 125%;
   position: absolute;
   z-index: 1;
+}
+
+/* Post-row tags sit on the left; a left-flying tooltip falls off the phone. */
+.post-item .tooltip .tooltiptext {
+  right: auto;
+  left: 0;
+  bottom: calc(100% + 4px);
+  top: auto;
+  width: max-content;
+  max-width: min(70vw, 12rem);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px), (hover: none) {
+  .post-item .tooltip .tooltiptext,
+  .post-filters .tooltiptext {
+    display: none;
+  }
 }
 
 .tooltip:hover .tooltiptext,
@@ -2651,7 +2749,6 @@ html[data-theme="dark"] .zoom-indicator {
   .tamagotchi-message {
     transition: none;
     animation: none;
-    transform: none;
   }
 
   .carousel-track {
