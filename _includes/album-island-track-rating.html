@@ -4,9 +4,9 @@
 {% endcomment %}
 {% assign track_kind = track.kind | default: '' | downcase %}
 {% if track_kind == 'interlude' or track_kind == 'prelude' %}
-  <span class="track-row__rating track-row__rating--skip" aria-label="Not rated ({{ track_kind }})" title="Not rated">—</span>
+  <span class="track-row__rating track-row__rating--skip" aria-label="not rated ({{ track_kind }})" title="not rated">—</span>
 {% elsif track.stars %}
-  <span class="track-row__rating" aria-label="{{ track.stars }} out of 5 stars">
+  <span class="track-row__rating" aria-label="{{ track.stars }} out of 5">
     {% for i in (1..5) %}
       {% if i <= track.stars %}
         <svg class="track-star track-star--filled" width="9" height="9" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -20,5 +20,5 @@
     {% endfor %}
   </span>
 {% else %}
-  <span class="track-row__rating track-row__rating--skip" aria-label="Not rated yet" title="Not rated">—</span>
+  <span class="track-row__rating track-row__rating--skip" aria-label="not rated yet" title="not rated">—</span>
 {% endif %}

@@ -13,6 +13,13 @@
     })
     .filter(Boolean);
 
+  function normalizeForSearch(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "");
+  }
+
   function setToggleHint(toggle, isExpanded) {
     const hint = toggle.querySelector("[data-toggle-hint]");
     if (!hint) return;
@@ -28,6 +35,9 @@
     toggle.setAttribute("aria-expanded", "false");
     panel.hidden = true;
     setToggleHint(toggle, false);
+
+    const heading = panel.querySelector(".track-list__heading");
+    if (heading) heading.removeAttribute("tabindex");
   }
 
   function expandRow(row) {
@@ -135,7 +145,7 @@
     }
 
     if (visibleCount === 0) {
-      searchStatus.textContent = "";
+      searchStatus.textContent = isSearching ? "no albums match your search." : "";
       return;
     }
 
@@ -146,12 +156,14 @@
   }
 
   function filterInventory() {
-    const query = searchInput.value.trim().toLowerCase();
+    const query = normalizeForSearch(searchInput.value.trim());
     const isSearching = query.length > 0;
     let visibleCount = 0;
 
     rows.forEach(function (row) {
-      const haystack = (row.dataset.artist || "") + " " + (row.dataset.title || "");
+      const haystack = normalizeForSearch(
+        (row.dataset.artist || "") + " " + (row.dataset.title || "")
+      );
       const matches = !isSearching || haystack.includes(query);
 
       if (!matches) collapseRow(row);

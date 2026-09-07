@@ -28,7 +28,7 @@
   root.className = "guybrush";
   root.setAttribute("role", "presentation");
   root.innerHTML =
-    '<button type="button" class="guybrush__hit" aria-grabbed="false" aria-label="Talk to Guybrush. Click for a quip. Drag with pointer to move him."></button>' +
+    '<button type="button" class="guybrush__hit" aria-grabbed="false" aria-label="talk to guybrush. click for a quip. drag to move him."></button>' +
     '<div class="guybrush__sprite" aria-hidden="true"></div>' +
     '<div class="guybrush__bubble" hidden aria-live="polite">' +
     '<p class="guybrush__line"></p>' +
@@ -318,8 +318,8 @@
   }
 
   function stageBounds() {
-    const header = document.querySelector(".tavern-sign");
-    const panel = document.querySelector(".dialog-panel");
+    const header = document.querySelector(".catalog-header");
+    const panel = document.querySelector(".catalog");
     const size = spriteSize("stand");
     const top = (header ? header.getBoundingClientRect().bottom : 72) + 12;
     const bottom = window.innerHeight - size.h - 12;
@@ -743,7 +743,7 @@
       rowObserver = new ResizeObserver(onLayoutChange);
       layoutObserver = new ResizeObserver(onLayoutChange);
       layoutObserver.observe(list);
-      const panel = document.querySelector(".dialog-panel__inner");
+      const panel = document.querySelector(".catalog");
       if (panel) layoutObserver.observe(panel);
     }
   }
