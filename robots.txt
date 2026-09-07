@@ -1,41 +1,114 @@
-# AI / training crawlers — block entire site
-User-agent: GPTBot
-User-agent: ChatGPT-User
-User-agent: OAI-SearchBot
-User-agent: Google-Extended
-User-agent: anthropic-ai
-User-agent: ClaudeBot
-User-agent: Claude-Web
-User-agent: Applebot-Extended
-User-agent: Bytespider
-User-agent: CCBot
-User-agent: cohere-ai
-User-agent: Diffbot
-User-agent: FacebookBot
-User-agent: meta-externalagent
-User-agent: PerplexityBot
-User-agent: YouBot
-User-agent: Amazonbot
-User-agent: AI2Bot
-User-agent: ImagesiftBot
-Disallow: /
-
-# Default crawlers
 User-agent: *
 Allow: /
-
-# Build / vendor / scripts
 Disallow: /_site/
 Disallow: /vendor/
 Disallow: /.bundle/
 Disallow: /script/
-
-# Resume (TR + EN) — personal, not for indexing or training
 Disallow: /resume/
 Disallow: /en/resume/
+Disallow: /tr/resume/
+Disallow: /*?draft=
+Disallow: /*?hidden=
+Disallow: /*?gclid=
+Disallow: /*&gclid=
+Disallow: /*?utm_
+Disallow: /*&utm_
+Disallow: /*?fbclid=
+Disallow: /*&fbclid=
 
-# Test / draft
-Disallow: /*?draft=*
-Disallow: /*?hidden=*
+User-agent: facebookexternalhit
+User-agent: Facebot
+User-agent: Twitterbot
+User-agent: LinkedInBot
+User-agent: Slackbot
+User-agent: Slackbot-LinkExpanding
+User-agent: TelegramBot
+User-agent: WhatsApp
+User-agent: Discordbot
+Allow: /
+Disallow: /_site/
+Disallow: /vendor/
+Disallow: /.bundle/
+Disallow: /script/
+Disallow: /resume/
+Disallow: /en/resume/
+Disallow: /tr/resume/
+
+User-agent: AhrefsBot
+User-agent: AhrefsSiteAudit
+User-agent: SemrushBot
+User-agent: SemrushBot-SA
+User-agent: SplitSignalBot
+User-agent: MJ12bot
+User-agent: DotBot
+User-agent: BLEXBot
+User-agent: DataForSeoBot
+User-agent: MegaIndex
+User-agent: PetalBot
+User-agent: proximic
+User-agent: SeekportBot
+User-agent: Seobility
+User-agent: magpie-crawler
+Disallow: /
+
+User-agent: Google-Extended
+User-agent: Gemini-Deep-Research
+User-agent: Google-CloudVertexBot
+User-agent: Google-NotebookLM
+Disallow: /
+
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: anthropic-ai
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: claude-web
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: MetaBot
+User-agent: MetaAI
+User-agent: Meta-ExternalAgent
+User-agent: meta-externalagent
+User-agent: Meta-ExternalFetcher
+User-agent: Meta-WebIndexer
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Applebot-Extended
+User-agent: Amazonbot
+User-agent: Amzn-SearchBot
+User-agent: Bytespider
+User-agent: DuckAssistBot
+Disallow: /
+
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: YouBot
+User-agent: DeepSeekBot
+Disallow: /
+
+User-agent: GrokBot
+User-agent: xAI-Grok
+User-agent: Grok-DeepSearch
+Disallow: /
+
+User-agent: AI2Bot
+User-agent: CCBot
+User-agent: Diffbot
+User-agent: cohere-ai
+User-agent: MistralAI-User
+User-agent: Omgili
+User-agent: Omgilibot
+User-agent: webzio-extended
+User-agent: ImagesiftBot
+User-agent: Timpibot
+User-agent: iaskspider
+User-agent: Kangaroo Bot
+Disallow: /
 
 Sitemap: https://blog.atr0p.dev/sitemap.xml
