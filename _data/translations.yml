@@ -28,6 +28,8 @@ tr:
     wip_content: "bu yazının içeriği henüz hazır değil. lütfen daha sonra tekrar kontrol edin."
     tbd: "tbd"
     report_typo: "bu yazıda yazım hatası olduğunu düşünüyorsanız"
+    image_gone: "görsel yok"
+    image_gone_hint: "bağlantı öldü"
   copy_button:
     copy: "kopyala"
     copied: "kopyalandı!"
@@ -121,6 +123,8 @@ en:
     wip_content: "the content of this post is not ready yet. please check back later."
     tbd: "tbd"
     report_typo: "if you believe there's a typo in this post"
+    image_gone: "image gone"
+    image_gone_hint: "the link died"
   copy_button:
     copy: "copy"
     copied: "copied!"

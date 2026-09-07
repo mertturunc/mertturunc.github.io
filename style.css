@@ -677,6 +677,209 @@ body.post-layout figure>a>img {
   border: 1px solid var(--border-color);
 }
 
+/* Dead remote images: a flat paper well, not a lifted photo */
+.post .missing-image {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  width: 80%;
+  max-width: 36rem;
+  min-height: 8rem;
+  aspect-ratio: 2 / 1;
+  margin: 0 auto 1em;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--code-bg);
+  color: var(--primary-text);
+  text-align: left;
+  font-style: normal;
+  line-height: 1.4;
+}
+
+.post .missing-image--compact {
+  width: 8.5rem;
+  max-width: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
+}
+
+@media (max-width: 599px) {
+  .post .missing-image:not(.missing-image--compact) {
+    width: 100%;
+    max-width: none;
+  }
+
+  .post .missing-image:not(.missing-image--compact) .missing-image__iso,
+  .post .missing-image:not(.missing-image--compact) .missing-image__comet-wake,
+  .post .missing-image:not(.missing-image--compact) .missing-image__comet-tail,
+  .post .missing-image:not(.missing-image--compact) .missing-image__comet-head {
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+.post .missing-image__map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.post .missing-image.is-mapped .missing-image__map {
+  opacity: 1;
+}
+
+.post .missing-image__iso {
+  fill: none;
+  stroke: var(--muted-text);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.4;
+}
+
+.post .missing-image__iso--index {
+  stroke-width: 1.6;
+  opacity: 0.28;
+}
+
+.post .missing-image__iso--accent {
+  stroke: var(--accent-color);
+  stroke-width: 1.55;
+  opacity: 0.95;
+}
+
+.post .missing-image--compact .missing-image__iso,
+.post .missing-image--compact .missing-image__comet-wake,
+.post .missing-image--compact .missing-image__comet-tail,
+.post .missing-image--compact .missing-image__comet-head {
+  vector-effect: non-scaling-stroke;
+}
+
+.post .missing-image__comet-wake,
+.post .missing-image__comet-tail,
+.post .missing-image__comet-head {
+  fill: none;
+  stroke: var(--accent-color);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .post .missing-image.is-mapped .missing-image__map {
+    transition: opacity 0.2s ease;
+  }
+
+  .post .missing-image.is-animating .missing-image__iso--accent {
+    opacity: 0;
+  }
+
+  .post .missing-image.is-animating .missing-image__comet-wake {
+    opacity: 0.2;
+    stroke-width: 1.2;
+    stroke-dasharray: 0.34 0.66;
+    animation: missing-comet-wake 16s linear infinite;
+  }
+
+  .post .missing-image.is-animating .missing-image__comet-tail {
+    opacity: 0.55;
+    stroke-width: 1.7;
+    stroke-dasharray: 0.14 0.86;
+    animation: missing-comet-tail 16s linear infinite;
+  }
+
+  .post .missing-image.is-animating .missing-image__comet-head {
+    opacity: 1;
+    stroke-width: 2.25;
+    stroke-dasharray: 0.04 0.96;
+    animation: missing-comet-head 16s linear infinite;
+  }
+}
+
+.post .missing-image__copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  padding: 1rem 1rem 0.8rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+  background: linear-gradient(
+    to top,
+    var(--code-bg) 0.65em,
+    color-mix(in srgb, var(--code-bg) 58%, transparent) 1.45em,
+    transparent
+  );
+}
+
+.post .missing-image__title {
+  display: block;
+  font-family: body, "IBM Plex Sans", sans-serif;
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--primary-text);
+}
+
+.post .missing-image__hint {
+  display: block;
+  margin-top: 0.15em;
+  font-family: body, "IBM Plex Sans", sans-serif;
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--secondary-text);
+}
+
+.post .missing-image--compact .missing-image__copy {
+  padding: 0.65rem 0.7rem 0.6rem;
+}
+
+.post figure.is-missing > img[hidden],
+.post .fig.is-missing > img[hidden],
+.post figure.is-missing > a > img[hidden] {
+  display: none;
+}
+
+.post figure.is-missing,
+.post .fig.is-missing {
+  color: var(--muted-text);
+}
+
+body.post-layout .post figure.is-missing:has(.missing-image--compact),
+body.post-layout .post .fig.is-missing:has(.missing-image--compact) {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-inline: 0;
+}
+
+@keyframes missing-comet-wake {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -1; }
+}
+
+@keyframes missing-comet-tail {
+  from { stroke-dashoffset: -0.2; }
+  to { stroke-dashoffset: -1.2; }
+}
+
+@keyframes missing-comet-head {
+  from { stroke-dashoffset: -0.3; }
+  to { stroke-dashoffset: -1.3; }
+}
+
 /* Filler görselleri için özel stil - çerçeve ve gölge yok */
 .filler-image img {
   box-shadow: none !important;
@@ -2746,7 +2949,12 @@ html[data-theme="dark"] .zoom-indicator {
   .heading-permalink,
   .copy-button,
   .collapsible,
-  .tamagotchi-message {
+  .tamagotchi-message,
+  .missing-image__map,
+  .missing-image__iso,
+  .missing-image__comet-wake,
+  .missing-image__comet-tail,
+  .missing-image__comet-head {
     transition: none;
     animation: none;
   }

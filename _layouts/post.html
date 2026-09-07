@@ -59,6 +59,18 @@ layout: default
     {% include typo-report-link.html %}
   </p>
 
+  <template id="missing-image-template">
+    <div class="missing-image">
+      <svg class="missing-image__map" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <g class="missing-image__comet" aria-hidden="true"></g>
+      </svg>
+      <p class="missing-image__copy">
+        <span class="missing-image__title"></span>
+        <span class="missing-image__hint"></span>
+      </p>
+    </div>
+  </template>
+
   <script>
     document.querySelectorAll(".hoverable").forEach(function (e) {
         e.onclick = function() { e.classList.toggle("clicked"); }
@@ -66,6 +78,157 @@ layout: default
     
     // Add post-layout class to body for wider page width
     document.body.classList.add('post-layout');
+
+    (function () {
+      var root = document.querySelector('.post');
+      var template = document.getElementById('missing-image-template');
+      if (!root || !template) return;
+
+      var copyByLang = {
+        tr: {
+          title: {{ site.data.translations.tr.post.image_gone | jsonify }},
+          hint: {{ site.data.translations.tr.post.image_gone_hint | jsonify }}
+        },
+        en: {
+          title: {{ site.data.translations.en.post.image_gone | jsonify }},
+          hint: {{ site.data.translations.en.post.image_gone_hint | jsonify }}
+        }
+      };
+      var copyLang = {{ page.lang | default: current_lang | jsonify }};
+      var copy = copyByLang[copyLang] || copyByLang.en;
+
+      var motionNodes = [];
+      var isoReady = null;
+      var isoSrc = '/i/missing-image-iso.svg?v=20260907-7';
+
+      function loadIsoRoot() {
+        if (!isoReady) {
+          isoReady = fetch(isoSrc, { cache: 'force-cache' }).then(function (res) {
+            if (!res.ok) throw new Error('iso');
+            return res.text();
+          }).then(function (text) {
+            var doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+            var root = doc.querySelector('[data-compact-viewbox]');
+            if (!root) throw new Error('iso');
+            return root;
+          }).catch(function () {
+            return null;
+          });
+        }
+        return isoReady;
+      }
+
+      function decorateMap(node) {
+        var map = node.querySelector('.missing-image__map');
+        var isoRoot = node.querySelector('[data-compact-viewbox]');
+        var comet = node.querySelector('.missing-image__comet');
+        if (node.classList.contains('missing-image--compact') && isoRoot && map) {
+          map.setAttribute('viewBox', isoRoot.getAttribute('data-compact-viewbox'));
+        }
+        var accent = node.querySelector('.missing-image__iso--accent');
+        if (accent && comet && !comet.childNodes.length) {
+          var uid = 'missing-iso-' + Math.random().toString(36).slice(2, 10);
+          accent.setAttribute('id', uid);
+          ['wake', 'tail', 'head'].forEach(function (role) {
+            var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttribute('href', '#' + uid);
+            use.setAttribute('class', 'missing-image__comet-' + role);
+            comet.appendChild(use);
+          });
+        }
+      }
+
+      function fillIso(node) {
+        loadIsoRoot().then(function (isoRoot) {
+          if (!isoRoot || !node.isConnected) return;
+          var map = node.querySelector('.missing-image__map');
+          var comet = node.querySelector('.missing-image__comet');
+          if (!map || node.querySelector('[data-compact-viewbox]')) return;
+          map.insertBefore(document.importNode(isoRoot, true), comet);
+          decorateMap(node);
+          node.classList.add('is-mapped');
+        });
+      }
+
+      function syncMotion() {
+        var visible = !document.hidden;
+        motionNodes.forEach(function (node) {
+          node.classList.toggle('is-animating', !!(node._inView && visible));
+        });
+      }
+
+      var motionObserver = null;
+      if ('IntersectionObserver' in window) {
+        motionObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            entry.target._inView = entry.isIntersecting;
+          });
+          syncMotion();
+        }, { threshold: 0.2 });
+      }
+
+      document.addEventListener('visibilitychange', syncMotion);
+
+      function skip(img) {
+        return img.closest('.filler-image, .about, .share-buttons, .missing-image');
+      }
+
+      function intendedHeight(img) {
+        var styleH = parseFloat(img.style.height);
+        if (styleH) return styleH;
+        var attrH = parseFloat(img.getAttribute('height'));
+        return attrH || 0;
+      }
+
+      function markBroken(img) {
+        if (img.dataset.missingHandled === '1') return;
+        img.dataset.missingHandled = '1';
+
+        var node = template.content.firstElementChild.cloneNode(true);
+        var titleEl = node.querySelector('.missing-image__title');
+        var hintEl = node.querySelector('.missing-image__hint');
+        titleEl.textContent = copy.title;
+        hintEl.textContent = copy.hint;
+
+        var alt = (img.getAttribute('alt') || '').trim();
+        var label = alt
+          ? alt + ' — ' + copy.title
+          : copy.title + '. ' + copy.hint;
+        node.setAttribute('role', 'img');
+        node.setAttribute('aria-label', label);
+        node.setAttribute('lang', copyLang);
+        node.querySelector('.missing-image__copy').setAttribute('aria-hidden', 'true');
+
+        if (intendedHeight(img) > 0 && intendedHeight(img) <= 240) {
+          node.classList.add('missing-image--compact');
+        }
+
+        img.setAttribute('hidden', '');
+        img.after(node);
+        fillIso(node);
+
+        var figure = img.closest('figure, .fig');
+        if (figure) figure.classList.add('is-missing');
+
+        motionNodes.push(node);
+        if (motionObserver) {
+          motionObserver.observe(node);
+        } else {
+          node._inView = true;
+          syncMotion();
+        }
+      }
+
+      function bind(img) {
+        if (skip(img)) return;
+        img.addEventListener('error', function () { markBroken(img); });
+        if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) {
+          markBroken(img);
+        }
+      }
+
+      root.querySelectorAll('img').forEach(bind);
+    })();
   </script>
 
   {% if page.hide_about %}  
