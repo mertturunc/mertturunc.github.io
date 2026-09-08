@@ -65,13 +65,18 @@ permalink: /tools/slit-scan/
 
       <section>
         <h2 data-i18n="capture">capture</h2>
-        <label class="slider">
-          <span class="fieldlabel"><span data-i18n="scale">scale</span> <em data-scale>0.5×</em></span>
-          <input type="range" min="0.25" max="1" step="0.25" value="0.5" data-scaleinput />
-        </label>
+        <div class="flowwrap qualitywrap">
+          <span class="fieldlabel" data-i18n="quality">quality</span>
+          <div class="seg quality" role="group" data-i18n="quality_group" data-i18n-attr="aria-label" aria-label="render quality">
+            <button class="segbtn" type="button" data-quality="draft" aria-pressed="false" data-i18n="quality_draft">draft</button>
+            <button class="segbtn" type="button" data-quality="high" aria-pressed="false" data-i18n="quality_high">high</button>
+            <button class="segbtn on" type="button" data-quality="full" aria-pressed="true" data-i18n="quality_full">full</button>
+          </div>
+          <p class="hint" data-i18n="quality_hint">draft is fastest · full keeps native pixels</p>
+        </div>
         <div class="actions capture">
-          <button class="primary" type="button" data-live disabled data-i18n="go_live">start</button>
-          <button class="ghost" type="button" data-oneshot disabled data-i18n="go_oneshot">render</button>
+          <button class="ghost" type="button" data-live disabled data-i18n="go_live">live</button>
+          <button class="primary" type="button" data-oneshot disabled data-i18n="go_oneshot">render</button>
           <button class="ghost" type="button" data-stop disabled data-i18n="stop_capture">stop</button>
         </div>
         <div class="flowwrap">
@@ -82,11 +87,15 @@ permalink: /tools/slit-scan/
             <button class="segbtn" type="button" data-fmt="webp" aria-pressed="false">webp</button>
             <button class="segbtn" type="button" data-fmt="webm" aria-pressed="false">webm</button>
             <button class="segbtn" type="button" data-fmt="mp4" aria-pressed="false">mp4</button>
+            <button class="segbtn" type="button" data-fmt="ae" aria-pressed="false"
+              data-i18n="fmt_ae_aria" data-i18n-attr="aria-label" aria-label="after effects project">ae</button>
+            <button class="segbtn" type="button" data-fmt="pr" aria-pressed="false"
+              data-i18n="fmt_pr_aria" data-i18n-attr="aria-label" aria-label="premiere pro project">pr</button>
           </div>
+          <p class="hint" data-i18n="export_hint">render downloads the file · ae / pr unzip, then open in adobe</p>
         </div>
         <div class="actions ship">
           <button class="ghost" type="button" data-reset disabled data-i18n="reset">reset</button>
-          <button class="primary" type="button" data-download disabled data-i18n="download">download</button>
         </div>
       </section>
     </aside>
@@ -101,8 +110,9 @@ permalink: /tools/slit-scan/
         <div class="stage" data-stage tabindex="0"
           data-i18n="stage_aria" data-i18n-attr="aria-label"
           aria-label="video. use arrows to move the line; freehand needs a pointer." hidden>
-          <video data-video muted playsinline preload="auto" loop></video>
+          <video data-video muted playsinline webkit-playsinline preload="auto" loop></video>
           <canvas class="pathov" data-pathov width="4" height="4" aria-hidden="true"></canvas>
+          <p class="stage-fail" data-stagefail hidden></p>
         </div>
       </section>
 

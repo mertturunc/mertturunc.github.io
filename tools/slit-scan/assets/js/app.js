@@ -4,7 +4,18 @@ import {
   planCapture,
   buildPath,
   timeOnX,
+  detectVideoRate,
+  captureRate,
+  playSpeed,
 } from './slitScan.js'
+import { buildProjectZip } from './projectExport.js'
+import {
+  probeMediaFile,
+  browserCanPlayCodec,
+  isHevc,
+  paintFirstFrame,
+  videoHasPicture,
+} from './mediaProbe.js'
 
 const $ = (sel) => document.querySelector(sel)
 const t = (key, vars) => (typeof window.toolT === 'function' ? window.toolT(key, vars) : key)
@@ -13,11 +24,10 @@ const $stage = $('[data-stage]')
 const $empty = $('[data-empty]')
 const $video = $('[data-video]')
 const $pathov = $('[data-pathov]')
+const $stageFail = $('[data-stagefail]')
 const $srcname = $('[data-srcname]')
 const $file = $('[data-file]')
 const $filelabel = $('[data-filelabel]')
-const $scale = $('[data-scale]')
-const $scaleinput = $('[data-scaleinput]')
 const $out = $('[data-out]')
 const $outputbed = $('[data-outputbed]')
 const $progress = $('[data-progress]')
@@ -28,7 +38,6 @@ const $live = $('[data-live]')
 const $oneshot = $('[data-oneshot]')
 const $stop = $('[data-stop]')
 const $reset = $('[data-reset]')
-const $download = $('[data-download]')
 const $toast = $('[data-toast]')
 const $drawhint = $('[data-drawhint]')
 const $drawrow = $('[data-drawrow]')
@@ -38,6 +47,7 @@ const $stagePanel = $('.stage-panel')
 const shapeBtns = [...document.querySelectorAll('[data-shape]')]
 const flowBtns = [...document.querySelectorAll('[data-flow]')]
 const fmtBtns = [...document.querySelectorAll('[data-fmt]')]
+const qualityBtns = [...document.querySelectorAll('[data-quality]')]
 const dropzones = [...document.querySelectorAll('[data-dropzone]')]
 
 const SHAPE_ARIA = {
@@ -56,6 +66,7 @@ const VIDEO_EXTS = new Set([
 
 const IMAGE_FMTS = new Set(['png', 'jpg', 'webp'])
 const VIDEO_FMTS = new Set(['webm', 'mp4'])
+const PROJECT_FMTS = new Set(['ae', 'pr'])
 
 function canRecordMime(mimes) {
   try {
@@ -93,6 +104,7 @@ function fmtSupported(fmt) {
   if (fmt === 'webp') return WEBP_OK
   if (fmt === 'webm') return !!RECORD_MIME.webm
   if (fmt === 'mp4') return !!RECORD_MIME.mp4
+  if (PROJECT_FMTS.has(fmt)) return true
   return false
 }
 
@@ -122,10 +134,13 @@ const DEFAULT_FREE = [
 const state = {
   objectUrl: null,
   srcName: null,
+  sourceFile: null,
   shape: 'v',
   flow: 'lr',
   linePos: 0.5,
-  scale: 0.5,
+  fps: 30,
+  fpsReady: false,
+  quality: 'full',
   exportFmt: firstSupportedFmt(),
   freePath: DEFAULT_FREE.map((p) => ({ ...p })),
   busy: false,
@@ -137,6 +152,9 @@ const state = {
   fileName: null,
   drawing: false,
 }
+
+let fpsProbe = null
+let fpsGen = 0
 
 let engineRef = null
 let rafRef = null
@@ -156,7 +174,8 @@ function currentParams() {
     shape: state.shape,
     flow: state.flow,
     linePos: state.linePos,
-    scale: state.scale,
+    rate: state.fps,
+    quality: state.quality,
     freePath: state.freePath,
   }
 }
@@ -201,6 +220,12 @@ function directionLabel() {
 
 function videoBox() {
   const rect = $stage.getBoundingClientRect()
+  const vr = $video.getBoundingClientRect()
+  const w = vr.width
+  const h = vr.height
+  if (w >= 2 && h >= 2) {
+    return { left: vr.left, top: vr.top, width: w, height: h, stage: rect }
+  }
   const vw = $video.videoWidth || 1
   const vh = $video.videoHeight || 1
   const scale = Math.min(rect.width / vw, rect.height / vh)
@@ -212,6 +237,24 @@ function videoBox() {
     width: dw,
     height: dh,
     stage: rect,
+  }
+}
+
+function syncStageAspect() {
+  const vw = $video.videoWidth
+  const vh = $video.videoHeight
+  if (vw > 0 && vh > 0) $stage.style.setProperty('--stage-aspect', `${vw} / ${vh}`)
+  else $stage.style.removeProperty('--stage-aspect')
+}
+
+function setStageFail(msg) {
+  if (!$stageFail) return
+  if (msg) {
+    $stageFail.textContent = msg
+    $stageFail.hidden = false
+  } else {
+    $stageFail.textContent = ''
+    $stageFail.hidden = true
   }
 }
 
@@ -291,6 +334,12 @@ function render() {
     b.setAttribute('aria-pressed', String(on))
   }
 
+  for (const b of qualityBtns) {
+    const on = b.dataset.quality === state.quality
+    b.classList.toggle('on', on)
+    b.setAttribute('aria-pressed', String(on))
+  }
+
   if (!fmtSupported(state.exportFmt)) state.exportFmt = firstSupportedFmt()
   for (const b of fmtBtns) {
     const fmt = b.dataset.fmt
@@ -302,7 +351,6 @@ function render() {
     b.setAttribute('aria-pressed', String(on))
   }
 
-  $scale.textContent = `${state.scale}×`
   $direction.textContent = directionLabel()
 
   $out.classList.toggle('live', state.busy)
@@ -325,12 +373,9 @@ function render() {
 
   const hasSrc = !!state.objectUrl
   const locked = !hasSrc || state.busy
-  for (const b of [...shapeBtns, ...flowBtns]) b.disabled = locked
-  $scaleinput.disabled = locked
+  for (const b of [...shapeBtns, ...flowBtns, ...qualityBtns]) b.disabled = locked
   $clearpath.disabled = locked
   $reset.disabled = !hasSrc || state.busy
-  $download.disabled = !state.hasOutput || state.busy || !fmtSupported(state.exportFmt)
-  $download.textContent = t('download')
   $file.disabled = state.busy
   $stop.disabled = !state.busy
   $stop.textContent = t('stop_capture')
@@ -349,7 +394,7 @@ function render() {
     $live.disabled = true
     $live.textContent = t('go_live')
     $oneshot.disabled = true
-    $oneshot.textContent = t('go_oneshot')
+    $oneshot.textContent = t('go_oneshot_busy')
   } else {
     $live.disabled = !hasSrc
     $live.textContent = t('go_live')
@@ -403,11 +448,21 @@ function startLive() {
     setMsg(t('msg_need_path'))
     return
   }
+  ensureFps().then(() => {
+    if (state.busy || !state.objectUrl) return
+    beginLive()
+  })
+}
+
+function beginLive() {
+  const v = $video
+  if (!v || state.busy) return
   const engine = ensureEngine()
   v.pause()
   v.currentTime = 0
   const duration = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 0
-  const { frames, step } = planCapture(duration, 30)
+  const rate = captureRate(currentParams())
+  const { frames } = planCapture(duration, rate, state.quality)
   totalRef = frames
   frameRef = 0
   bufferRef = null
@@ -419,35 +474,60 @@ function startLive() {
   state.busy = true
   state.busyKind = 'live'
   render()
-  v.playbackRate = 1
+  v.muted = true
+  v.playbackRate = playSpeed(state.quality)
   v.play().catch(() => {})
 
   const tick = () => {
     if (!state.busy || state.busyKind !== 'live') return
-    if (v.ended || frameRef >= totalRef) {
-      if (bufferRef) engine.flush(bufferRef, true)
+    const tnow = v.currentTime || 0
+    const idx = frames < 2 || duration <= 0
+      ? 0
+      : Math.max(0, Math.min(frames - 1, Math.round((tnow / duration) * (frames - 1))))
+    if (v.ended || tnow >= duration - 0.04) {
+      if (bufferRef) {
+        if (idx !== lastStampIdxRef) {
+          try { engine.stampInto(bufferRef, idx) } catch (_) {}
+        }
+        engine.flush(bufferRef, true)
+      }
       stopLive(t('msg_done'))
       return
     }
     if (!bufferRef) {
       bufferRef = engine.makeBuffer(totalRef)
     }
-    const wi = Math.floor(v.currentTime * 30 / step)
-    if (wi !== lastStampIdxRef) {
-      lastStampIdxRef = wi
-      if (frameRef < totalRef) {
-        try {
-          engine.stampInto(bufferRef, frameRef)
-          engine.flush(bufferRef, false)
-          if (!streamedRef) { streamedRef = true; state.hasOutput = true; render() }
-        } catch (_) {}
-        frameRef++
-        throttledProgress(frameRef / totalRef)
-      }
+    if (idx !== lastStampIdxRef) {
+      lastStampIdxRef = idx
+      try {
+        engine.stampInto(bufferRef, idx)
+        engine.flush(bufferRef, false)
+        if (!streamedRef) { streamedRef = true; state.hasOutput = true; render() }
+      } catch (_) {}
+      frameRef = idx + 1
+      throttledProgress(Math.min(1, (idx + 1) / totalRef))
     }
     rafRef = requestAnimationFrame(tick)
   }
   rafRef = requestAnimationFrame(tick)
+}
+
+async function ensureFps() {
+  if (state.fpsReady) return state.fps
+  if (!state.objectUrl) return state.fps
+  if (fpsProbe) return fpsProbe
+  const gen = fpsGen
+  fpsProbe = detectVideoRate(state.objectUrl)
+    .then((fps) => {
+      if (gen !== fpsGen) return state.fps
+      state.fps = fps
+      state.fpsReady = true
+      engineRef = null
+      return fps
+    })
+    .catch(() => state.fps)
+    .finally(() => { if (gen === fpsGen) fpsProbe = null })
+  return fpsProbe
 }
 
 async function runOneShot() {
@@ -456,6 +536,7 @@ async function runOneShot() {
     setMsg(t('msg_need_path'))
     return
   }
+  await ensureFps()
   const engine = ensureEngine()
   lastPctRef = -1
   state.busy = true
@@ -463,21 +544,34 @@ async function runOneShot() {
   state.hasOutput = false
   state.progress = 0
   render()
+  let shipped = false
   try {
     const run = engine.renderFull(throttledProgress)
     oneshotCancel = run.cancel
     await run.promise
-    if (state.busyKind === 'oneshot') {
-      state.hasOutput = true
-      setMsg(t('msg_rendered'))
-    }
+    if (state.busyKind !== 'oneshot') return
+    state.hasOutput = true
+    oneshotCancel = null
+    state.busyKind = 'export'
+    state.progress = 0
+    render()
+    shipped = await shipOutput()
   } catch (e) {
-    if (state.busyKind === 'oneshot') setMsg(t('msg_fail', { err: e.message }))
+    const cancelled = e && (e.message === 'cancelled' || e.name === 'AbortError')
+    if (cancelled) {
+      if (state.busyKind === 'oneshot' || state.busyKind === 'export') setMsg(t('msg_stopped'))
+    } else if (state.busyKind === 'oneshot' || state.busyKind === 'export') {
+      setMsg(t('msg_fail', { err: e.message }))
+    }
   } finally {
     oneshotCancel = null
-    state.busy = false
-    state.busyKind = null
-    render()
+    exportCancel = null
+    if (state.busyKind === 'oneshot' || state.busyKind === 'export') {
+      state.busy = false
+      state.busyKind = null
+      if (shipped && !state.msg) setMsg(t('msg_rendered'))
+      render()
+    }
   }
 }
 
@@ -514,6 +608,8 @@ function reset(quiet) {
     exportCancel = null
   }
   if ($video) $video.pause()
+  setStageFail('')
+  if ($stage) $stage.style.removeProperty('--stage-aspect')
   const c = $out
   if (c) { c.getContext('2d').clearRect(0, 0, c.width, c.height); c.width = 4; c.height = 4 }
   bufferRef = null
@@ -526,31 +622,54 @@ function reset(quiet) {
   render()
 }
 
+function canvasToBlob(canvas, mime, quality) {
+  return new Promise((resolve, reject) => {
+    const done = (blob) => {
+      if (blob) resolve(blob)
+      else reject(new Error('encode'))
+    }
+    try {
+      if (quality == null) canvas.toBlob(done, mime)
+      else canvas.toBlob(done, mime, quality)
+    } catch (e) {
+      reject(e)
+    }
+  })
+}
+
+function triggerDownload(blob, filename) {
+  const a = document.createElement('a')
+  a.download = filename
+  a.href = URL.createObjectURL(blob)
+  document.body.appendChild(a)
+  a.click()
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(a.href) }, 10000)
+}
+
 function exportImage(fmt) {
   const c = $out
-  if (!c || c.width <= 4) return
+  if (!c || c.width <= 4) return Promise.resolve(false)
   if (!fmtSupported(fmt)) {
     setMsg(t('fmt_unsupported', { fmt }))
-    return
+    return Promise.resolve(false)
   }
   const mime = fmt === 'jpg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
   const quality = fmt === 'png' ? undefined : 0.92
-  const a = document.createElement('a')
-  a.download = `slitscan.${fmt === 'jpg' ? 'jpg' : fmt}`
-  a.href = quality == null ? c.toDataURL(mime) : c.toDataURL(mime, quality)
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setMsg(t('msg_exported', { fmt }))
+  const filename = `slitscan.${fmt === 'jpg' ? 'jpg' : fmt}`
+  return canvasToBlob(c, mime, quality).then((blob) => {
+    triggerDownload(blob, filename)
+    setMsg(t('msg_exported', { fmt }))
+    return true
+  })
 }
 
 async function exportVideo(fmt) {
   const c = $out
-  if (!c || c.width <= 4 || state.busy) return
+  if (!c || c.width <= 4) return false
   const mime = RECORD_MIME[fmt]
   if (!mime) {
     setMsg(t('fmt_unsupported', { fmt }))
-    return
+    return false
   }
   const engine = ensureEngine()
   const v = $video
@@ -562,8 +681,9 @@ async function exportVideo(fmt) {
   compose.width = w
   compose.height = h
   const ctx = compose.getContext('2d')
+  const rate = Number.isFinite(state.fps) && state.fps > 0 ? state.fps : 30
 
-  const stream = compose.captureStream(30)
+  const stream = compose.captureStream(rate)
   const rec = new MediaRecorder(stream, { mimeType: mime })
   const chunks = []
   rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data) }
@@ -580,15 +700,11 @@ async function exportVideo(fmt) {
   let lastUi = 0
   exportCancel = () => { cancelled = true }
 
-  state.busy = true
-  state.busyKind = 'export'
-  state.progress = 0
   setMsg(t('msg_exporting', { fmt }))
-  render()
   const prevLoop = v.loop
-  const prevRate = v.playbackRate || 1
   v.pause()
   v.loop = false
+  v.playbackRate = 1
 
   const paint = (filled, forceUi) => {
     engine.composeFrame(ctx, w, h, filled, total, { showKnife: false })
@@ -610,7 +726,7 @@ async function exportVideo(fmt) {
 
     if (!duration) {
       paint(total, true)
-      await new Promise((r) => setTimeout(r, 600))
+      await new Promise((r) => setTimeout(r, Math.round(2000 / rate)))
     } else {
       await new Promise((resolve) => {
         let settled = false
@@ -649,7 +765,7 @@ async function exportVideo(fmt) {
         }
         const onSeeked = () => {
           v.removeEventListener('seeked', onSeeked)
-          v.playbackRate = duration > 12 ? 2 : 1
+          v.playbackRate = 1
           v.play().then(start).catch(start)
         }
         v.addEventListener('seeked', onSeeked)
@@ -664,58 +780,127 @@ async function exportVideo(fmt) {
 
     if (!cancelled) {
       paint(total, true)
-      await new Promise((r) => setTimeout(r, 350))
+      await new Promise((r) => setTimeout(r, Math.round(2000 / rate)))
     }
     if (rec.state !== 'inactive') rec.stop()
     await done
 
     const blob = new Blob(chunks, { type: rec.mimeType || mime })
     if (!cancelled && blob.size) {
-      const a = document.createElement('a')
-      a.download = `slitscan.${fmt}`
-      a.href = URL.createObjectURL(blob)
-      document.body.appendChild(a)
-      a.click()
-      setTimeout(() => { a.remove(); URL.revokeObjectURL(a.href) }, 10000)
+      triggerDownload(blob, `slitscan.${fmt}`)
       setMsg(t('msg_exported', { fmt }))
-    } else if (cancelled) {
-      setMsg(t('msg_stopped'))
+      return true
     }
+    if (cancelled) setMsg(t('msg_stopped'))
+    return false
   } catch (e) {
     try { if (rec.state !== 'inactive') rec.stop() } catch (_) {}
     if (!cancelled) setMsg(t('msg_fail', { err: e.message || 'export' }))
+    return false
   } finally {
     exportCancel = null
     try { v.pause() } catch (_) {}
-    try { v.playbackRate = prevRate } catch (_) {}
+    try { v.playbackRate = 1 } catch (_) {}
     try { v.loop = prevLoop } catch (_) {}
-    state.busy = false
-    state.busyKind = null
-    state.progress = 0
-    render()
   }
 }
 
-function runDownload() {
-  if (!state.hasOutput || state.busy) return
+async function exportProject(kind) {
+  const c = $out
+  if (!c || c.width <= 4) return false
+  let cancelled = false
+  exportCancel = () => { cancelled = true }
+  setMsg(t('msg_packaging'))
+  try {
+    const stillBlob = await canvasToBlob(c, 'image/png')
+    if (cancelled) {
+      setMsg(t('msg_stopped'))
+      return false
+    }
+    const v = $video
+    const { blob, filename } = await buildProjectZip({
+      kind,
+      stillBlob,
+      sourceFile: state.sourceFile,
+      sourceName: state.fileName || state.srcName || 'source.mp4',
+      fps: state.fps,
+      duration: Number.isFinite(v.duration) ? v.duration : 0,
+      stillW: c.width,
+      stillH: c.height,
+      videoW: v.videoWidth,
+      videoH: v.videoHeight,
+    })
+    if (cancelled) {
+      setMsg(t('msg_stopped'))
+      return false
+    }
+    triggerDownload(blob, filename)
+    setMsg(t('msg_exported_project', { fmt: kind }))
+    return true
+  } finally {
+    exportCancel = null
+  }
+}
+
+async function shipOutput() {
   const fmt = state.exportFmt
   if (!fmtSupported(fmt)) {
     setMsg(t('fmt_unsupported', { fmt }))
-    return
+    return false
   }
-  if (IMAGE_FMTS.has(fmt)) exportImage(fmt)
-  else if (VIDEO_FMTS.has(fmt)) exportVideo(fmt)
+  if (IMAGE_FMTS.has(fmt)) return exportImage(fmt)
+  if (VIDEO_FMTS.has(fmt)) return exportVideo(fmt)
+  if (PROJECT_FMTS.has(fmt)) return exportProject(fmt)
+  return false
 }
 
-function handleSource({ url, name }) {
+function handleSource({ url, name, file }) {
   if (state.objectUrl) URL.revokeObjectURL(state.objectUrl)
   reset(true)
+  setStageFail('')
   state.objectUrl = url
   state.srcName = name
   state.fileName = name
+  state.sourceFile = file || null
+  state.fps = 30
+  state.fpsReady = false
+  fpsGen += 1
+  fpsProbe = null
   $video.src = url
   $video.load()
   render()
+  preparePreview(file)
+}
+
+async function preparePreview(file) {
+  const gen = fpsGen
+  let probe = { codec: null, rotation: 0, brand: '' }
+  try {
+    if (file) probe = await probeMediaFile(file)
+  } catch (_) {}
+  if (gen !== fpsGen) return
+
+  if (probe.codec && !browserCanPlayCodec(probe.codec)) {
+    const msg = isHevc(probe.codec) ? t('msg_hevc') : t('msg_video_error')
+    setStageFail(msg)
+    setMsg(msg)
+    return
+  }
+
+  try {
+    await paintFirstFrame($video)
+  } catch (_) {}
+  if (gen !== fpsGen) return
+
+  syncStageAspect()
+  drawOverlay()
+  render()
+
+  if ($video.videoWidth > 0 && !videoHasPicture($video)) {
+    const msg = isHevc(probe.codec) ? t('msg_hevc') : t('msg_no_frame')
+    setStageFail(msg)
+    setMsg(msg)
+  }
 }
 
 function takeVideoFile(file) {
@@ -724,8 +909,10 @@ function takeVideoFile(file) {
     setMsg(t('msg_bad_file'))
     return
   }
-  state.fileName = file.name
-  handleSource({ url: URL.createObjectURL(file), name: file.name })
+  const type = file.type && file.type !== 'video/quicktime' ? file.type : 'video/mp4'
+  const blob = type === file.type ? file : new Blob([file], { type })
+  const url = URL.createObjectURL(blob)
+  handleSource({ url, name: file.name, file })
 }
 
 function bindDropzone(el) {
@@ -755,10 +942,10 @@ function moveLine(e) {
   const box = videoBox()
   if (box.width < 1) return
   let p
-  if (state.shape === 'h') {
+  if (state.shape === 'h' || state.shape === 'sine') {
     p = (e.clientY - box.top) / box.height
   } else {
-    // v, diag, adiag, sine — primarily horizontal control
+    // v, diag, adiag — primarily horizontal control
     p = (e.clientX - box.left) / box.width
   }
   state.linePos = Math.max(0, Math.min(1, p))
@@ -769,7 +956,7 @@ function handleKey(e) {
   if (state.busy || state.shape === 'free') return
   const step = e.shiftKey ? 0.1 : 0.01
   let p = state.linePos
-  if (state.shape === 'h') {
+  if (state.shape === 'h' || state.shape === 'sine') {
     if (e.key === 'ArrowUp') p -= step
     else if (e.key === 'ArrowDown') p += step
     else if (e.key === 'Home') p = 0
@@ -858,15 +1045,16 @@ for (const b of fmtBtns) {
     render()
   })
 }
+for (const b of qualityBtns) {
+  b.addEventListener('click', () => {
+    state.quality = b.dataset.quality || 'full'
+    engineRef = null
+    render()
+  })
+}
 
 $clearpath.addEventListener('click', () => {
   state.freePath = DEFAULT_FREE.map((p) => ({ ...p }))
-  render()
-})
-
-$scaleinput.addEventListener('input', () => {
-  state.scale = Number($scaleinput.value)
-  engineRef = null
   render()
 })
 
@@ -874,15 +1062,22 @@ $live.addEventListener('click', () => { if (!state.busy) startLive() })
 $oneshot.addEventListener('click', runOneShot)
 $stop.addEventListener('click', stopCapture)
 $reset.addEventListener('click', () => reset(false))
-$download.addEventListener('click', runDownload)
 
 $video.addEventListener('loadedmetadata', () => {
   state.meta = { duration: $video.duration }
+  syncStageAspect()
   render()
+  ensureFps().then(() => { if (state.objectUrl) render() })
+})
+
+$video.addEventListener('loadeddata', () => {
+  syncStageAspect()
+  drawOverlay()
 })
 
 $video.addEventListener('error', () => {
   if (!state.objectUrl) return
+  setStageFail(t('msg_video_error'))
   setMsg(t('msg_video_error'))
 })
 

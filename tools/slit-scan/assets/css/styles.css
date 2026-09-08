@@ -92,7 +92,8 @@ section {
 .outputbed[hidden],
 .progress[hidden],
 .metaline[hidden],
-.toast[hidden] {
+.toast[hidden],
+.stage-fail[hidden] {
   display: none !important;
 }
 
@@ -104,20 +105,27 @@ section {
   width: 100%;
   overflow: hidden;
   border-radius: 4px;
-  background: #000;
+  background: var(--code-bg);
   cursor: crosshair;
   touch-action: none;
   user-select: none;
   margin-top: 8px;
+  display: grid;
+  place-items: center;
 }
 
 .stage video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  position: relative;
+  z-index: 0;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
   object-fit: contain;
   background: #000;
+  border-radius: 4px;
 }
 
 .pathov {
@@ -126,6 +134,22 @@ section {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: 1;
+}
+
+.stage-fail {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--code-bg);
 }
 
 .stage.drawing {
@@ -289,13 +313,17 @@ section {
 .flow .segbtn { flex-basis: 44%; }
 
 .exportfmt .segbtn {
-  flex: 1 1 calc(20% - 5px);
-  min-width: 3.2rem;
+  flex: 1 1 calc(25% - 5px);
+  min-width: 2.8rem;
   font-family: var(--mono);
   text-transform: lowercase;
 }
 
 .flowwrap { margin-top: 10px; }
+
+.qualitywrap { margin-top: 0; }
+
+.quality .segbtn { flex: 1; }
 
 .fieldlabel {
   display: flex;
@@ -311,18 +339,6 @@ section {
   font-style: normal;
   color: var(--accent);
   font-weight: 400;
-}
-
-.slider {
-  display: block;
-  margin-bottom: 8px;
-}
-
-input[type="range"] {
-  width: 100%;
-  margin: 0 0 8px;
-  accent-color: var(--accent);
-  cursor: pointer;
 }
 
 .filebtn { display: block; position: relative; }
@@ -466,7 +482,9 @@ button:disabled {
   .stage,
   .empty {
     flex: none;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: var(--stage-aspect, 16 / 9);
+    width: 100%;
+    max-height: 70vh;
     min-height: 0;
   }
 
@@ -494,9 +512,5 @@ button:disabled {
   .seg.shape .segbtn {
     min-height: 40px;
     min-width: 2.75rem;
-  }
-
-  input[type="range"] {
-    min-height: 40px;
   }
 }
