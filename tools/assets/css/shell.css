@@ -30,6 +30,9 @@
   --muted-text: #665c54;
   --accent-color: #d65d0e;
   --accent-hover: #af3a03;
+  --accent-ink: #af3a03;
+  --accent-ink-hover: color-mix(in srgb, #af3a03 82%, #1d2021);
+  --accent-readout: var(--accent-ink);
   --border-color: #d5c4a1;
   --code-bg: #f2e5bc;
   --btn-bg: #f9f5d7;
@@ -52,7 +55,7 @@
   --accent: var(--accent-color);
   --accent-deep: var(--accent-hover);
   --accent-soft: color-mix(in srgb, var(--accent-color) 16%, var(--primary-bg));
-  --accent-btn: var(--accent-color);
+  --accent-btn: var(--accent-ink);
   --danger: var(--status-bad);
   --error: var(--status-bad);
   --warn: var(--status-wip);
@@ -71,6 +74,9 @@ html[data-theme="dark"] {
   --muted-text: #d5c4a1;
   --accent-color: #fe8019;
   --accent-hover: #fd971f;
+  --accent-ink: #fe8019;
+  --accent-ink-hover: #fd971f;
+  --accent-readout: #ffb050;
   --border-color: #504945;
   --code-bg: #3c3836;
   --btn-bg: #3c3836;
@@ -459,17 +465,17 @@ button:hover {
 
 button.primary,
 .export-btn {
-  background: var(--accent-color);
+  background: var(--accent-ink);
   color: var(--primary-bg);
-  border-color: var(--accent-color);
+  border-color: var(--accent-ink);
   font-weight: 400;
   min-height: 32px;
 }
 
 button.primary:hover,
 .export-btn:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background: var(--accent-ink-hover);
+  border-color: var(--accent-ink-hover);
 }
 
 button.danger {

@@ -170,7 +170,7 @@ layout: default
       document.addEventListener('visibilitychange', syncMotion);
 
       function skip(img) {
-        return img.closest('.filler-image, .about, .share-buttons, .missing-image');
+        return img.classList.contains('emoji') || img.closest('.filler-image, .about, .share-buttons, .missing-image');
       }
 
       function intendedHeight(img) {

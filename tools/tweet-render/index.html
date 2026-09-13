@@ -1,0 +1,158 @@
+---
+layout: null
+title: tweet render
+tool: tweet-render
+description: typeset a public tweet on this notebook’s paper and download a png sized for a post.
+permalink: /tools/tweet-render/
+---
+{% include language-utils.html %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>tweet render @ {{ t.site_title }}</title>
+<meta name="description" content="{{ page.description }}" />
+{% include tool-head.html %}
+<link rel="stylesheet" href="{{ '/tools/tweet-render/assets/css/styles.css' | relative_url }}" />
+</head>
+<body>
+{% include tool-chrome.html %}
+  <div class="app">
+    <aside class="rail-intro" aria-labelledby="main">
+      <h1 class="tool-title" id="main" data-i18n="title">tweet render</h1>
+      <p class="tool-lede" data-i18n="lede">typeset a tweet on this paper · png sized for a post</p>
+
+      <section>
+        <h2 data-i18n="source">tweet</h2>
+        <label class="urlfield">
+          <span class="fieldlabel" data-i18n="url">url or id</span>
+          <input id="tweet-url" type="text" inputmode="url" spellcheck="false" autocomplete="off"
+            autocapitalize="off" autocorrect="off" data-lpignore="true" data-1p-ignore="true"
+            data-i18n-placeholder="url_ph" placeholder="https://x.com/name/status/…"
+            aria-describedby="tweet-url-hint tweet-status" />
+        </label>
+        <div class="actions">
+          <button class="primary" type="button" data-render data-i18n="render">render</button>
+        </div>
+        <p class="hint" id="tweet-url-hint" data-i18n="url_hint">public tweets · photos, quotes, replies, video posters</p>
+      </section>
+    </aside>
+
+    <main class="stage-panel">
+      <section class="stageblock">
+        <div class="panelhead">
+          <h2 data-i18n="preview">preview</h2>
+          <span class="srcname" data-srcname hidden></span>
+        </div>
+        <div class="empty" data-empty data-i18n="empty">paste a tweet url, then render. the picture is the artifact.</div>
+        <div class="stage" data-stage hidden>
+          <div class="card-fit" data-fit></div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rail-knobs" data-i18n="controls" data-i18n-attr="aria-label" aria-label="controls">
+      <section aria-labelledby="knobs-title">
+        <h2 id="knobs-title" data-i18n="frame">frame</h2>
+        <div class="flowwrap ratiowrap">
+          <span class="fieldlabel" id="ratio-label" data-i18n="ratio">ratio</span>
+          <div class="seg ratio" role="radiogroup" aria-labelledby="ratio-label">
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-ratio" value="auto" checked />
+              <span data-i18n="ratio_auto">auto</span>
+            </label>
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-ratio" value="16:9" />
+              <span>16:9</span>
+            </label>
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-ratio" value="4:3" />
+              <span>4:3</span>
+            </label>
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-ratio" value="1:1" />
+              <span>1:1</span>
+            </label>
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-ratio" value="3:2" />
+              <span>3:2</span>
+            </label>
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-ratio" value="9:16" />
+              <span>9:16</span>
+            </label>
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-ratio" value="custom" />
+              <span data-i18n="ratio_custom">custom</span>
+            </label>
+          </div>
+        </div>
+        <div class="custom-ratio" data-custom-ratio hidden>
+          <label>
+            <span class="sr-only" data-i18n="ratio_w">width</span>
+            <input data-ratio-w type="number" min="1" max="32" step="1" value="16" inputmode="numeric" />
+          </label>
+          <span class="custom-ratio__sep" aria-hidden="true">:</span>
+          <label>
+            <span class="sr-only" data-i18n="ratio_h">height</span>
+            <input data-ratio-h type="number" min="1" max="32" step="1" value="9" inputmode="numeric" />
+          </label>
+        </div>
+        <p class="hint" data-i18n="ratio_hint">auto follows the photo · others size the photo well · the paper grows</p>
+        <div class="flowwrap" data-media-knobs hidden>
+          <span class="fieldlabel" id="media-label" data-i18n="media">media</span>
+          <div class="seg mediafit" role="radiogroup" aria-labelledby="media-label">
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-media" value="fill" checked />
+              <span data-i18n="media_fill">fill</span>
+            </label>
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-media" value="fit" />
+              <span data-i18n="media_fit">fit</span>
+            </label>
+          </div>
+          <p class="hint" data-i18n="media_hint">fill crops the well · fit shows the whole picture</p>
+          <div class="placewrap" data-place-knobs hidden>
+            <span class="fieldlabel" id="place-label" data-i18n="place">place</span>
+            <div class="seg mediaplace" role="radiogroup" aria-labelledby="place-label">
+              <label class="segbtn">
+                <input class="sr-only" type="radio" name="tweet-place" value="top" />
+                <span data-i18n="place_top">top</span>
+              </label>
+              <label class="segbtn">
+                <input class="sr-only" type="radio" name="tweet-place" value="center" checked />
+                <span data-i18n="place_center">center</span>
+              </label>
+              <label class="segbtn">
+                <input class="sr-only" type="radio" name="tweet-place" value="bottom" />
+                <span data-i18n="place_bottom">bottom</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <label class="dprfield">
+          <span class="fieldlabel"><span data-i18n="sharpness">sharpness</span> <em data-dprval>1× · 700px</em></span>
+          <input data-dpr type="range" min="1" max="8" step="1" value="1"
+            data-i18n="sharpness_group" data-i18n-attr="aria-label" aria-label="download sharpness" />
+        </label>
+        <p class="hint" data-i18n="sharp_hint">1× is post width (700px) · 8× is 5600px</p>
+        <p class="hint" data-dpr-cap hidden data-i18n="sharp_capped">output caps at 8192px · this scale shrinks</p>
+      </section>
+
+      <section aria-labelledby="export-title">
+        <h2 id="export-title" data-i18n="export">export</h2>
+        <div class="actions">
+          <button class="primary" type="button" data-download disabled data-i18n="download">download png</button>
+          <button class="ghost" type="button" data-clear disabled data-i18n="clear">clear</button>
+        </div>
+        <p class="metaline" id="tweet-status" data-status hidden role="status" aria-live="polite" aria-atomic="true"></p>
+      </section>
+    </aside>
+  </div>
+
+  <div class="toast" data-toast hidden></div>
+
+  <script type="module" src="{{ '/tools/tweet-render/assets/js/app.js' | relative_url }}"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@ highlighter: rouge
 plugins:
   - jekyll-redirect-from
   - jekyll-sitemap
+  - jemoji
 
 # Sitemap configuration
 sitemap:
@@ -41,6 +42,7 @@ exclude:
   - tools/ascii-studio/package-lock.json
   - tools/ascii-studio/node_modules
   - tools/ascii-studio/asset-build
+  - tools/tweet-render/proxy
   - .playwright-cli
   - .playwright
   - .playwright-mcp

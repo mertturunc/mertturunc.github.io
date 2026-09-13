@@ -1,0 +1,18 @@
+{% comment %}
+Opt-in D3 mount for blog posts.
+Requires page.d3: true so the layout loads d3.min.js and d3-post.js.
+
+  {% include d3-figure.html id="demo-bars" caption="a tiny bar chart on the same paper" height="220" %}
+{% endcomment %}
+<figure class="d3-figure"{% if include.id %} id="{{ include.id | escape }}-figure"{% endif %}>
+  <div
+    class="d3-figure__mount"
+    {% if include.id %}id="{{ include.id | escape }}"{% endif %}
+    role="img"
+    {% if include.caption %}aria-label="{{ include.caption | escape }}"{% endif %}
+    {% if include.height %}style="min-height: {{ include.height }}px;"{% endif %}
+  ></div>
+  {% if include.caption %}
+  <figcaption>{{ include.caption | escape }}</figcaption>
+  {% endif %}
+</figure>

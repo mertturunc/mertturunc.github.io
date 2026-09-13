@@ -23,3 +23,9 @@
   title_tr: slit scan
   year: 2026
   url: /tools/slit-scan/
+
+- id: tweet-render
+  title: tweet render
+  title_tr: tweet render
+  year: 2026
+  url: /tools/tweet-render/
