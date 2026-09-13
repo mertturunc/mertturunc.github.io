@@ -46,7 +46,7 @@ function appendRichText(parent, text) {
     if (m.index > last) parent.append(src.slice(last, m.index))
     const token = m[0]
     if (m[1]) {
-      const a = el('a', { href: token, rel: 'noreferrer', target: '_blank' }, [token.replace(/^https?:\/\//, '')])
+      const a = el('a', { href: token, rel: 'noreferrer', target: '_blank', tabindex: '-1' }, [token.replace(/^https?:\/\//, '')])
       parent.append(a)
     } else if (m[2]) {
       parent.append(el('span', { class: 'mention' }, [token]))
@@ -209,13 +209,28 @@ function buildLinkCard(card) {
   ])
 }
 
-function footLine(tweet, t) {
-  const bits = []
-  if (tweet.replies != null) bits.push(`${formatCount(tweet.replies)} ${t('metric_replies')}`)
-  if (tweet.retweets != null) bits.push(`${formatCount(tweet.retweets)} ${t('metric_reposts')}`)
-  if (tweet.likes != null) bits.push(`${formatCount(tweet.likes)} ${t('metric_likes')}`)
-  if (tweet.edited) bits.push(t('edited'))
-  return bits.join(' · ')
+function buildFoot(tweet, t) {
+  const stats = []
+  if (tweet.replies != null) stats.push({ n: formatCount(tweet.replies), k: t('metric_replies') })
+  if (tweet.retweets != null) stats.push({ n: formatCount(tweet.retweets), k: t('metric_reposts') })
+  if (tweet.likes != null) stats.push({ n: formatCount(tweet.likes), k: t('metric_likes') })
+  if (!stats.length && !tweet.edited) return null
+
+  const foot = el('footer', { class: 'card-foot' })
+  if (stats.length) {
+    const list = el('ul', { class: 'card-stats' })
+    for (const s of stats) {
+      list.append(
+        el('li', { class: 'card-stat' }, [
+          el('span', { class: 'card-stat-n' }, [s.n]),
+          el('span', { class: 'card-stat-k' }, [s.k]),
+        ]),
+      )
+    }
+    foot.append(list)
+  }
+  if (tweet.edited) foot.append(el('p', { class: 'card-edited' }, [t('edited')]))
+  return foot
 }
 
 export function buildCard(tweet, { lang, t, ratio, media, place }) {
@@ -256,8 +271,8 @@ export function buildCard(tweet, { lang, t, ratio, media, place }) {
 
   growBits.forEach((n) => article.append(n))
 
-  const foot = footLine(tweet, t)
-  if (foot) article.append(el('footer', { class: 'card-foot' }, [foot]))
+  const foot = buildFoot(tweet, t)
+  if (foot) article.append(foot)
 
   return article
 }

@@ -2,7 +2,7 @@
 layout: null
 title: tweet render
 tool: tweet-render
-description: typeset a public tweet on this notebook’s paper and download a png sized for a post.
+description: typeset a public tweet on this notebook’s paper and download a png or webp sized for a post.
 permalink: /tools/tweet-render/
 ---
 {% include language-utils.html %}
@@ -21,7 +21,7 @@ permalink: /tools/tweet-render/
   <div class="app">
     <aside class="rail-intro" aria-labelledby="main">
       <h1 class="tool-title" id="main" data-i18n="title">tweet render</h1>
-      <p class="tool-lede" data-i18n="lede">typeset a tweet on this paper · png sized for a post</p>
+      <p class="tool-lede" data-i18n="lede">typeset a tweet on this paper · sized for a post</p>
 
       <section>
         <h2 data-i18n="source">tweet</h2>
@@ -142,8 +142,23 @@ permalink: /tools/tweet-render/
 
       <section aria-labelledby="export-title">
         <h2 id="export-title" data-i18n="export">export</h2>
+        <div class="flowwrap ratiowrap">
+          <span class="fieldlabel" id="fmt-label" data-i18n="fmt">format</span>
+          <div class="seg fmt" role="radiogroup" aria-labelledby="fmt-label" aria-describedby="fmt-hint">
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-fmt" value="png" checked />
+              <span>png</span>
+            </label>
+            <label class="segbtn">
+              <input class="sr-only" type="radio" name="tweet-fmt" value="webp" />
+              <span>webp</span>
+            </label>
+          </div>
+          <p class="hint" id="fmt-hint" data-i18n="fmt_hint">png is lossless · webp is smaller for posts</p>
+          <p class="hint" id="fmt-unsupported" data-fmt-unsupported hidden data-i18n="fmt_unsupported">this browser cannot write webp · png still works</p>
+        </div>
         <div class="actions">
-          <button class="primary" type="button" data-download disabled data-i18n="download">download png</button>
+          <button class="primary" type="button" data-download disabled data-i18n="download">download</button>
           <button class="ghost" type="button" data-clear disabled data-i18n="clear">clear</button>
         </div>
         <p class="metaline" id="tweet-status" data-status hidden role="status" aria-live="polite" aria-atomic="true"></p>

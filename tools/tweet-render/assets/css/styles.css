@@ -1,5 +1,10 @@
 /* Tweet render — sits on the shared tools paper (shell.css). */
 
+html[data-theme="dark"] {
+  /* coral mixed toward parchment-ink so 12px errors clear 4.5:1 on --panel */
+  --status-bad: color-mix(in srgb, #fb4934 58%, var(--primary-text));
+}
+
 * { box-sizing: border-box; }
 
 html,
@@ -149,7 +154,8 @@ section {
   justify-content: center;
 }
 
-.seg.mediafit .segbtn {
+.seg.mediafit .segbtn,
+.seg.fmt .segbtn {
   flex: 1 1 calc(50% - 4px);
 }
 
@@ -168,6 +174,19 @@ section {
 .segbtn:has(:disabled):hover {
   border-color: var(--border);
   color: var(--text);
+}
+
+.segbtn input:focus {
+  outline: none;
+}
+
+.segbtn:has(:focus-visible) {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.segbtn:has(:checked):has(:focus-visible) {
+  outline-color: var(--primary-text);
 }
 
 .dprfield {
@@ -221,6 +240,10 @@ section {
   min-width: 0;
   min-height: 32px;
   padding: 5px 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   border: 1px solid var(--border);
   background: var(--btn-bg);
   color: var(--text);
@@ -231,7 +254,7 @@ section {
   border-radius: 4px;
 }
 
-.segbtn:hover:not(:disabled) {
+.segbtn:hover:not(:has(:disabled)) {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -243,8 +266,8 @@ section {
   color: var(--primary-bg);
 }
 
-.segbtn.on:hover,
-.segbtn:has(:checked):hover {
+.segbtn.on:hover:not(:has(:disabled)),
+.segbtn:has(:checked):hover:not(:has(:disabled)) {
   background: var(--accent-ink-hover);
   border-color: var(--accent-ink-hover);
   color: var(--primary-bg);
@@ -608,13 +631,50 @@ button:disabled {
 }
 
 .card-foot {
-  margin-top: 0.9em;
-  padding-top: 0.7em;
-  border-top: 1px dashed var(--border-color);
-  font-size: 0.72em;
-  line-height: 1.4;
-  color: var(--muted-text);
+  margin-top: 1em;
+  padding-top: 0.75em;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: flex-end;
+  gap: 1.1em;
+}
+
+.card-stats {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.35em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12em;
+  min-width: 0;
+}
+
+.card-stat-n {
+  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
+  font-size: 0.82em;
+  line-height: 1.15;
+  font-weight: 400;
+  color: var(--primary-text);
+}
+
+.card-stat-k {
+  font-size: 0.62em;
+  line-height: 1.2;
+  color: var(--muted-text);
+}
+
+.card-edited {
+  margin: 0 0 0.12em auto;
+  font-size: 0.62em;
+  line-height: 1.2;
+  color: var(--muted-text);
 }
 
 .toast {

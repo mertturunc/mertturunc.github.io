@@ -60,21 +60,94 @@ function paintBackground(ctx, el, origin) {
   ctx.restore()
 }
 
+function borderSide(cs, edge) {
+  const cap = edge[0].toUpperCase() + edge.slice(1)
+  const width = parseFloat(cs[`border${cap}Width`]) || 0
+  const style = cs[`border${cap}Style`]
+  const color = parseColor(cs, `border${cap}Color`)
+  const visible = !!(color && width >= 0.4 && style && style !== 'none' && style !== 'hidden')
+  return { width, style, color, visible }
+}
+
+function dashFor(style, width) {
+  if (style === 'dashed') return [width * 3, width * 2]
+  if (style === 'dotted') return [width, width]
+  return []
+}
+
 function paintBorder(ctx, el, origin) {
   const cs = getComputedStyle(el)
-  const color = parseColor(cs, 'borderTopColor')
-  const width = parseFloat(cs.borderTopWidth) || 0
-  if (!color || width < 0.4) return
+  const top = borderSide(cs, 'top')
+  const right = borderSide(cs, 'right')
+  const bottom = borderSide(cs, 'bottom')
+  const left = borderSide(cs, 'left')
+  if (!top.visible && !right.visible && !bottom.visible && !left.visible) return
+
   const b = box(el, origin)
-  const r = parseFloat(cs.borderRadius) || 0
-  const style = cs.borderTopStyle
-  ctx.save()
-  roundRect(ctx, b.x + width / 2, b.y + width / 2, Math.max(0, b.w - width), Math.max(0, b.h - width), Math.max(0, r - width / 2))
-  ctx.strokeStyle = color
-  ctx.lineWidth = width
-  if (style === 'dashed') ctx.setLineDash([width * 3, width * 2])
-  ctx.stroke()
-  ctx.restore()
+  const radius = parseFloat(cs.borderRadius) || 0
+  const uniform =
+    top.visible &&
+    right.visible &&
+    bottom.visible &&
+    left.visible &&
+    top.width === right.width &&
+    top.width === bottom.width &&
+    top.width === left.width &&
+    top.style === right.style &&
+    top.style === bottom.style &&
+    top.style === left.style &&
+    top.color === right.color &&
+    top.color === bottom.color &&
+    top.color === left.color
+
+  if (uniform) {
+    const width = top.width
+    ctx.save()
+    roundRect(
+      ctx,
+      b.x + width / 2,
+      b.y + width / 2,
+      Math.max(0, b.w - width),
+      Math.max(0, b.h - width),
+      Math.max(0, radius - width / 2),
+    )
+    ctx.strokeStyle = top.color
+    ctx.lineWidth = width
+    ctx.setLineDash(dashFor(top.style, width))
+    ctx.stroke()
+    ctx.restore()
+    return
+  }
+
+  const stroke = (x1, y1, x2, y2, side) => {
+    ctx.save()
+    ctx.strokeStyle = side.color
+    ctx.lineWidth = side.width
+    ctx.lineCap = 'butt'
+    ctx.setLineDash(dashFor(side.style, side.width))
+    ctx.beginPath()
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(x2, y2)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  if (top.visible) {
+    const y = b.y + top.width / 2
+    stroke(b.x, y, b.x + b.w, y, top)
+  }
+  if (bottom.visible) {
+    const y = b.y + b.h - bottom.width / 2
+    stroke(b.x, y, b.x + b.w, y, bottom)
+  }
+  if (left.visible) {
+    const x = b.x + left.width / 2
+    stroke(x, b.y, x, b.y + b.h, left)
+  }
+  if (right.visible) {
+    const x = b.x + b.w - right.width / 2
+    stroke(x, b.y, x, b.y + b.h, right)
+  }
 }
 
 function posOffset(token, extra) {
@@ -270,11 +343,21 @@ export async function captureCard(source, { width, dpr }) {
   }
 }
 
-export function canvasToPngBlob(canvas) {
+export function canvasToBlob(canvas, mime = 'image/png', quality) {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) reject(new Error('empty png'))
+    const done = (blob) => {
+      if (!blob) reject(new Error('empty image'))
       else resolve(blob)
-    }, 'image/png')
+    }
+    try {
+      if (quality == null) canvas.toBlob(done, mime)
+      else canvas.toBlob(done, mime, quality)
+    } catch (e) {
+      reject(e)
+    }
   })
+}
+
+export function canvasToPngBlob(canvas) {
+  return canvasToBlob(canvas, 'image/png')
 }

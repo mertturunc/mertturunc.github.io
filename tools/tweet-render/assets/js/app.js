@@ -1,6 +1,6 @@
 import { extractTweetId, fetchTweet } from './tweet.js'
 import { FIGURE_WIDTH, buildCard, applyCardFrame, parseRatio } from './card.js'
-import { captureCard, canvasToPngBlob, exportSize } from './capture.js'
+import { captureCard, canvasToBlob, exportSize } from './capture.js'
 
 const $ = (sel) => document.querySelector(sel)
 const t = (key, vars) => (typeof window.toolT === 'function' ? window.toolT(key, vars) : key)
@@ -27,6 +27,22 @@ const ratioInputs = [...document.querySelectorAll('input[name="tweet-ratio"]')]
 const mediaInputs = [...document.querySelectorAll('input[name="tweet-media"]')]
 const placeInputs = [...document.querySelectorAll('input[name="tweet-place"]')]
 
+const fmtInputs = [...document.querySelectorAll('input[name="tweet-fmt"]')]
+const $fmtGroup = document.querySelector('.seg.fmt')
+const $fmtHint = document.getElementById('fmt-hint')
+const $fmtUnsupported = $('[data-fmt-unsupported]')
+
+const WEBP_OK = (() => {
+  try {
+    const c = document.createElement('canvas')
+    c.width = 1
+    c.height = 1
+    return c.toDataURL('image/webp').startsWith('data:image/webp')
+  } catch (_) {
+    return false
+  }
+})()
+
 const state = {
   tweet: null,
   width: FIGURE_WIDTH,
@@ -36,6 +52,7 @@ const state = {
   customH: 9,
   media: 'fill',
   place: 'center',
+  fmt: 'png',
   busy: false,
 }
 
@@ -49,7 +66,7 @@ function currentRatio() {
   return parseRatio(state.ratioKey, state.customW, state.customH)
 }
 
-function setStatus(msg, isError) {
+function setStatus(msg, isError, invalidUrl) {
   if (!msg) {
     $status.hidden = true
     $status.textContent = ''
@@ -60,7 +77,7 @@ function setStatus(msg, isError) {
   $status.hidden = false
   $status.textContent = msg
   $status.classList.toggle('error', !!isError)
-  if (isError) $url.setAttribute('aria-invalid', 'true')
+  if (invalidUrl) $url.setAttribute('aria-invalid', 'true')
   else $url.removeAttribute('aria-invalid')
 }
 
@@ -97,7 +114,7 @@ function fitCard() {
   $fit.style.overflow = 'hidden'
   if (state.tweet) {
     const out = exportSize(w, h, state.dpr)
-    setStatus(t('ready', { w, h: Math.round(h), dpr: state.dpr, ew: out.width, eh: out.height }))
+    setStatus(t('ready', { w, h: Math.round(h), dpr: state.dpr, ew: out.width, eh: out.height, fmt: state.fmt }))
     refreshDprLabel()
   }
 }
@@ -138,17 +155,20 @@ function setBusy(busy) {
   $download.disabled = busy || !state.tweet
   $clear.disabled = busy || !state.tweet
   $url.disabled = busy
+  for (const input of fmtInputs) {
+    input.disabled = busy || (input.value === 'webp' && !WEBP_OK)
+  }
 }
 
 async function doRender() {
   const raw = $url.value.trim()
   if (!raw) {
-    setStatus(t('err_need_url'), true)
+    setStatus(t('err_need_url'), true, true)
     toast(t('err_need_url'), true)
     return
   }
   if (!extractTweetId(raw)) {
-    setStatus(t('err_bad_id'), true)
+    setStatus(t('err_bad_id'), true, true)
     toast(t('err_bad_id'), true)
     return
   }
@@ -169,20 +189,22 @@ async function doRender() {
 async function doDownload() {
   const card = $fit.querySelector('.card')
   if (!card || !state.tweet) return
+  const fmt = state.fmt === 'webp' && WEBP_OK ? 'webp' : 'png'
+  const mime = fmt === 'webp' ? 'image/webp' : 'image/png'
   setBusy(true)
-  setStatus(t('exporting', { dpr: state.dpr }))
+  setStatus(t('exporting', { dpr: state.dpr, fmt }))
   try {
     const canvas = await captureCard(card, { width: state.width, dpr: state.dpr })
-    const blob = await canvasToPngBlob(canvas)
+    const blob = await canvasToBlob(canvas, mime, fmt === 'webp' ? 0.95 : undefined)
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `tweet-${state.tweet.author.handle || 'render'}-${state.tweet.id}.png`
+    a.download = `tweet-${state.tweet.author.handle || 'render'}-${state.tweet.id}.${fmt}`
     a.click()
     setTimeout(() => URL.revokeObjectURL(a.href), 4000)
-    setStatus(t('downloaded', { w: canvas.width, h: canvas.height }))
-    toast(t('msg_downloaded'))
+    setStatus(t('downloaded', { w: canvas.width, h: canvas.height, fmt }))
+    toast(t('msg_downloaded', { fmt }))
   } catch (err) {
-    const msg = t('err_export', { err: (err && err.message) || 'error' })
+    const msg = t('err_export', { err: (err && err.message) || 'error', fmt })
     setStatus(msg, true)
     toast(msg, true)
   } finally {
@@ -219,7 +241,7 @@ function setDpr(n) {
   if (state.tweet) {
     const h = cardHeight()
     const out = exportSize(state.width, h, state.dpr)
-    setStatus(t('ready', { w: state.width, h: Math.round(h), dpr: state.dpr, ew: out.width, eh: out.height }))
+    setStatus(t('ready', { w: state.width, h: Math.round(h), dpr: state.dpr, ew: out.width, eh: out.height, fmt: state.fmt }))
   }
 }
 
@@ -275,6 +297,14 @@ function setPlace(key) {
   applyLiveFrame()
 }
 
+function setFmt(key) {
+  const fmt = key === 'webp' && WEBP_OK ? 'webp' : 'png'
+  state.fmt = fmt
+  for (const input of fmtInputs) input.checked = input.value === fmt
+  if (state.tweet) fitCard()
+  else refreshDprLabel()
+}
+
 $dpr?.addEventListener('input', () => setDpr(Number($dpr.value) || 1))
 
 for (const input of ratioInputs) {
@@ -285,6 +315,9 @@ for (const input of mediaInputs) {
 }
 for (const input of placeInputs) {
   input.addEventListener('change', () => setPlace(input.value || 'center'))
+}
+for (const input of fmtInputs) {
+  input.addEventListener('change', () => setFmt(input.value || 'png'))
 }
 
 function onCustomRatio() {
@@ -336,6 +369,15 @@ try {
     doRender()
   }
 } catch (_) {}
+
+if (!WEBP_OK) {
+  for (const input of fmtInputs) {
+    if (input.value === 'webp') input.disabled = true
+  }
+  if ($fmtHint) $fmtHint.hidden = true
+  if ($fmtUnsupported) $fmtUnsupported.hidden = false
+  $fmtGroup?.setAttribute('aria-describedby', 'fmt-unsupported')
+}
 
 syncMediaKnobs()
 mountCard()
