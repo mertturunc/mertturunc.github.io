@@ -75,11 +75,12 @@ const canvasFilled = await page.evaluate(() => {
 console.log('canvas opaque pixels after load:', canvasFilled);
 
 const exportVisible = await page.locator('#export-row').isVisible();
-console.log('export row visible:', exportVisible);
+const webBtnVisible = await page.locator('#export-web-btn').isVisible();
+console.log('export row visible:', exportVisible, 'web btn:', webBtnVisible);
 
-// Try exporting a GIF.
+// Try exporting a GIF (larger default grid needs more time).
 await page.click('#export-btn');
-await page.waitForTimeout(2500);
+await page.waitForSelector('#preview-wrap:not(.hidden)', { timeout: 60000 });
 const previewShown = await page.locator('#preview-wrap:not(.hidden)').count() > 0;
 console.log('preview shown after export:', previewShown);
 const previewSrc = await page.locator('#preview-img').getAttribute('src');
@@ -90,10 +91,47 @@ const gifOk = (await page.evaluate(async (src) => {
 }, previewSrc)) && previewSrc?.startsWith('blob:');
 console.log('preview is a valid GIF blob:', gifOk);
 
+// Web export (live stub): finishes without leaving busy state.
+await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+await page.click('#export-web-btn');
+await page.waitForFunction(
+  () => !document.getElementById('export-web-btn')?.getAttribute('aria-busy'),
+  null,
+  { timeout: 60000 },
+);
+const webExportDone = await page.evaluate(() => !document.getElementById('export-web-btn')?.disabled);
+console.log('web export completed:', webExportDone);
+
+// Live embed runtime fixture.
+await page.goto(`http://localhost:${PORT}/tools/ascii-studio/embed-fixture.html`, {
+  waitUntil: 'networkidle',
+});
+await page.waitForTimeout(2500);
+const liveCanvas = await page.evaluate(() => {
+  const c = document.querySelector('#live canvas');
+  if (!c) return { ok: false, reason: 'no canvas' };
+  const ctx = c.getContext('2d');
+  const d = ctx.getImageData(0, 0, c.width, c.height).data;
+  let opaque = 0;
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 20) opaque++;
+  return { ok: opaque > 0, opaque, w: c.width, h: c.height };
+});
+console.log('live embed canvas:', liveCanvas);
+
 await browser.close();
 server.close();
 
-const failed = sliderCount !== 11 || paletteCount !== 6 || canvasFilled.opaque <= 0 || !exportVisible || !previewShown || !gifOk || errors.length > 0;
+const failed =
+  sliderCount !== 33 ||
+  paletteCount !== 7 ||
+  canvasFilled.opaque <= 0 ||
+  !exportVisible ||
+  !webBtnVisible ||
+  !previewShown ||
+  !gifOk ||
+  !webExportDone ||
+  !liveCanvas.ok ||
+  errors.length > 0;
 if (errors.length) console.log('JS errors:', errors);
 console.log(failed ? 'SMOKE TEST: FAILED' : 'SMOKE TEST: PASSED');
 process.exit(failed ? 1 : 0);

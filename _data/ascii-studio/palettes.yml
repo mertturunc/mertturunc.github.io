@@ -1,37 +1,47 @@
-# Ink palettes rendered as chips by _includes/ascii-studio-app.html.
-# Mirrors INK_PALETTES in tools/ascii-studio/_src/state.js — keep the ids in sync.
+# Ink palettes — luminance band roles:
+#   shadow    = dark cells (silhouette core)
+#   highlight = mid cells
+#   mid       = light / edge cells
+# Keep in sync with tools/ascii-studio/_src/state.js INK_PALETTES.
+
+- id: ember
+  name: Ember
+  shadow: "#1a1a1a"
+  highlight: "#FF6700"
+  mid: "#FFC043"
+
 - id: denim
   name: Denim
-  shadow: "#151921"
-  mid: "#3f4f73"
+  shadow: "#1a1a1a"
   highlight: "#1d4ed8"
+  mid: "#60a5fa"
 
 - id: carbon
   name: Carbon
-  shadow: "#18181b"
-  mid: "#5b6474"
-  highlight: "#c7ced8"
+  shadow: "#1a1a1a"
+  highlight: "#64748b"
+  mid: "#94a3b8"
 
 - id: amber
   name: Amber
-  shadow: "#24170a"
-  mid: "#a16207"
-  highlight: "#fbbf24"
+  shadow: "#1a1a1a"
+  highlight: "#d97706"
+  mid: "#fbbf24"
 
 - id: forest
   name: Forest
-  shadow: "#10281a"
-  mid: "#15803d"
-  highlight: "#a7f3d0"
+  shadow: "#1a1a1a"
+  highlight: "#15803d"
+  mid: "#4ade80"
 
 - id: wine
   name: Wine
-  shadow: "#3c0d22"
-  mid: "#be123c"
-  highlight: "#fbcfe8"
+  shadow: "#1a1a1a"
+  highlight: "#be123c"
+  mid: "#fb7185"
 
 - id: ocean
   name: Ocean
-  shadow: "#10233b"
-  mid: "#2563eb"
-  highlight: "#bfdbfe"
+  shadow: "#1a1a1a"
+  highlight: "#0284c7"
+  mid: "#38bdf8"

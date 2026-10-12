@@ -6,7 +6,8 @@
 // those controls itself.
 
 import { createEngine } from './engine.js';
-import { createState, SETTING_DEFS, INK_PALETTES } from './state.js';
+import { createState, SETTING_DEFS, INK_PALETTES, deriveInksFromMaterial, paletteToInks } from './state.js';
+import { hexRelativeLum, CELL_ASPECT } from './renderer/ascii.js';
 
 const monitor = document.getElementById('ascii-canvas');
 const state = createState();
@@ -33,6 +34,7 @@ const motionSelect = document.getElementById('motion-select');
 const motionRow = document.getElementById('motion-row');
 const spinHint = document.getElementById('spin-hint');
 const exportBtn = document.getElementById('export-btn');
+const exportWebBtn = document.getElementById('export-web-btn');
 const exportRow = document.getElementById('export-row');
 const previewWrap = document.getElementById('preview-wrap');
 let previewImg = null;
@@ -104,9 +106,11 @@ function syncAllControls() {
   colorAInput.value = state.get('colorA');
   colorBInput.value = state.get('colorB');
   colorCInput.value = state.get('colorC');
+  syncBgUI();
   syncPaletteChips();
   syncInkUI();
   syncDitherUI();
+  syncStyleSegs();
 }
 
 for (const [key, entry] of sliderRows) {
@@ -134,6 +138,7 @@ for (const [key, entry] of sliderRows) {
 const colorAInput = document.getElementById('color-a');
 const colorBInput = document.getElementById('color-b');
 const colorCInput = document.getElementById('color-c');
+const colorBgInput = document.getElementById('color-bg');
 colorAInput.value = state.get('colorA');
 colorBInput.value = state.get('colorB');
 colorCInput.value = state.get('colorC');
@@ -147,6 +152,149 @@ colorCInput.value = state.get('colorC');
     refresh();
   });
 });
+
+if (colorBgInput) {
+  const bg = state.get('bgColor');
+  if (bg && bg !== 'transparent') colorBgInput.value = bg;
+  colorBgInput.addEventListener('input', () => {
+    try {
+      sessionStorage.setItem('ascii-studio-user-bg', '1');
+    } catch (_) {}
+    state.set({ bgColor: colorBgInput.value });
+    syncBgUI();
+    refresh();
+  });
+}
+
+function syncBgUI() {
+  const bg = state.get('bgColor') || 'transparent';
+  const transparent = bg === 'transparent';
+  syncTogglePressed(
+    [...document.querySelectorAll('[data-bg-transparent]')],
+    (b) => Number(b.dataset.bgTransparent) === (transparent ? 1 : 0)
+  );
+  if (colorBgInput && !transparent) colorBgInput.value = bg;
+  syncPaperColor();
+}
+
+document.querySelectorAll('[data-bg-transparent]').forEach((b) => {
+  b.addEventListener('click', () => {
+    const on = Number(b.dataset.bgTransparent) === 1;
+    try {
+      sessionStorage.setItem('ascii-studio-user-bg', '1');
+    } catch (_) {}
+    if (on) state.set({ bgColor: 'transparent' });
+    else state.set({ bgColor: colorBgInput?.value || '#f5f3ee' });
+    syncBgUI();
+    refresh();
+  });
+});
+
+// ---------- Segmented style controls ----------
+function wireSegGroup(attr, key, parse = (v) => v) {
+  const btns = [...document.querySelectorAll(`[${attr}]`)];
+  btns.forEach((b) => {
+    b.addEventListener('click', () => {
+      const next = parse(b.getAttribute(attr));
+      if (state.get(key) === next) return;
+      state.set({ [key]: next });
+      syncStyleSegs();
+      refresh();
+    });
+  });
+  return btns;
+}
+
+const cameraFollowBtns = wireSegGroup('data-camera-follow', 'cameraFollow');
+const cellModeBtns = wireSegGroup('data-cell-mode', 'cellMode');
+const cellOutlineBtns = wireSegGroup('data-cell-outline', 'cellOutline', Number);
+const trailEnabledBtns = wireSegGroup('data-trail-enabled', 'trailEnabled', Number);
+const trailStrokeBtns = wireSegGroup('data-trail-stroke', 'trailStroke', Number);
+const formationBtns = wireSegGroup('data-formation', 'formationMode');
+
+function syncStyleSegs() {
+  syncTogglePressed(cameraFollowBtns, (b) => b.dataset.cameraFollow === state.get('cameraFollow'));
+  syncTogglePressed(cellModeBtns, (b) => b.dataset.cellMode === state.get('cellMode'));
+  syncTogglePressed(cellOutlineBtns, (b) => Number(b.dataset.cellOutline) === Number(state.get('cellOutline')));
+  syncTogglePressed(trailEnabledBtns, (b) => Number(b.dataset.trailEnabled) === Number(state.get('trailEnabled')));
+  syncTogglePressed(trailStrokeBtns, (b) => Number(b.dataset.trailStroke) === Number(state.get('trailStroke')));
+  syncTogglePressed(formationBtns, (b) => b.dataset.formation === state.get('formationMode'));
+  syncPointerFocusability();
+}
+
+// ---------- Pointer (mouse / keyboard camera + trail) ----------
+let pointerNx = 0;
+let pointerNy = 0;
+
+function pointerNeedsInput() {
+  return state.get('cameraFollow') === 'mouse' || !!Number(state.get('trailEnabled'));
+}
+
+function applyPointer(nx, ny) {
+  pointerNx = Math.max(-1, Math.min(1, nx));
+  pointerNy = Math.max(-1, Math.min(1, ny));
+  engine.setPointer(pointerNx, pointerNy, state.settings);
+  if (!ticking) refresh();
+}
+
+function syncPointerFocusability() {
+  const on = pointerNeedsInput();
+  if (on) {
+    monitor.setAttribute('tabindex', '0');
+    const hint = tt('pointer_keys_hint');
+    const base =
+      mainModelInfo
+        ? tt('canvas_of', { name: mainFileLabel.textContent || '' })
+        : tt('canvas_aria');
+    monitor.setAttribute('aria-label', `${base}. ${hint}`);
+  } else if (mainModelInfo) {
+    monitor.removeAttribute('tabindex');
+    monitor.setAttribute('aria-label', tt('canvas_of', { name: mainFileLabel.textContent || '' }));
+  } else {
+    monitor.removeAttribute('tabindex');
+    monitor.setAttribute('aria-label', tt('canvas_aria'));
+  }
+}
+
+function pointerFromEvent(e) {
+  const rect = monitor.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+  return { nx, ny };
+}
+
+function onPointerMove(e) {
+  if (prefersReducedMotion()) return;
+  if (!pointerNeedsInput()) return;
+  const p = pointerFromEvent(e);
+  if (!p) return;
+  applyPointer(p.nx, p.ny);
+}
+
+function onPointerLeave() {
+  if (state.get('cameraFollow') !== 'mouse') return;
+  applyPointer(0, 0);
+}
+
+function onPointerKeydown(e) {
+  if (!pointerNeedsInput() || prefersReducedMotion()) return;
+  const step = e.shiftKey ? 0.12 : 0.05;
+  let handled = true;
+  if (e.key === 'ArrowLeft') applyPointer(pointerNx - step, pointerNy);
+  else if (e.key === 'ArrowRight') applyPointer(pointerNx + step, pointerNy);
+  else if (e.key === 'ArrowUp') applyPointer(pointerNx, pointerNy - step);
+  else if (e.key === 'ArrowDown') applyPointer(pointerNx, pointerNy + step);
+  else if (e.key === 'Home' || e.key === 'Escape') applyPointer(0, 0);
+  else handled = false;
+  if (handled) e.preventDefault();
+}
+
+monitor.addEventListener('pointermove', onPointerMove);
+monitor.addEventListener('pointerleave', onPointerLeave);
+monitor.addEventListener('keydown', onPointerKeydown);
+dropZone.addEventListener('pointermove', onPointerMove);
+dropZone.addEventListener('pointerleave', onPointerLeave);
 
 // ---------- Render ink ui ----------
 const colorRow = document.getElementById('color-row');
@@ -176,15 +324,12 @@ const ditherBtns = [...document.querySelectorAll('.style-rows [data-dither]')];
 function applyPalette(id) {
   const p = INK_PALETTES.find((x) => x.id === id);
   if (!p) return;
-  state.set({
-    paletteId: id,
-    colorA: p.shadow,
-    colorC: p.mid,
-    colorB: p.highlight,
-  });
-  colorAInput.value = p.shadow;
-  colorCInput.value = p.mid;
-  colorBInput.value = p.highlight;
+  const paperLum = hexRelativeLum(state.get('paperColor') || resolvePaperHex());
+  const inks = paletteToInks(p, paperLum);
+  state.set(inks);
+  colorAInput.value = inks.colorA;
+  colorBInput.value = inks.colorB;
+  colorCInput.value = inks.colorC;
   syncPaletteChips();
   refresh();
 }
@@ -203,21 +348,22 @@ function syncPaletteChips() {
 }
 
 // Threshold / split sliders for which band visibility depends on ink count.
-const thresholdSlider = controlsBody.querySelector('input[data-key="threshold"]').closest('.slider-row');
-const splitSlider = controlsBody.querySelector('input[data-key="split"]').closest('.slider-row');
+const thresholdSlider = controlsBody.querySelector('input[data-key="threshold"]')?.closest('.slider-row');
+const splitSlider = controlsBody.querySelector('input[data-key="split"]')?.closest('.slider-row');
 
 function syncInkUI() {
   const n = state.get('colorMode');
   syncTogglePressed(inkBtns, (b) => Number(b.dataset.ink) === n);
-  thresholdSlider.classList.toggle('hidden', n === 1);
-  splitSlider.classList.toggle('hidden', n !== 3);
+  // Threshold/split drove old luminance→hue banding; letter/accent model ignores them.
+  thresholdSlider?.classList.toggle('hidden', true);
+  splitSlider?.classList.toggle('hidden', true);
   colorAItem.classList.toggle('hidden', false);
   colorBItem.classList.toggle('hidden', n === 1);
   colorCItem.classList.toggle('hidden', n !== 3);
   colorRow.classList.toggle('three', n === 3);
-  colorALabel.textContent = n === 1 ? tt('ink_color') : tt('shadow_color');
-  colorBLabel.textContent = tt('highlight_color');
-  document.getElementById('color-c-label').textContent = tt('mid_color');
+  colorALabel.textContent = tt('ink_color');
+  colorBLabel.textContent = tt('accent_color');
+  document.getElementById('color-c-label').textContent = tt('accent_alt_color');
 }
 
 function syncSliderUI() {
@@ -226,18 +372,7 @@ function syncSliderUI() {
 
 function setInkMode(n) {
   if (state.get('colorMode') === n) return;
-  if (n === 3) {
-    // Starting at three inks: auto-balance the bands from the current frame's
-    // luminance so all three read evenly. Without a model, use neutral thirds.
-    if (mainModelInfo) {
-      const bal = engine.balancedThresholds(state.settings);
-      state.set({ colorMode: 3, threshold: bal.threshold, split: bal.split });
-    } else {
-      state.set({ colorMode: 3, threshold: 0.33, split: 0.67 });
-    }
-  } else {
-    state.set({ colorMode: n });
-  }
+  state.set({ colorMode: n });
   syncSliderUI();
   syncInkUI();
   refresh();
@@ -328,9 +463,11 @@ async function loadMainModel(file) {
   try {
     // Restore this file's last settings (or a clean framing pose on first open)
     // before the engine applies lights / orientation.
-    if (state.setActiveModel(file.name)) syncAllControls();
+    const openKind = state.setActiveModel(file.name);
+    if (openKind) syncAllControls();
     const info = await engine.loadModel(file, state.settings);
-    mainModelInfo = info;
+    mainModelInfo = { ...info, file, fromFolder: false };
+    if (openKind === 'fresh') applyFreshModelLook();
     onModelLoaded(file.name);
   } catch (err) {
     console.error(err);
@@ -352,9 +489,11 @@ async function importGltfFolder(files) {
   try {
     const gltf = [...files].find((f) => /\.gltf$/i.test(f.name));
     const displayName = gltf ? gltf.name : 'glTF scene';
-    if (state.setActiveModel(displayName)) syncAllControls();
+    const openKind = state.setActiveModel(displayName);
+    if (openKind) syncAllControls();
     const info = await engine.loadGltfFolder(files, state.settings);
-    mainModelInfo = info;
+    mainModelInfo = { ...info, file: null, fromFolder: true };
+    if (openKind === 'fresh') applyFreshModelLook();
     onModelLoaded(displayName);
   } catch (err) {
     console.error(err);
@@ -365,6 +504,150 @@ async function importGltfFolder(files) {
   } finally {
     setImportBusy(false);
   }
+}
+
+/** First-open: probe luminance + materials → lights, exposure, bands, inks. */
+function applyFreshModelLook() {
+  syncPaperColor();
+  // Always start a new model at object origin (ω/φ/κ = 0).
+  state.set({ objectOmega: 0, objectPhi: 0, objectKappa: 0 });
+  engine.resetModelTransform(state.settings);
+  const raw = engine.calibrateLook(state.settings);
+  if (!raw || !Object.keys(raw).length) return;
+  const { __matHue: hue, __matSat: sat, __matLum: lum, ...look } = raw;
+  const paperLum = hexRelativeLum(state.get('paperColor') || '#f5f3ee');
+  const colors = deriveInksFromMaterial({ hue, sat, lum }, paperLum);
+  state.set({ ...look, ...colors });
+  fitAsciiToFrame({ pullCamera: true });
+  syncAllControls();
+  syncInkUI();
+  syncPaletteChips();
+  showToast(tt('look_calibrated', { palette: colors.paletteId || 'custom' }));
+}
+
+/** Paper used for ink contrast when canvas bg is transparent. */
+function resolvePaperHex() {
+  const bg = state.get('bgColor');
+  if (bg && bg !== 'transparent') return bg;
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return dark ? '#2a2724' : '#f5f3ee';
+}
+
+function syncPaperColor() {
+  const paper = resolvePaperHex();
+  if (state.get('paperColor') === paper) return;
+  state.set({ paperColor: paper });
+}
+
+/** Available paint box inside the frame (minus tray when visible). */
+function frameContentSize() {
+  if (!frame) return { w: 640, h: 480 };
+  const pad = 36;
+  const tw = Math.max(80, frame.clientWidth - pad * 2);
+  let th = Math.max(80, frame.clientHeight - pad * 2);
+  const tray = document.querySelector('.tray');
+  if (tray && loadedUI && !loadedUI.classList.contains('hidden')) {
+    th = Math.max(80, th - tray.getBoundingClientRect().height - 12);
+  }
+  return { w: tw, h: th };
+}
+
+/**
+ * Size the ASCII grid to the stage and crop empty space around the model.
+ * When a model is loaded, reshape cols/rows to the silhouette aspect and
+ * pull zoom so the object fills the frame.
+ */
+function fitAsciiToFrame({ pullCamera = false } = {}) {
+  const { w: availW, h: availH } = frameContentSize();
+  const spacing = Math.max(0, Number(state.get('cellSpacing')) || 0);
+  let cell = Math.max(4, Math.min(16, Math.round(Number(state.get('cellSize')) || 9)));
+
+  const stepX = (c) => c + spacing;
+  const stepY = (c) => Math.round(c * CELL_ASPECT) + spacing;
+
+  // Default: fill the paint box. With a model, prefer silhouette aspect.
+  let targetAspect = availW / Math.max(1, availH);
+  let zoomPatch = null;
+  if (pullCamera && mainModelInfo) {
+    const fitted = engine.fitFrameToObject(state.settings, { margin: 1.08, spinSamples: 12 });
+    if (fitted?.aspect > 0.15 && fitted.aspect < 8) {
+      targetAspect = fitted.aspect;
+    }
+    zoomPatch = fitted.zoom;
+  }
+
+  // Pick the largest even grid that fits availW×availH at `cell` with targetAspect.
+  // pixel aspect = cols / (rows * CELL_ASPECT) ≈ targetAspect
+  // ⇒ cols/rows ≈ targetAspect * CELL_ASPECT
+  const colRowRatio = targetAspect * CELL_ASPECT;
+
+  while (cell > 4) {
+    const maxCols = Math.floor(availW / stepX(cell));
+    const maxRows = Math.floor(availH / stepY(cell));
+    if (maxCols >= 32 && maxRows >= 20) break;
+    cell -= 1;
+  }
+
+  let cols = Math.floor(availW / stepX(cell));
+  let rows = Math.max(20, Math.round(cols / colRowRatio));
+  if (rows * stepY(cell) > availH) {
+    rows = Math.floor(availH / stepY(cell));
+    cols = Math.max(32, Math.round(rows * colRowRatio));
+  }
+  cols = Math.min(cols, Math.floor(availW / stepX(cell)));
+  rows = Math.min(rows, Math.floor(availH / stepY(cell)));
+  cols = Math.max(32, cols - (cols % 2));
+  rows = Math.max(20, rows - (rows % 2));
+  while (cols > 32 && cols * stepX(cell) > availW) cols -= 2;
+  while (rows > 20 && rows * stepY(cell) > availH) rows -= 2;
+
+  const patch = {
+    gridWidth: cols,
+    gridHeight: rows,
+    cellSize: cell,
+  };
+
+  if (zoomPatch != null) {
+    // Re-measure zoom with the new grid aspect so NDC fill stays tight.
+    const refit = engine.fitFrameToObject(
+      { ...state.settings, ...patch, zoom: zoomPatch },
+      { margin: 1.08, spinSamples: 12 }
+    );
+    patch.zoom = refit.zoom;
+    patch.cameraDistance = refit.zoom;
+  }
+
+  const cur = state.settings;
+  const changed =
+    cur.gridWidth !== patch.gridWidth ||
+    cur.gridHeight !== patch.gridHeight ||
+    cur.cellSize !== patch.cellSize ||
+    (patch.zoom != null && Math.abs(Number(cur.zoom) - patch.zoom) > 0.04);
+  if (changed) {
+    state.set(patch);
+    syncAllControls();
+  }
+  scaleCanvasCss(availW, availH);
+  return patch;
+}
+
+/** CSS-scale the canvas into the frame (intrinsic pixels stay sharp via object-fit). */
+function scaleCanvasCss(availW, availH) {
+  if (!monitor) return;
+  const cw = monitor.width || 1;
+  const ch = monitor.height || 1;
+  const s = Math.min(1, availW / cw, availH / ch);
+  monitor.style.width = `${Math.max(1, Math.floor(cw * s))}px`;
+  monitor.style.height = `${Math.max(1, Math.floor(ch * s))}px`;
+}
+
+let fitRaf = 0;
+function scheduleFitAscii() {
+  cancelAnimationFrame(fitRaf);
+  fitRaf = requestAnimationFrame(() => {
+    fitAsciiToFrame({ pullCamera: !!mainModelInfo });
+    refresh();
+  });
 }
 
 /** Common post-load UI wiring shared by single-file and folder imports. */
@@ -383,7 +666,11 @@ function onModelLoaded(displayName) {
   animFileBtn.classList.remove('hidden');
 
   exportRow.classList.remove('hidden');
-  refresh();
+  // Fit after tray becomes visible so height accounts for it.
+  requestAnimationFrame(() => {
+    fitAsciiToFrame({ pullCamera: true });
+    refresh();
+  });
 }
 
 function resetToEmptyState() {
@@ -426,7 +713,10 @@ removeModelBtn.addEventListener('click', resetToEmptyState);
 const resetSettingsBtn = document.getElementById('reset-settings-btn');
 resetSettingsBtn.addEventListener('click', () => {
   state.reset();
+  // Pin model at origin with ω/φ/κ = 0 and re-fit the camera.
+  engine.resetModelTransform(state.settings);
   syncAllControls();
+  fitAsciiToFrame({ pullCamera: !!mainModelInfo });
   refresh();
 });
 
@@ -532,6 +822,14 @@ motionSegs.forEach((b) =>
 // ---------- Preview loop ----------
 let startTime = null;
 let ticking = false;
+let stageVisible = true;
+
+function previewShouldRun() {
+  if (document.hidden || !stageVisible) return false;
+  if (!mainModelInfo) return false;
+  return true;
+}
+
 function refresh() {
   startTime = performance.now();
   if (!ticking) {
@@ -545,16 +843,20 @@ function tick(now) {
     ticking = false;
     return;
   }
-  // No model: one still frame is enough — don't keep the WebGL/ASCII loop hot.
-  if (!mainModelInfo) {
-    engine.renderPreview(0, state.settings);
+  const reduced = prefersReducedMotion();
+  engine.setReducedMotion(reduced);
+  // No model / hidden tab / offscreen stage: one still frame, then idle.
+  if (!previewShouldRun()) {
+    if (mainModelInfo) engine.renderPreview(reduced ? 0 : ((now - startTime) / 1000) % Math.max(0.1, state.get('duration') || 6), state.settings);
+    else engine.renderPreview(0, state.settings);
     ticking = false;
     startTime = null;
     return;
   }
-  const reduced = prefersReducedMotion();
   const t = reduced ? 0 : (now - startTime) / 1000;
   engine.renderPreview(t, state.settings);
+  const box = frameContentSize();
+  scaleCanvasCss(box.w, box.h);
   if (reduced) {
     ticking = false;
     return;
@@ -563,18 +865,42 @@ function tick(now) {
 }
 requestAnimationFrame(tick);
 
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refresh();
+});
+
+if (typeof IntersectionObserver !== 'undefined' && frame) {
+  const stageIo = new IntersectionObserver(
+    (entries) => {
+      stageVisible = !!entries[0]?.isIntersecting;
+      if (stageVisible) refresh();
+    },
+    { threshold: 0.05 }
+  );
+  stageIo.observe(frame);
+}
+
 window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => {
   updateSpinHint();
   refresh();
 });
 
 // ---------- Export ----------
+function setExportBusy(busy) {
+  for (const btn of [exportBtn, exportWebBtn]) {
+    if (!btn) continue;
+    btn.disabled = busy;
+    if (busy) btn.setAttribute('aria-busy', 'true');
+    else btn.removeAttribute('aria-busy');
+  }
+  if (exportBtn) exportBtn.textContent = busy ? tt('rendering') : tt('export');
+  if (exportWebBtn) exportWebBtn.textContent = busy ? tt('rendering') : tt('export_web');
+}
+
 exportBtn.addEventListener('click', async () => {
   if (!mainModelInfo) return;
   try {
-    exportBtn.disabled = true;
-    exportBtn.setAttribute('aria-busy', 'true');
-    exportBtn.textContent = tt('rendering');
+    setExportBusy(true);
 
     const bytes = await engine.captureAsync(state.settings, () => {});
 
@@ -598,24 +924,75 @@ exportBtn.addEventListener('click', async () => {
     console.error(err);
     showError(tt('err_export', { err: err.message }));
   } finally {
-    exportBtn.disabled = false;
-    exportBtn.removeAttribute('aria-busy');
-    exportBtn.textContent = tt('export');
+    setExportBusy(false);
+  }
+});
+
+exportWebBtn?.addEventListener('click', async () => {
+  if (!mainModelInfo) return;
+  try {
+    setExportBusy(true);
+    const { isSingleFileModelName } = await import('./embed/player.js');
+    const { exportWebPackage, copyLiveStub } = await import('./web/liveExport.js');
+
+    if (mainModelInfo.fromFolder || !mainModelInfo.file || !isSingleFileModelName(mainModelInfo.name || '')) {
+      showError(tt('err_export_web_folder'));
+      return;
+    }
+
+    const baseName = mainModelInfo.name || 'ascii';
+    const result = await exportWebPackage({
+      engine,
+      settings: state.settings,
+      baseName,
+      ariaLabel: tt('export_web_aria'),
+      motionMode: engine.motionMode,
+      originalFile: mainModelInfo.file,
+    });
+    await copyLiveStub(result.stub);
+    const sizeNote =
+      result.beforeBytes > 0
+        ? tt('export_web_size', {
+            before: (result.beforeBytes / 1024).toFixed(0),
+            after: (result.afterBytes / 1024).toFixed(0),
+          })
+        : '';
+    showToast([tt('export_web_saved_zip', { path: `i/embeds/${result.folder}/` }), sizeNote].filter(Boolean).join(' '));
+  } catch (err) {
+    console.error(err);
+    showError(tt('err_export_web', { err: err.message }));
+  } finally {
+    setExportBusy(false);
   }
 });
 
 // ---------- Helpers ----------
 function formatValue(key, v) {
-  if (key === 'threshold' || key === 'split') return v.toFixed(2);
-  if (key === 'cellSize') return Math.round(v) + 'px';
-  if (key === 'gridWidth' || key === 'gridHeight' || key === 'fps') return String(Math.round(v));
-  if (key === 'duration') return v.toFixed(2) + 's';
-  if (key === 'cameraDistance') return v.toFixed(2);
+  if (key === 'threshold' || key === 'split' || key === 'colorMix' || key === 'explodeAmount' || key === 'speedFactor' || key === 'gamma') {
+    return Number(v).toFixed(2);
+  }
+  if (key === 'cellSize' || key === 'cellSpacing') return Math.round(v) + 'px';
+  if (
+    key === 'gridWidth' ||
+    key === 'gridHeight' ||
+    key === 'fps' ||
+    key === 'bold' ||
+    key === 'trailLength' ||
+    key === 'trailDecayMs' ||
+    key === 'transitionMs'
+  ) {
+    return String(Math.round(v));
+  }
+  if (key === 'duration') return Number(v).toFixed(2) + 's';
+  if (key === 'zoom' || key === 'cameraDistance') return Number(v).toFixed(2);
   if (key === 'contrast') return (v > 0 ? '+' : '') + Math.round(v);
   if (
     key === 'objectOmega' ||
     key === 'objectPhi' ||
     key === 'objectKappa' ||
+    key === 'orbitH' ||
+    key === 'orbitV' ||
+    key === 'mouseStrength' ||
     key === 'cameraOmega' ||
     key === 'cameraPhi' ||
     key === 'cameraKappa' ||
@@ -624,18 +1001,44 @@ function formatValue(key, v) {
   ) {
     return Math.round(v) + '°';
   }
+  if (
+    key === 'keyX' ||
+    key === 'keyY' ||
+    key === 'keyZ' ||
+    key === 'fillX' ||
+    key === 'fillY' ||
+    key === 'fillZ' ||
+    key === 'keyIntensity' ||
+    key === 'fillIntensity' ||
+    key === 'ambientIntensity'
+  ) {
+    return Number(v).toFixed(2);
+  }
   return v;
 }
 
 let toastTimer = null;
-function showError(message) {
+function showToast(message, kind = 'ok') {
   clearTimeout(toastTimer);
   toast.textContent = message;
-  toast.classList.remove('hidden', 'hide');
+  toast.classList.remove('hidden', 'hide', 'toast--error', 'toast--ok');
+  if (kind === 'error') {
+    toast.classList.add('toast--error');
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+  } else {
+    toast.classList.add('toast--ok');
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+  }
   toastTimer = setTimeout(() => {
     toast.classList.add('hide');
     setTimeout(() => toast.classList.add('hidden'), 300);
   }, 5000);
+}
+
+function showError(message) {
+  showToast(message, 'error');
 }
 
 function sleep(ms) {
@@ -647,13 +1050,45 @@ syncInkUI();
 syncSliderUI();
 syncPaletteChips();
 syncDitherUI();
+syncStyleSegs();
+syncBgUI();
+syncPointerFocusability();
+engine.setReducedMotion(prefersReducedMotion());
 engine.renderPreview(0, state.settings);
 syncMotionSegs();
 
+// Theme-aware plate: prefer transparent unless the user picked a solid bg.
+function syncThemeBgDefault() {
+  let userBg = false;
+  try {
+    userBg = sessionStorage.getItem('ascii-studio-user-bg') === '1';
+  } catch (_) {}
+  if (!userBg) {
+    const bg = state.get('bgColor');
+    if (bg && bg !== 'transparent') {
+      state.set({ bgColor: 'transparent' });
+      syncBgUI();
+    }
+  }
+  syncPaperColor();
+  refresh();
+}
+const themeObs = new MutationObserver(syncThemeBgDefault);
+themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+syncThemeBgDefault();
+
+fitAsciiToFrame({ pullCamera: false });
+if (typeof ResizeObserver !== 'undefined' && frame) {
+  const ro = new ResizeObserver(() => scheduleFitAscii());
+  ro.observe(frame);
+} else {
+  window.addEventListener('resize', scheduleFitAscii);
+}
 window.addEventListener('langchange', () => {
   syncInkUI();
   updateSpinHint();
   if (exportBtn && !exportBtn.disabled) exportBtn.textContent = tt('export');
+  if (exportWebBtn && !exportWebBtn.disabled) exportWebBtn.textContent = tt('export_web');
   if (mainModelInfo) {
     dropZone.querySelector('.drop-message').textContent = tt('replace_drop');
     monitor.setAttribute('aria-label', tt('canvas_of', { name: mainFileLabel.textContent || '' }));

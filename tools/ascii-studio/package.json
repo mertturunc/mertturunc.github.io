@@ -4,10 +4,14 @@
   "description": "ASCII GIF Studio — Vite build for the Jekyll page at /tools/ascii-studio/",
   "private": true,
   "scripts": {
-    "build:js": "vite build --config vite.build.config.mjs",
+    "build:js": "vite build --config vite.build.config.mjs && vite build --config vite.embed-standalone.config.mjs",
     "verify": "node verify.mjs"
   },
   "dependencies": {
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@gltf-transform/functions": "^4.5.0",
+    "fflate": "^0.8.3",
     "gifenc": "^1.0.3",
     "three": "^0.185.1"
   },

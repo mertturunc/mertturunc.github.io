@@ -260,7 +260,10 @@ rouge
 : the highlighter that paints the fences.
 
 d3
-: opt-in charts, only when the post asks.
+: opt-in charts when the post sets `d3: true` or `viz: [d3, graphviz, cytoscape, vis]`.
+
+postViz.network
+: shared `postViz.network(mount, { engine, nodes, edges })` or `{ engine: 'graphviz', dot: '…' }`.
 
 ## chart
 

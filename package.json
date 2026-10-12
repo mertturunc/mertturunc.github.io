@@ -7,7 +7,8 @@
     "generate-placeholders:png": "node .github/scripts/generate-placeholders.js --format=png",
     "generate-placeholders:jpg": "node .github/scripts/generate-placeholders.js --format=jpg",
     "generate-placeholders:svg": "node .github/scripts/generate-placeholders.js --format=svg",
-    "build:ascii-studio": "npm install --prefix tools/ascii-studio && npm run build:js --prefix tools/ascii-studio"
+    "build:ascii-studio": "npm install --prefix tools/ascii-studio && npm run build:js --prefix tools/ascii-studio",
+    "sync:viz-vendor": "node .github/scripts/sync-viz-vendor.js"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",

@@ -67,11 +67,81 @@
 
                 {% comment %}
                   Grouped sliders from _data/ascii-studio/settings.yml.
-                  Task path: output → framing → shading (+ ink controls).
+                  Lighting / trail / effects stay collapsed (advanced).
                 {% endcomment %}
                 {% for group in site.data.ascii-studio.settings %}
+                  {% assign is_advanced = false %}
+                  {% if group.id == 'lighting' or group.id == 'trail' or group.id == 'effects' %}
+                    {% assign is_advanced = true %}
+                  {% endif %}
+                  {% if is_advanced %}
+                  <details class="settings-sub" data-group="{{ group.id }}">
+                    <summary class="settings-sub-summary">
+                      <span class="settings-group-label" data-i18n="group_{{ group.id }}">{{ group.label }}</span>
+                      <span class="chev" aria-hidden="true">▾</span>
+                    </summary>
+                    <div class="settings-sub-body">
+                  {% else %}
                   <section class="settings-group" data-group="{{ group.id }}">
                     <h2 class="settings-group-label" data-i18n="group_{{ group.id }}">{{ group.label }}</h2>
+                  {% endif %}
+
+                    {% if group.id == 'camera' %}
+                      <div class="style-field">
+                        <span class="style-label" data-i18n="camera_follow">follow</span>
+                        <div class="motion-btns inks-btns" role="group" data-i18n="camera_follow" data-i18n-attr="aria-label" aria-label="camera follow">
+                          <button type="button" class="seg" data-camera-follow="auto" aria-pressed="false" data-i18n="camera_follow_auto">auto rotate</button>
+                          <button type="button" class="seg" data-camera-follow="mouse" aria-pressed="false" data-i18n="camera_follow_mouse">mouse</button>
+                        </div>
+                      </div>
+                      <p class="settings-hint" data-i18n="pointer_keys_hint">arrow keys nudge the view when mouse follow or trail is on; esc resets</p>
+                    {% endif %}
+
+                    {% if group.id == 'cell' %}
+                      <div class="style-field">
+                        <span class="style-label" data-i18n="cell_mode">mode</span>
+                        <div class="motion-btns inks-btns" role="group" data-i18n="cell_mode" data-i18n-attr="aria-label" aria-label="cell mode">
+                          <button type="button" class="seg" data-cell-mode="text" aria-pressed="false" data-i18n="cell_mode_text">text</button>
+                          <button type="button" class="seg" data-cell-mode="shapes" aria-pressed="false" data-i18n="cell_mode_shapes">shapes</button>
+                          <button type="button" class="seg" data-cell-mode="mixed" aria-pressed="false" data-i18n="cell_mode_mixed">mixed</button>
+                        </div>
+                      </div>
+                      <div class="style-field">
+                        <span class="style-label" data-i18n="cell_outline">outline</span>
+                        <div class="motion-btns inks-btns" role="group" data-i18n="cell_outline" data-i18n-attr="aria-label" aria-label="cell outline">
+                          <button type="button" class="seg" data-cell-outline="0" aria-pressed="false" data-i18n="dither_off">off</button>
+                          <button type="button" class="seg" data-cell-outline="1" aria-pressed="false" data-i18n="on">on</button>
+                        </div>
+                      </div>
+                    {% endif %}
+
+                    {% if group.id == 'trail' %}
+                      <div class="style-field">
+                        <span class="style-label" data-i18n="trail_enabled">trail</span>
+                        <div class="motion-btns inks-btns" role="group">
+                          <button type="button" class="seg" data-trail-enabled="0" aria-pressed="false" data-i18n="dither_off">off</button>
+                          <button type="button" class="seg" data-trail-enabled="1" aria-pressed="false" data-i18n="on">on</button>
+                        </div>
+                      </div>
+                      <div class="style-field">
+                        <span class="style-label" data-i18n="trail_stroke">trail stroke</span>
+                        <div class="motion-btns inks-btns" role="group">
+                          <button type="button" class="seg" data-trail-stroke="0" aria-pressed="false" data-i18n="dither_off">off</button>
+                          <button type="button" class="seg" data-trail-stroke="1" aria-pressed="false" data-i18n="on">on</button>
+                        </div>
+                      </div>
+                    {% endif %}
+
+                    {% if group.id == 'effects' %}
+                      <div class="style-field">
+                        <span class="style-label" data-i18n="formation_mode">formation</span>
+                        <div class="motion-btns inks-btns" role="group">
+                          <button type="button" class="seg" data-formation="none" aria-pressed="false" data-i18n="formation_none">none</button>
+                          <button type="button" class="seg" data-formation="assemble" aria-pressed="false" data-i18n="formation_assemble">assemble</button>
+                        </div>
+                      </div>
+                    {% endif %}
+
                     {% for def in group.settings %}
                       <label class="slider-row">
                         <span class="slider-label" data-i18n="set_{{ def.key }}">{{ def.label }}</span>
@@ -80,7 +150,7 @@
                       </label>
                     {% endfor %}
 
-                    {% if group.id == 'shading' %}
+                    {% if group.id == 'colors' %}
                       <div class="color-row" id="color-row">
                         <label class="color-item" id="color-a-item">
                           <span id="color-a-label" data-i18n="shadow_color">shadow color</span>
@@ -94,6 +164,17 @@
                           <span id="color-c-label" data-i18n="mid_color">mid color</span>
                           <input type="color" id="color-c" />
                         </label>
+                        <label class="color-item" id="color-bg-item">
+                          <span data-i18n="bg_color">background</span>
+                          <input type="color" id="color-bg" value="#f5f3ee" />
+                        </label>
+                      </div>
+                      <div class="style-field">
+                        <span class="style-label" data-i18n="bg_transparent">bg transparent</span>
+                        <div class="motion-btns inks-btns" role="group">
+                          <button type="button" class="seg" data-bg-transparent="1" aria-pressed="false" data-i18n="on">on</button>
+                          <button type="button" class="seg" data-bg-transparent="0" aria-pressed="false" data-i18n="dither_off">off</button>
+                        </div>
                       </div>
 
                       <div class="style-rows">
@@ -130,7 +211,13 @@
                         </div>
                       </div>
                     {% endif %}
+
+                  {% if is_advanced %}
+                    </div>
+                  </details>
+                  {% else %}
                   </section>
+                  {% endif %}
                 {% endfor %}
 
                 <div class="controls-hr"></div>
@@ -139,9 +226,11 @@
               </div>
             </details>
 
-            <div id="export-row" class="export-row hidden">
-              <button id="export-btn" class="export-btn" data-i18n="export">export gif</button>
-            </div>
+            <fieldset id="export-row" class="export-row hidden">
+              <legend class="sr-only" data-i18n="export_group">export</legend>
+              <button id="export-btn" class="export-btn" type="button" data-i18n="export">export gif</button>
+              <button id="export-web-btn" class="export-btn export-btn--secondary" type="button" data-i18n="export_web">export for web</button>
+            </fieldset>
           </div>
         </div>
 
@@ -150,4 +239,4 @@
     </main>
   </div>
 
-  <div id="toast" class="toast hidden" role="alert"></div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>

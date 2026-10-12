@@ -42,24 +42,21 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v4
-      - name: Build with Jekyll
-        # Outputs to the './_site' directory by default
-        run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
-        env:
-          JEKYLL_ENV: production
-          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          
       - name: Install Node.js dependencies
-        run: |
-          npm install
-          
+        run: npm install
+      - name: Sync post visualization vendors
+        run: npm run sync:viz-vendor
       - name: Generate placeholder images
-        run: |
-          node .github/scripts/generate-placeholders.js
+        run: node .github/scripts/generate-placeholders.js
+      - name: Build with Jekyll
+        run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
+        env:
+          JEKYLL_ENV: production
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
           
       - name: Generate llms.txt
         run: |

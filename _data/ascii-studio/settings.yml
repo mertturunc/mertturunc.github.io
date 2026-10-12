@@ -1,70 +1,109 @@
-# Settings panel: grouped sliders rendered by _includes/ascii-studio-app.html.
+# Settings panel: grouped sliders for playback, camera, lighting, cell, effects.
 # Mirrors SETTING_DEFS keys in tools/ascii-studio/_src/state.js — keep in sync.
-#
-# Groups follow the task path: shape the GIF → frame the model → shade the inks.
+# Non-slider enums (cameraFollow, cellMode, formationMode, toggles) live in
+# ascii-studio-app.html next to the matching group.
 
-- id: output
-  label: output
+- id: playback
+  label: playback
   settings:
-    - key: gridWidth
-      label: grid width
-      min: 32
-      max: 220
-      step: 2
-      default: 96
-
-    - key: gridHeight
-      label: grid height
-      min: 20
-      max: 140
-      step: 2
-      default: 54
-
-    - key: cellSize
-      label: character size (px)
-      min: 4
-      max: 16
-      step: 1
-      default: 8
-
+    - key: speedFactor
+      label: speed
+      min: 0.25
+      max: 3
+      step: 0.05
+      default: 1
     - key: fps
       label: fps
       min: 4
-      max: 30
+      max: 240
       step: 1
-      default: 12
-
+      default: 30
     - key: duration
       label: duration (s)
       min: 0.5
-      max: 4
+      max: 8
       step: 0.25
-      default: 1.5
+      default: 6
 
-- id: framing
-  label: framing
+- id: grid
+  label: grid
   settings:
-    - key: cameraDistance
-      label: camera distance
+    - key: gridWidth
+      label: columns
+      min: 32
+      max: 220
+      step: 2
+      default: 140
+    - key: gridHeight
+      label: rows
+      min: 20
+      max: 140
+      step: 2
+      default: 94
+    - key: cellSize
+      label: cell w (px)
+      min: 4
+      max: 16
+      step: 1
+      default: 9
+    - key: cellSpacing
+      label: spacing
+      min: 0
+      max: 8
+      step: 1
+      default: 0
+    - key: gamma
+      label: gamma
+      min: 0.5
+      max: 2.5
+      step: 0.05
+      default: 1.4
+    - key: bold
+      label: bold
+      min: 0
+      max: 1
+      step: 1
+      default: 1
+
+- id: camera
+  label: camera
+  settings:
+    - key: orbitH
+      label: orbit h (°)
+      min: -180
+      max: 180
+      step: 5
+      default: 27
+    - key: orbitV
+      label: orbit v (°)
+      min: -180
+      max: 180
+      step: 5
+      default: 111
+    - key: zoom
+      label: zoom
       min: 1.5
       max: 10
       step: 0.25
-      default: 4
-
+      default: 3.2
+    - key: mouseStrength
+      label: mouse str (°)
+      min: 0
+      max: 90
+      step: 1
+      default: 48
     - key: objectOmega
       label: object ω (°)
       min: -180
       max: 180
       step: 5
       default: 0
-
     - key: objectPhi
       label: object φ (°)
       min: -180
       max: 180
       step: 5
       default: 0
-
     - key: objectKappa
       label: object κ (°)
       min: -180
@@ -72,61 +111,124 @@
       step: 5
       default: 0
 
-    - key: cameraOmega
-      label: camera ω (°)
-      min: -180
-      max: 180
-      step: 5
-      default: 0
-
-    - key: cameraPhi
-      label: camera φ (°)
-      min: -180
-      max: 180
-      step: 5
-      default: 0
-
-    - key: cameraKappa
-      label: camera κ (°)
-      min: -180
-      max: 180
-      step: 5
-      default: 0
-
-    - key: lightAzimuth
-      label: light azimuth (°)
-      min: 0
-      max: 360
-      step: 5
-      default: 45
-
-    - key: lightElevation
-      label: light elevation (°)
-      min: 0
-      max: 90
-      step: 5
-      default: 40
-
-- id: shading
-  label: shading
+- id: lighting
+  label: lighting
   settings:
+    - key: keyX
+      label: key x
+      min: -12
+      max: 12
+      step: 0.25
+      default: 2
+    - key: keyY
+      label: key y
+      min: -12
+      max: 12
+      step: 0.25
+      default: 5
+    - key: keyZ
+      label: key z
+      min: -12
+      max: 12
+      step: 0.25
+      default: 4
+    - key: keyIntensity
+      label: key intensity
+      min: 0
+      max: 4
+      step: 0.05
+      default: 1.2
+    - key: fillX
+      label: fill x
+      min: -12
+      max: 12
+      step: 0.25
+      default: -2.2
+    - key: fillY
+      label: fill y
+      min: -12
+      max: 12
+      step: 0.25
+      default: 2
+    - key: fillZ
+      label: fill z
+      min: -12
+      max: 12
+      step: 0.25
+      default: -1.8
+    - key: fillIntensity
+      label: fill intensity
+      min: 0
+      max: 2
+      step: 0.05
+      default: 0.15
+    - key: ambientIntensity
+      label: ambient
+      min: 0
+      max: 1.5
+      step: 0.05
+      default: 0.6
+
+- id: cell
+  label: cell
+  settings: []
+
+- id: colors
+  label: colors
+  settings:
+    - key: colorMix
+      label: accent mix
+      min: 0
+      max: 1
+      step: 0.05
+      default: 0.28
     - key: threshold
       label: color threshold
       min: 0
       max: 1
       step: 0.01
-      default: 0.5
-
+      default: 0.42
     - key: split
       label: mid split
       min: 0
       max: 1
       step: 0.01
-      default: 0.67
-
+      default: 0.68
     - key: contrast
       label: contrast
       min: -50
       max: 50
       step: 5
       default: 0
+
+- id: trail
+  label: trail
+  settings:
+    - key: trailLength
+      label: length
+      min: 1
+      max: 24
+      step: 1
+      default: 8
+    - key: trailDecayMs
+      label: decay (ms)
+      min: 100
+      max: 2000
+      step: 50
+      default: 600
+
+- id: effects
+  label: effects
+  settings:
+    - key: explodeAmount
+      label: explode
+      min: 0
+      max: 1
+      step: 0.01
+      default: 0
+    - key: transitionMs
+      label: transition (ms)
+      min: 0
+      max: 2000
+      step: 50
+      default: 400

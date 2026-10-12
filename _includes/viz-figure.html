@@ -1,0 +1,17 @@
+{% comment %}
+Visualization mount for blog posts. Set page.d3 or page.viz in front matter.
+
+  {% include viz-figure.html id="my-graph" caption="…" height="320" paper=true %}
+  postViz.network('#my-graph', { engine: 'cytoscape', nodes: [], edges: [] });
+{% endcomment %}
+<figure class="viz-figure{% if include.paper %} viz-figure--paper{% endif %}{% if include.code %} viz-figure--code{% endif %}"{% if include.id %} id="{{ include.id | escape }}-figure"{% endif %}>
+  <div
+    class="viz-figure__mount{% if include.gantt %} post-gantt__plot{% endif %}"
+    {% if include.id %}id="{{ include.id | escape }}"{% endif %}
+    role="img"{% if include.caption %} aria-label="{{ include.caption | escape }}"{% endif %}
+    {% if include.height %}style="min-height: {{ include.height }}px;"{% endif %}
+  ></div>
+  {% if include.caption %}
+  <figcaption{% if include.id %} id="{{ include.id | escape }}-caption"{% endif %}>{{ include.caption | escape }}</figcaption>
+  {% endif %}
+</figure>

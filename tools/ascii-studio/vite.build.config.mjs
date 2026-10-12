@@ -1,9 +1,8 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
-// Bundles the studio into tools/ascii-studio/assets/js/tool.js (+ lazy chunks).
-// Loaders and gifenc are code-split so the first paint only pays for the shell +
-// Three core; format-specific parsers download on first use.
+// Bundles studio (tool.js) + live embed runtime (ascii-embed.js).
+// Loaders and gifenc are code-split; Three core is a shared chunk.
 // Run with cwd = tools/ascii-studio/.
 export default defineConfig({
   root: process.cwd(),
@@ -15,14 +14,16 @@ export default defineConfig({
     modulePreload: false,
     chunkSizeWarningLimit: 700,
     rollupOptions: {
-      input: resolve(process.cwd(), '_src/main.js'),
+      input: {
+        tool: resolve(process.cwd(), '_src/main.js'),
+        'ascii-embed': resolve(process.cwd(), '_src/embed/entry.js'),
+      },
       output: {
         format: 'es',
-        entryFileNames: 'tool.js',
+        entryFileNames: '[name].js',
         chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
         manualChunks(id) {
-          // Keep Three core cacheable; leave examples/jsm (addons) to dynamic chunks.
           const path = id.replace(/\\/g, '/');
           if (!path.includes('/node_modules/three/')) return;
           if (path.includes('/examples/jsm/') || path.includes('/addons/')) return;

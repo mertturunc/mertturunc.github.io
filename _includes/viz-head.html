@@ -1,0 +1,29 @@
+{% comment %}
+Opt-in visualization scripts.
+
+  d3: true
+  viz: [d3, graphviz, cytoscape, vis]
+
+Libs: d3 (charts + force network), graphviz (Viz.js / DOT), cytoscape, vis (vis-network).
+{% endcomment %}
+{% assign viz_libs = page.viz %}
+{% if page.d3 or viz_libs %}
+<script src="/assets/js/post-viz-core.js?v=20260923-1"></script>
+{% endif %}
+{% if page.d3 or viz_libs contains 'd3' %}
+<script src="/assets/vendor/d3.min.js"></script>
+<script src="/assets/js/d3-post.js?v=20260324-6"></script>
+{% endif %}
+{% if viz_libs contains 'graphviz' %}
+<script src="/assets/vendor/viz.js"></script>
+<script src="/assets/vendor/viz.render.js"></script>
+{% endif %}
+{% if viz_libs contains 'cytoscape' %}
+<script src="/assets/vendor/cytoscape.min.js"></script>
+{% endif %}
+{% if viz_libs contains 'vis' %}
+<script src="/assets/vendor/vis-network.min.js"></script>
+{% endif %}
+{% if page.d3 or viz_libs contains 'd3' or viz_libs contains 'graphviz' or viz_libs contains 'cytoscape' or viz_libs contains 'vis' %}
+<script src="/assets/js/post-viz-network.js?v=20260923-1"></script>
+{% endif %}
