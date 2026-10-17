@@ -1,5 +1,6 @@
 ---
 layout: project
+lang: en
 title: iptv-tui
 title_en: iptv-tui
 category: ai-native

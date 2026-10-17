@@ -913,12 +913,10 @@
         {% assign has_en_fields = true %}
       {% endif %}
       
-      {% if project_lang == 'en' or has_en_fields %}
-        {% if has_en_fields %}
-          {% assign lang_indicators = "[TR/EN]" %}
-        {% else %}
-          {% assign lang_indicators = "[EN]" %}
-        {% endif %}
+      {% if project.lang == 'en' %}
+        {% assign lang_indicators = "[EN]" %}
+      {% elsif has_en_fields %}
+        {% assign lang_indicators = "[TR/EN]" %}
       {% else %}
         {% assign lang_indicators = "[TR]" %}
       {% endif %}
