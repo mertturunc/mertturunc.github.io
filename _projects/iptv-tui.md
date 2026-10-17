@@ -14,85 +14,52 @@ carousel_alts: "iptv-tui terminal demosu"
 carousel_alts_en: "iptv-tui terminal demo"
 site_url: https://github.com/mertturunc/iptv-tui
 ---
-browse live, vod and series, read the epg, send to tv over chromecast, play through mpv with resume. the gif above runs on pseudo demo data.
+iptv-tui is a terminal client for m3u playlists and xtream codes. browse live tv, movies and series, read the epg, and play through mpv, picking up where you left off. it can also send a stream to a chromecast from the same screen.
 
-## try it
+one go binary, no cgo, no account, no web ui. sources and the epg are cached on disk, so startup is instant and works offline. the demo above runs on pseudo data.
 
-needs go 1.27+ and `mpv` on `path` ([mpv.io](https://mpv.io)), or an absolute player path in settings. every route below leaves a bare `iptv-tui` on `path`.
+## features
 
-macos:
+- live, vod and series over m3u and xtream codes, with favorites and history
+- epg from xmltv, cached to disk
+- mpv playback with position tracking, so vod and series resume on the next launch
+- chromecast: scans the lan, casts the stream, keeps playing after you quit. dash (`.mpd`) plays direct, everything else proxies through your machine
+- 8 color palettes, all wcag aa: gruvbox, dracula, nord, tokyo night, solarized, one light, catppuccin latte
 
-```sh
-brew install go mpv
-go install github.com/mertturunc/iptv-tui@latest
-```
+## install
 
-if `command -v iptv-tui` finds nothing, add go's bin dir once:
-
-```sh
-echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
-```
-
-linux:
-
-install go 1.27+ and mpv from your package manager or go.dev, then:
+needs go 1.27+ and [mpv](https://mpv.io) on `PATH`, or an absolute player path in settings.
 
 ```sh
 go install github.com/mertturunc/iptv-tui@latest
-echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 ```
 
-windows (powershell):
+the binary lands in `~/go/bin` (`%USERPROFILE%\go\bin` on windows). add that folder to `PATH` if `iptv-tui` isn't found. prebuilt binaries with `SHA256SUMS` are on the [releases](https://github.com/mertturunc/iptv-tui/releases) page.
 
-```powershell
-go install github.com/mertturunc/iptv-tui@latest
-```
-
-binary lands at `%USERPROFILE%\go\bin\iptv-tui.exe`. if `where iptv-tui` finds nothing, append that folder to your user `path` once, then open a new terminal:
-
-```powershell
-[Environment]::SetEnvironmentVariable('Path', $env:Path + ';$HOME\go\bin', 'User')
-```
-
-no go toolchain? grab the zip for your os from [releases](https://github.com/mertturunc/iptv-tui/releases), unzip, put the binary on `path`, verify against `SHA256SUMS` in the same release.
-
-## use it
+## usage
 
 ```sh
-iptv-tui                  # launch the tui
-iptv-tui -play <url>      # play a url or file directly with mpv, then exit
-iptv-tui -add-source <m3u-url>  # add an m3u source, then exit
-iptv-tui -version
-iptv-tui -ascii           # plain-ascii rendering (also IPTV_TUI_ASCII=1)
+iptv-tui                        # launch the tui
+iptv-tui -play <url>            # play a url or file with mpv, then exit
+iptv-tui -add-source <m3u-url>  # add a source, then exit
+iptv-tui -ascii                 # plain-ascii rendering
 ```
 
-keys (`?` in-app shows them, `←/→` inside help previews themes):
-
-- `up/down`, `pgup/pgdn` navigate · `tab`, `left/right` (`h`/`l`) switch group and channel panes · `g` jumps to groups
-- `enter` plays or expands · `o` plays · `c` sends to tv · `f` favorites · `/` filters
-- inside series: `tab`, `left/right` switch season and episode panes · `backspace`/`esc` back to series
-- `e` epg · `0-9` + `enter` jumps by channel number · `1/2/3` live, movies, series on xtream
-- `s` sources · `a` adds · `k` toggles m3u and xtream in the add form · `d` deletes · `r` reloads · `x` stops mpv and tv · `m` keeps mpv on quit · `q` quits
-
-playback position for vod and series resumes with `--start` on next launch. that needs mpv: without it the app falls back to vlc, then mpc-hc, which play fine but report no position, so no duration meter and no resume. if the playbar says `waiting for player…`, the mpv link never came up.
-
-send to tv: press `c` on any channel. the sheet scans the lan for receivers or takes a typed address, remembers the last good tv, and keeps playing after quit like keep-mpv-on-quit. except dash (`.mpd`), streams proxy through your machine so provider headers travel server-side and throughput is measured; dash pulls direct with no headers and no bitrate. while casting the sheet polls receiver status every 2s: state, position, rate, drift, stalls, plus a proxy-throughput sparkline.
-
-## what is inside
-
-- live, vod, series over m3u and xtream codes, with favorites and history
-- epg from xmltv, cached to disk so startup works offline and feels instant
-- mpv launch with ipc position tracking, one-per-line `MpvArgs`, custom user agent
-- chromecast send-to-tv: lan scan, castv2 sender, hls rewrite behind the proxy, no cgo
-- 8 palettes, wcag aa pairs: gruvbox dark hard (default), dracula, nord, tokyo night, gruvbox light hard, solarized light, one light, catppuccin latte
-- data on first run: `%AppData%\iptv-tui` on windows, `~/.config/iptv-tui` on linux, `~/Library/Application Support/iptv-tui` on macos
+| key | action |
+| --- | --- |
+| `enter` / `o` | play (`enter` also expands groups and series) |
+| `c` | send to tv |
+| `e` | epg |
+| `f` | favorites |
+| `/` | filter |
+| `1` `2` `3` | live, movies, series (xtream) |
+| `?` | all keys, in app |
 
 ## build
 
 ```sh
 go vet ./...
 go test ./...
-gofmt -l .
 ```
 
-screenshots regenerate from pseudo demo data with `IPTV_TUI_GEN_SHOTS=1 go test ./internal/tui/ -run TestGenShots` plus `python3 docs/screenshots/render.py`. debug logging: `IPTV_TUI_DEBUG=1 iptv-tui` clears and records the cast path end to end; urls in the log carry host plus shape only.
+source and issues on [github](https://github.com/mertturunc/iptv-tui).
