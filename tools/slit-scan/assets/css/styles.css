@@ -93,7 +93,8 @@ section {
 .progress[hidden],
 .metaline[hidden],
 .toast[hidden],
-.stage-fail[hidden] {
+.stage-fail[hidden],
+.outputwrap canvas.out[hidden] {
   display: none !important;
 }
 
@@ -200,21 +201,15 @@ section {
 
 /* ---- Output ---- */
 .outputwrap {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   margin-top: 8px;
-  overflow: auto;
-}
-
-.outputwrap:has(canvas.out:not([style*="display: none"])) {
-  justify-content: flex-start;
 }
 
 .outputbed {
-  flex: 1 1 auto;
+  position: absolute;
+  inset: 0;
   margin: 0;
   display: grid;
   place-items: center;
@@ -227,24 +222,19 @@ section {
   padding: 12px;
 }
 
+/* Fit the strip both ways; slit-scans are often far wider than tall. */
 .outputwrap canvas.out {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  align-self: center;
-  background: #1d2021;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   border-radius: 4px;
-  image-rendering: auto;
-}
-
-.outputwrap canvas.out[style*="display: none"] {
-  display: none !important;
 }
 
 .outputwrap canvas.live {
-  outline: 2px solid var(--accent);
-  outline-offset: 0;
+  /* traces the contained picture, not the letterboxed box */
+  filter: drop-shadow(0 0 1px var(--accent)) drop-shadow(0 0 1px var(--accent));
 }
 
 .progress {
@@ -490,15 +480,8 @@ button:disabled {
 
   .outputwrap {
     flex: none;
+    height: 40vh;
     min-height: 180px;
-  }
-
-  .outputbed {
-    min-height: 120px;
-  }
-
-  .outputwrap canvas.out {
-    max-height: 50vh;
   }
 }
 
@@ -514,3 +497,13 @@ button:disabled {
     min-width: 2.75rem;
   }
 }
+
+.vsizelabel { margin-top: 8px; }
+.vscale .segbtn { font-family: var(--mono); }
+.lag[hidden] { display: none; }
+.lag .segbtn { font-family: var(--mono); }
+
+.segbtn.toggle { width: 100%; }
+
+.seg.fit { margin-top: 8px; }
+[data-spanwrap][hidden] { display: none; }

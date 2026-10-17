@@ -27,7 +27,7 @@ permalink: /tools/slit-scan/
         <h2 data-i18n="source">source</h2>
         <label class="filebtn" data-dropzone>
           <input type="file" accept="video/*,.mp4,.m4v,.webm,.mov,.mkv,.avi,.ogv,.ogg,.3gp,.3g2,.wmv,.flv,.ts,.mts,.m2ts,.asf,.mpg,.mpeg" data-file />
-          <span data-filelabel data-i18n="drop">drop a video</span>
+          <span data-filelabel>drop or choose a video</span>
         </label>
         <p class="hint" data-i18n="formats_hint">mp4 · mov · webm · mkv · avi · …</p>
       </section>
@@ -55,11 +55,20 @@ permalink: /tools/slit-scan/
         <div class="flowwrap">
           <span class="fieldlabel" data-i18n="direction">direction</span>
           <div class="seg flow" role="group" data-i18n="flow_group" data-i18n-attr="aria-label" aria-label="slit scan direction">
-            <button class="segbtn on" type="button" data-flow="lr" aria-pressed="true" data-i18n="flow_lr">→ left→right</button>
-            <button class="segbtn" type="button" data-flow="rl" aria-pressed="false" data-i18n="flow_rl">← right→left</button>
-            <button class="segbtn" type="button" data-flow="ud" aria-pressed="false" data-i18n="flow_ud">↑ upward</button>
-            <button class="segbtn" type="button" data-flow="du" aria-pressed="false" data-i18n="flow_du">↓ downward</button>
+            <button class="segbtn on" type="button" data-flow="lr" aria-pressed="true" data-i18n="flow_lr">→ right</button>
+            <button class="segbtn" type="button" data-flow="rl" aria-pressed="false" data-i18n="flow_rl">← left</button>
+            <button class="segbtn" type="button" data-flow="ud" aria-pressed="false" data-i18n="flow_ud">↑ up</button>
+            <button class="segbtn" type="button" data-flow="du" aria-pressed="false" data-i18n="flow_du">↓ down</button>
           </div>
+        </div>
+        <div class="flowwrap">
+          <button class="segbtn toggle" type="button" data-keep aria-pressed="false" disabled data-i18n="keep_source">keep untouched source</button>
+          <p class="hint" data-i18n="keep_hint">behind the slit the video stays · the scan flows out the other side</p>
+          <div class="seg fit" role="group" data-i18n="fit_group" data-i18n-attr="aria-label" aria-label="fit">
+            <button class="segbtn on" type="button" data-fit="fit" aria-pressed="true" disabled data-i18n="fit_fit">fit to frame</button>
+            <button class="segbtn" type="button" data-fit="grow" aria-pressed="false" disabled data-i18n="fit_grow">don't fit</button>
+          </div>
+          <p class="hint" data-i18n="fit_hint">fit squeezes the scan into the frame · don't fit runs 1 px per frame, so the output grows with the clip</p>
         </div>
       </section>
 
@@ -76,7 +85,7 @@ permalink: /tools/slit-scan/
         </div>
         <div class="actions capture">
           <button class="ghost" type="button" data-live disabled data-i18n="go_live">live</button>
-          <button class="primary" type="button" data-oneshot disabled data-i18n="go_oneshot">render</button>
+          <button class="primary" type="button" data-oneshot disabled>render</button>
           <button class="ghost" type="button" data-stop disabled data-i18n="stop_capture">stop</button>
         </div>
         <div class="flowwrap">
@@ -94,6 +103,29 @@ permalink: /tools/slit-scan/
           </div>
           <p class="hint" data-i18n="export_hint">render downloads the file · ae / pr unzip, then open in adobe</p>
         </div>
+        <div class="flowwrap" data-videowrap hidden>
+          <span class="fieldlabel" data-i18n="video_mode">video</span>
+          <div class="seg vmode" role="group" data-i18n="video_mode" data-i18n-attr="aria-label" aria-label="video">
+            <button class="segbtn on" type="button" data-vmode="scroll" aria-pressed="true" data-i18n="mode_scroll">scroll</button>
+            <button class="segbtn" type="button" data-vmode="displace" aria-pressed="false" data-i18n="mode_displace">displace</button>
+          </div>
+          <p class="hint" data-vmodehint></p>
+          <span class="fieldlabel vsizelabel" data-i18n="vscale">size</span>
+          <div class="seg vscale" role="group" data-i18n="vscale" data-i18n-attr="aria-label" aria-label="size">
+            <button class="segbtn on" type="button" data-vscale="1" aria-pressed="true">1x</button>
+            <button class="segbtn" type="button" data-vscale="0.5" aria-pressed="false">0.5x</button>
+            <button class="segbtn" type="button" data-vscale="0.25" aria-pressed="false">0.25x</button>
+          </div>
+          <div data-spanwrap>
+          <span class="fieldlabel vsizelabel" data-i18n="lag_group">span</span>
+          <div class="seg lag" role="group" data-i18n="lag_group" data-i18n-attr="aria-label" aria-label="span">
+            <button class="segbtn" type="button" data-lag="1" aria-pressed="false">1s</button>
+            <button class="segbtn" type="button" data-lag="2" aria-pressed="false">2s</button>
+            <button class="segbtn" type="button" data-lag="4" aria-pressed="false">4s</button>
+            <button class="segbtn on" type="button" data-lag="all" aria-pressed="true" data-i18n="lag_all">all</button>
+          </div>
+          </div>
+        </div>
         <div class="actions ship">
           <button class="ghost" type="button" data-reset disabled data-i18n="reset">reset</button>
         </div>
@@ -110,7 +142,7 @@ permalink: /tools/slit-scan/
         <div class="stage" data-stage tabindex="0"
           data-i18n="stage_aria" data-i18n-attr="aria-label"
           aria-label="video. use arrows to move the line; freehand needs a pointer." hidden>
-          <video data-video muted playsinline webkit-playsinline preload="auto" loop></video>
+          <video data-video muted playsinline webkit-playsinline preload="auto"></video>
           <canvas class="pathov" data-pathov width="4" height="4" aria-hidden="true"></canvas>
           <p class="stage-fail" data-stagefail hidden></p>
         </div>
@@ -119,10 +151,10 @@ permalink: /tools/slit-scan/
       <section class="outputblock">
         <div class="panelhead">
           <h2 data-i18n="output">output</h2>
-          <span class="direction" data-direction>vertical line · left → right</span>
+          <span class="direction" data-direction>| · → right</span>
         </div>
         <div class="outputwrap">
-          <canvas class="out" data-out width="4" height="4" role="img"
+          <canvas class="out" data-out width="4" height="4" role="img" hidden
             data-i18n="out_aria" data-i18n-attr="aria-label"
             aria-label="generated slit-scan image"></canvas>
           <p class="outputbed" data-outputbed data-i18n="awaiting">no output yet</p>
@@ -132,7 +164,7 @@ permalink: /tools/slit-scan/
           data-i18n="progress_aria" data-i18n-attr="aria-label" aria-label="capture progress">
           <div class="bar" data-bar style="transform: scaleX(0)"></div>
         </div>
-        <div class="metaline" data-meta hidden>sampling axis position 50%</div>
+        <div class="metaline" data-meta hidden>line 50%</div>
       </section>
     </main>
   </div>

@@ -1,783 +1,419 @@
-// Slit-scan renderer: each frame samples pixels along a 1D path through the
-// frame and stamps that column/row into an accumulating output.
+// Slit-scan engine: sample a 1D path through every decoded frame and stamp
+// it into one time slot of an accumulating image.
 //
-// params: {
-//   shape: 'v'|'h'|'diag'|'adiag'|'sine'|'free',
-//   flow: 'lr'|'rl'|'ud'|'du',
-//   linePos: 0..1,
-//   rate: frames per second (source rate),
-//   quality: 'draft'|'high'|'full',
-//   freePath: [{x,y}, ...] normalized 0..1 (video space), for shape==='free'
-// }
+// Output layout — the scanned strip flows out of the slit along the arrow,
+// so the newest sample sits at the arrow's tail and frame 0 at its tip:
+//   lr →  x = cols - 1 - slot     rl ←  x = slot
+//   du ↓  y = cols - 1 - slot     ud ↑  y = slot
+// The other axis holds the samples along the path, in path order.
+//
+// params: { shape: 'v'|'h'|'diag'|'adiag'|'sine'|'free', flow: 'lr'|'rl'|'ud'|'du',
+//           linePos: 0..1, freePath: [{x, y}, ...] normalized to the frame }
 
-import { BED, KNIFE } from './tokens.js'
+import { BED } from './tokens.js'
+import { seekTo, playThrough, setRate, holdPlayback } from './playback.js'
 
-export const MAX_AXIS = 16384
+const MAX_AXIS = 16384
+// Safari refuses canvases past ~16.7M px; stay under it everywhere.
+const MAX_AREA = 16000000
+const FLUSH_MS = 80
 
-export function planCapture(duration, rate = 30, quality = 'full') {
-  const d = Number.isFinite(duration) && duration > 0 ? duration : 0
-  if (quality === 'draft') {
-    const frames = Math.max(16, Math.min(64, Math.round(d * 4) || 16))
-    return { frames, step: 1, raw: frames }
-  }
-  if (quality === 'high') {
-    const frames = Math.max(24, Math.min(180, Math.round(d * 10) || 24))
-    return { frames, step: 1, raw: frames }
-  }
-  const raw = Math.max(2, Math.round(d * rate))
-  const step = Math.max(1, Math.ceil(raw / MAX_AXIS))
-  const frames = Math.ceil(raw / step)
-  return { frames, step, raw }
-}
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
 export function timeOnX(flow) {
   return flow === 'lr' || flow === 'rl'
 }
 
-const COMMON_RATES = [23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60, 120]
-
-export function snapRate(raw) {
-  const n = Number(raw)
-  if (!Number.isFinite(n) || n <= 0) return 30
-  let best = 30
-  let bestD = Infinity
-  for (const c of COMMON_RATES) {
-    const d = Math.abs(c - n)
-    if (d < bestD) { bestD = d; best = c }
-  }
-  if (bestD <= 1.5) return best
-  return Math.max(8, Math.min(120, Math.round(n * 1000) / 1000))
-}
-
-export function qualityFactor(quality) {
-  if (quality === 'draft') return 0.2
-  if (quality === 'high') return 0.5
-  return 1
-}
-
-export function playSpeed(quality) {
-  if (quality === 'draft') return 16
-  if (quality === 'high') return 8
-  return 1
-}
-
-export function captureRate(params) {
-  const r = Number.isFinite(params && params.rate) ? params.rate : 30
-  const base = r > 0 ? r : 30
-  const f = qualityFactor(params && params.quality)
-  return Math.max(8, base * f)
-}
-
-/** Probe native frame rate from a cloned decoder so the preview stays paused. */
-export async function detectVideoRate(src, timeoutMs = 2800) {
-  if (!src) return 30
-  const el = document.createElement('video')
-  el.muted = true
-  el.playsInline = true
-  el.preload = 'auto'
-  el.setAttribute('playsinline', '')
-  el.style.cssText = 'position:fixed;left:-99px;top:0;width:1px;height:1px;opacity:0;pointer-events:none'
-  el.src = src
-  if (document.body) document.body.appendChild(el)
-  const times = []
-  try {
-    await new Promise((resolve, reject) => {
-      const fail = () => reject(new Error('fps probe failed'))
-      const timer = setTimeout(fail, timeoutMs)
-      el.addEventListener('error', () => { clearTimeout(timer); fail() }, { once: true })
-      el.addEventListener('loadeddata', () => { clearTimeout(timer); resolve() }, { once: true })
-    })
-    const peek = Math.min(0.08, Math.max(0, (el.duration || 1) * 0.02))
-    try { el.currentTime = peek } catch (_) {}
-    await el.play()
-    await new Promise((resolve) => {
-      const stopAt = performance.now() + 900
-      const tick = (_now, meta) => {
-        const t = meta && Number.isFinite(meta.mediaTime) ? meta.mediaTime : el.currentTime
-        if (Number.isFinite(t)) times.push(t)
-        if (times.length >= 16 || performance.now() > stopAt) {
-          resolve()
-          return
-        }
-        if (el.requestVideoFrameCallback) el.requestVideoFrameCallback(tick)
-        else requestAnimationFrame(() => tick(performance.now(), { mediaTime: el.currentTime }))
-      }
-      if (el.requestVideoFrameCallback) el.requestVideoFrameCallback(tick)
-      else requestAnimationFrame(() => tick(performance.now(), { mediaTime: el.currentTime }))
-    })
-  } catch (_) {
-    return 30
-  } finally {
-    try { el.pause() } catch (_) {}
-    try { el.removeAttribute('src'); el.load() } catch (_) {}
-    try { el.remove() } catch (_) {}
-  }
-  const deltas = []
-  for (let i = 1; i < times.length; i++) {
-    const d = times[i] - times[i - 1]
-    if (d > 0.003 && d < 0.12) deltas.push(d)
-  }
-  if (deltas.length < 3) return 30
-  deltas.sort((a, b) => a - b)
-  const med = deltas[Math.floor(deltas.length / 2)]
-  return snapRate(1 / med)
-}
-
 export function isStraight(shape) {
-  return shape === 'v' || shape === 'h'
+  return shape === 'v' || shape === 'h' || shape === 'diag' || shape === 'adiag'
 }
 
-/** True when the scan path runs mainly left↔right (horizontal slit or ~ wave). */
-export function slitAlongX(shape) {
-  return shape === 'h' || shape === 'sine'
+function slotPos(flow, slot, cols) {
+  return flow === 'lr' || flow === 'du' ? cols - 1 - slot : slot
 }
 
-/** Knife-split compose only when slit ⊥ time axis (v+lr/rl or h/~ + ud/du). */
-export function knifeComposeAligned(shape, flow) {
-  if (shape === 'v') return timeOnX(flow)
-  if (slitAlongX(shape)) return !timeOnX(flow)
-  return false
-}
+// ---- path geometry ----
 
-/** Resample a polyline to n points. pts: [{x,y}, ...] */
-export function resamplePath(pts, n) {
-  if (!pts || pts.length === 0) {
-    const out = new Float32Array(n * 2)
-    for (let i = 0; i < n; i++) {
-      out[i * 2] = 0.5
-      out[i * 2 + 1] = n === 1 ? 0.5 : i / (n - 1)
-    }
-    return out
-  }
-  if (pts.length === 1) {
-    const out = new Float32Array(n * 2)
-    for (let i = 0; i < n; i++) {
-      out[i * 2] = pts[0].x
-      out[i * 2 + 1] = pts[0].y
-    }
-    return out
-  }
-
-  const seg = []
-  let total = 0
-  for (let i = 1; i < pts.length; i++) {
-    const dx = pts[i].x - pts[i - 1].x
-    const dy = pts[i].y - pts[i - 1].y
-    const len = Math.hypot(dx, dy) || 1e-9
-    seg.push(len)
-    total += len
-  }
-
-  const out = new Float32Array(n * 2)
+function segment(out, n, ax, ay, bx, by) {
   for (let i = 0; i < n; i++) {
-    const t = n === 1 ? 0 : (i / (n - 1)) * total
-    let acc = 0
-    let s = 0
-    while (s < seg.length - 1 && acc + seg[s] < t) {
-      acc += seg[s]
-      s++
-    }
-    const local = Math.min(1, (t - acc) / seg[s])
-    const a = pts[s]
-    const b = pts[s + 1]
-    out[i * 2] = a.x + (b.x - a.x) * local
-    out[i * 2 + 1] = a.y + (b.y - a.y) * local
+    const t = n === 1 ? 0.5 : i / (n - 1)
+    out[i * 2] = ax + (bx - ax) * t
+    out[i * 2 + 1] = ay + (by - ay) * t
   }
   return out
+}
+
+/** Resample a polyline [{x, y}, ...] to n evenly spaced points. */
+export function resamplePath(pts, n) {
+  const out = new Float32Array(n * 2)
+  if (!pts || pts.length < 2) {
+    const p = (pts && pts[0]) || { x: 0.5, y: 0.5 }
+    return segment(out, n, p.x, p.y, p.x, p.y)
+  }
+  const cum = [0]
+  for (let i = 1; i < pts.length; i++) {
+    cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y))
+  }
+  const total = cum[cum.length - 1]
+  let s = 0
+  for (let i = 0; i < n; i++) {
+    const d = n === 1 ? 0 : (i / (n - 1)) * total
+    while (s < pts.length - 2 && cum[s + 1] < d) s++
+    const len = cum[s + 1] - cum[s]
+    const k = len > 0 ? clamp((d - cum[s]) / len, 0, 1) : 0
+    out[i * 2] = pts[s].x + (pts[s + 1].x - pts[s].x) * k
+    out[i * 2 + 1] = pts[s].y + (pts[s + 1].y - pts[s].y) * k
+  }
+  return out
+}
+
+/** Normalized (0..1) path of n points: Float32Array [x0, y0, x1, y1, ...]. */
+export function buildPath({ shape = 'v', linePos = 0.5, freePath }, n) {
+  if (shape === 'free') return resamplePath(freePath, n)
+  const lp = clamp(Number.isFinite(linePos) ? linePos : 0.5, 0, 1)
+  const out = new Float32Array(n * 2)
+  if (shape === 'h') return segment(out, n, 0, lp, 1, lp)
+  if (shape === 'diag') {
+    // `/` is the line x + y = c clipped to the frame, top-right → bottom-left.
+    const c = lp * 2
+    return c <= 1 ? segment(out, n, c, 0, 0, c) : segment(out, n, 1, c - 1, c - 1, 1)
+  }
+  if (shape === 'adiag') {
+    // `\` is the line x − y = d, top-left → bottom-right.
+    const d = lp * 2 - 1
+    return d >= 0 ? segment(out, n, d, 0, 1, 1 - d) : segment(out, n, 0, -d, 1 + d, 1)
+  }
+  if (shape === 'sine') {
+    // `~` runs along x like —, oscillating around linePos.
+    for (let i = 0; i < n; i++) {
+      const t = n === 1 ? 0.5 : i / (n - 1)
+      out[i * 2] = t
+      out[i * 2 + 1] = clamp(lp + 0.22 * Math.sin(t * Math.PI * 4), 0, 1)
+    }
+    return out
+  }
+  return segment(out, n, lp, 0, lp, 1)
+}
+
+/** linePos that puts the line through a pointer at normalized (x, y). */
+export function linePosAt(shape, x, y) {
+  if (shape === 'h' || shape === 'sine') return clamp(y, 0, 1)
+  if (shape === 'diag') return clamp((x + y) / 2, 0, 1)
+  if (shape === 'adiag') return clamp((x - y + 1) / 2, 0, 1)
+  return clamp(x, 0, 1)
+}
+
+/** Arrow keys that nudge linePos down / up for a shape. */
+export function lineKeys(shape) {
+  return shape === 'h' || shape === 'sine' ? ['ArrowUp', 'ArrowDown'] : ['ArrowLeft', 'ArrowRight']
+}
+
+// ---- planning ----
+
+function sampleAxis(shape, vw, vh) {
+  if (shape === 'v') return vh
+  if (shape === 'h' || shape === 'sine') return vw
+  return Math.max(vw, vh)
+}
+
+function qualitySpec(quality, fps, longEdge) {
+  if (quality === 'draft') return { rate: Math.min(fps, 8), scale: Math.min(1, 360 / longEdge) }
+  if (quality === 'high') return { rate: fps / 2, scale: Math.min(1, 960 / longEdge) }
+  return { rate: fps, scale: 1 }
 }
 
 /**
- * Build a normalized (0..1) path of `n` points for the given shape.
- * Returns Float32Array [x0,y0,x1,y1,...]
+ * cols: time slots (one per sampled frame), len: samples along the path,
+ * scale: source → sample resolution.
  */
-export function buildPath(params, n) {
-  const shape = params.shape || 'v'
-  const lp = Number.isFinite(params.linePos) ? Math.min(1, Math.max(0, params.linePos)) : 0.5
-  const out = new Float32Array(n * 2)
-
-  if (shape === 'free') {
-    return resamplePath(params.freePath, n)
-  }
-
-  if (shape === 'h') {
-    for (let i = 0; i < n; i++) {
-      const t = n === 1 ? 0.5 : i / (n - 1)
-      out[i * 2] = t
-      out[i * 2 + 1] = lp
-    }
-    return out
-  }
-
-  if (shape === 'diag') {
-    // Screen `/`: top-right → bottom-left (y grows downward).
-    const shift = (lp - 0.5) * 0.9
-    for (let i = 0; i < n; i++) {
-      const t = n === 1 ? 0.5 : i / (n - 1)
-      out[i * 2] = Math.min(1, Math.max(0, 1 - t + shift))
-      out[i * 2 + 1] = Math.min(1, Math.max(0, t + shift))
-    }
-    return out
-  }
-
-  if (shape === 'adiag') {
-    // Screen `\`: top-left → bottom-right.
-    const shift = (lp - 0.5) * 0.9
-    for (let i = 0; i < n; i++) {
-      const t = n === 1 ? 0.5 : i / (n - 1)
-      out[i * 2] = Math.min(1, Math.max(0, t + shift))
-      out[i * 2 + 1] = Math.min(1, Math.max(0, t - shift))
-    }
-    return out
-  }
-
-  if (shape === 'sine') {
-    // `~` is a horizontal wave: along x, oscillating in y — same axis as —.
-    const amp = 0.22
-    const periods = 2
-    for (let i = 0; i < n; i++) {
-      const t = n === 1 ? 0.5 : i / (n - 1)
-      out[i * 2] = t
-      out[i * 2 + 1] = Math.min(1, Math.max(0, lp + amp * Math.sin(t * Math.PI * 2 * periods)))
-    }
-    return out
-  }
-
-  // default: vertical
-  for (let i = 0; i < n; i++) {
-    const t = n === 1 ? 0.5 : i / (n - 1)
-    out[i * 2] = lp
-    out[i * 2 + 1] = t
-  }
-  return out
+export function planCapture({ duration, fps, vw, vh, shape, quality }) {
+  const rate = fps > 0 ? fps : 30
+  const spec = qualitySpec(quality, rate, Math.max(vw, vh, 1))
+  const len = Math.max(2, Math.round(sampleAxis(shape, vw, vh) * spec.scale))
+  const want = Math.max(2, Math.round(duration * spec.rate))
+  const cols = Math.max(2, Math.min(want, MAX_AXIS, Math.floor(MAX_AREA / len)))
+  return { cols, len, scale: spec.scale, duration }
 }
 
-export function sampleLenFor(sw, sh, params) {
-  const shape = params.shape || 'v'
-  if (slitAlongX(shape)) return Math.max(1, sw)
-  if (shape === 'v') return Math.max(1, sh)
-  // diagonal / free: sample along the longer axis for density
-  return Math.max(1, Math.max(sw, sh))
+/** Fastest playback rate that still presents roughly one frame per slot. */
+export function renderSpeed(plan) {
+  return clamp(Math.floor(40 / (plan.cols / plan.duration)), 1, 16)
 }
 
-export function createSlitEngine({ video, outputCanvas, params }) {
-  const scratch = document.createElement('canvas')
-  const sctx = scratch.getContext('2d', { willReadFrequently: true })
-  let pathCache = null
-  let pathCacheKey = ''
-  let lastFlushAt = 0
+// ---- sampling ----
 
-  function measure() {
-    const vw = video.videoWidth || 0
-    const vh = video.videoHeight || 0
-    const q = params.quality || 'full'
-    const f = qualityFactor(q)
-    let nw = Math.max(1, Math.round((vw || 1) * f))
-    let nh = Math.max(1, Math.round((vh || 1) * f))
-    if (q === 'draft') {
-      const cap = 480
-      const m = Math.max(nw, nh)
-      if (m > cap) {
-        const s = cap / m
-        nw = Math.max(1, Math.round(nw * s))
-        nh = Math.max(1, Math.round(nh * s))
-      }
-    }
-    if (scratch.width !== nw || scratch.height !== nh) {
-      scratch.width = nw
-      scratch.height = nh
-      pathCache = null
-    }
-    sctx.imageSmoothingEnabled = f < 1
-  }
-
-  function pathKey(n) {
-    const p = params
-    const free = p.shape === 'free' && p.freePath
-      ? p.freePath.map((pt) => pt.x.toFixed(3) + ',' + pt.y.toFixed(3)).join(';')
-      : ''
-    return [p.shape, p.linePos, n, free].join('|')
-  }
-
-  function cachedPath(n) {
-    const key = pathKey(n)
-    if (!pathCache || pathCacheKey !== key) {
-      pathCache = buildPath(params, n)
-      pathCacheKey = key
-    }
-    return pathCache
-  }
-
-  function makeBuffer(frames) {
-    measure()
-    const len = sampleLenFor(scratch.width, scratch.height, params)
-    if (timeOnX(params.flow)) {
-      return new ImageData(Math.max(1, frames), Math.max(1, len))
-    }
-    return new ImageData(Math.max(1, len), Math.max(1, frames))
-  }
-
-  function flush(buffer, force) {
-    const now = performance.now()
-    if (!force && now - lastFlushAt < 80) return
-    lastFlushAt = now
-    const octx = outputCanvas.getContext('2d', { willReadFrequently: true })
-    if (outputCanvas.width !== buffer.width || outputCanvas.height !== buffer.height) {
-      outputCanvas.width = buffer.width
-      outputCanvas.height = buffer.height
-    }
-    octx.putImageData(buffer, 0, 0)
-  }
-
-  /** Stamp from an explicit video + 2d context (for parallel workers). */
-  function stampFrom(sourceVideo, srcCtx, srcCanvas, buffer, frameIndex) {
-    const sw = srcCanvas.width
-    const sh = srcCanvas.height
-    const { flow } = params
-    const shape = params.shape || 'v'
-    const onX = timeOnX(flow)
-    let axisPos
-    // Universal for every shape×flow (not only knife-aligned compose):
-    // →/↑ : [fn]…[f0] along the time axis (newest at origin / against the live edge)
-    // ←/↓ : [f0]…[fn]
-    if (onX) axisPos = flow === 'lr' ? buffer.width - 1 - frameIndex : frameIndex
-    else axisPos = flow === 'ud' ? buffer.height - 1 - frameIndex : frameIndex
-    const n = onX ? buffer.height : buffer.width
-    const lp = Number.isFinite(params.linePos) ? Math.min(1, Math.max(0, params.linePos)) : 0.5
-
-    srcCtx.drawImage(sourceVideo, 0, 0, sw, sh)
-
-    if (shape === 'v') {
-      const x = Math.min(sw - 1, Math.max(0, Math.round(lp * (sw - 1))))
-      const id = srcCtx.getImageData(x, 0, 1, sh)
-      const data = id.data
-      const rows = Math.min(n, sh)
-      for (let i = 0; i < rows; i++) {
-        const src = i * 4
-        const dst = onX ? (i * buffer.width + axisPos) * 4 : (axisPos * buffer.width + i) * 4
-        buffer.data[dst] = data[src]
-        buffer.data[dst + 1] = data[src + 1]
-        buffer.data[dst + 2] = data[src + 2]
-        buffer.data[dst + 3] = 255
-      }
-      return
-    }
-
-    if (shape === 'h') {
-      const y = Math.min(sh - 1, Math.max(0, Math.round(lp * (sh - 1))))
-      const id = srcCtx.getImageData(0, y, sw, 1)
-      const data = id.data
-      const cols = Math.min(n, sw)
-      for (let i = 0; i < cols; i++) {
-        const src = i * 4
-        const dst = onX ? (i * buffer.width + axisPos) * 4 : (axisPos * buffer.width + i) * 4
-        buffer.data[dst] = data[src]
-        buffer.data[dst + 1] = data[src + 1]
-        buffer.data[dst + 2] = data[src + 2]
-        buffer.data[dst + 3] = 255
-      }
-      return
-    }
-
-    const id = srcCtx.getImageData(0, 0, sw, sh)
-    const data = id.data
-    const path = cachedPath(n)
-    for (let i = 0; i < n; i++) {
-      const sx = Math.min(sw - 1, Math.max(0, Math.round(path[i * 2] * (sw - 1))))
-      const sy = Math.min(sh - 1, Math.max(0, Math.round(path[i * 2 + 1] * (sh - 1))))
-      const src = (sy * sw + sx) * 4
-      const dst = onX ? (i * buffer.width + axisPos) * 4 : (axisPos * buffer.width + i) * 4
-      buffer.data[dst] = data[src]
-      buffer.data[dst + 1] = data[src + 1]
-      buffer.data[dst + 2] = data[src + 2]
-      buffer.data[dst + 3] = 255
-    }
-  }
-
-  function stampInto(buffer, frameIndex) {
-    stampFrom(video, sctx, scratch, buffer, frameIndex)
-  }
-
-  function copyStamp(buffer, fromIndex, toIndex) {
-    if (fromIndex === toIndex) return
-    const onX = timeOnX(params.flow)
-    const flow = params.flow
-    const srcPos = onX
-      ? (flow === 'lr' ? buffer.width - 1 - fromIndex : fromIndex)
-      : (flow === 'ud' ? buffer.height - 1 - fromIndex : fromIndex)
-    const dstPos = onX
-      ? (flow === 'lr' ? buffer.width - 1 - toIndex : toIndex)
-      : (flow === 'ud' ? buffer.height - 1 - toIndex : toIndex)
-    const n = onX ? buffer.height : buffer.width
-    const data = buffer.data
-    const w = buffer.width
-    for (let i = 0; i < n; i++) {
-      const src = onX ? (i * w + srcPos) * 4 : (srcPos * w + i) * 4
-      const dst = onX ? (i * w + dstPos) * 4 : (dstPos * w + i) * 4
-      data[dst] = data[src]
-      data[dst + 1] = data[src + 1]
-      data[dst + 2] = data[src + 2]
-      data[dst + 3] = 255
-    }
-  }
-
-  function composeSize() {
-    const vw = video.videoWidth || 16
-    const vh = video.videoHeight || 9
-    return { w: Math.max(1, vw), h: Math.max(1, vh) }
-  }
-
-  // Compose source video + progressive result reveal.
-  // opts.showKnife: orange scan line overlay (off for exports).
-  function composeFrame(ctx, W, H, filled, total, opts = {}) {
-    const showKnife = opts.showKnife === true
-    const vw = video.videoWidth || 0
-    const vh = video.videoHeight || 0
-    if (!vw || !vh) return
-    const ratio = Math.min(W / vw, H / vh)
-    const dw = vw * ratio
-    const dh = vh * ratio
-    const dx = (W - dw) / 2
-    const dy = (H - dh) / 2
-
-    ctx.fillStyle = BED
-    ctx.fillRect(0, 0, W, H)
-    const native = Math.abs(dw - vw) < 0.5 && Math.abs(dh - vh) < 0.5
-    ctx.imageSmoothingEnabled = !native
-    ctx.drawImage(video, dx, dy, dw, dh)
-
-    const shape = params.shape || 'v'
-    const oc = outputCanvas
-    const oW = oc.width
-    const oH = oc.height
-    const flow = params.flow
-    const forward = flow === 'lr' || flow === 'ud'
-    const onX = timeOnX(flow)
-
-    const wipeOutput = () => {
-      if (oW > 1 && oH > 1 && filled > 0 && total > 0) {
-        const t = Math.min(1, filled / total)
-        // Take the filled edge of the buffer (same as knife compose) so
-        // →/↑ grow toward the far side with oldest at the tip, newest inward.
-        const sw = onX ? Math.max(1, Math.round(oW * t)) : oW
-        const sh = onX ? oH : Math.max(1, Math.round(oH * t))
-        const sx = onX && forward ? Math.max(0, oW - sw) : 0
-        const sy = !onX && forward ? Math.max(0, oH - sh) : 0
-        const dwOut = onX ? dw * t : dw
-        const dhOut = onX ? dh : dh * t
-        const dxOut = onX && forward ? dx + dw - dwOut : dx
-        const dyOut = !onX && forward ? dy + dh - dhOut : dy
-        ctx.drawImage(oc, sx, sy, sw, sh, dxOut, dyOut, dwOut, dhOut)
-      }
-    }
-
-    // Curves / freehand / mismatched slit×flow → full-frame wipe in flow direction.
-    if (!knifeComposeAligned(shape, flow)) {
-      if (showKnife) {
-        const n = 256
-        const path = buildPath(params, n)
-        ctx.strokeStyle = KNIFE
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        for (let i = 0; i < n; i++) {
-          const x = dx + path[i * 2] * dw
-          const y = dy + path[i * 2 + 1] * dh
-          if (i === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
-        }
-        ctx.stroke()
-      }
-      wipeOutput()
-      return
-    }
-
-    const verticalLn = shape === 'v'
-    const bp = Number.isFinite(params.linePos) ? Math.min(1, Math.max(0, params.linePos)) : 0.5
-    const kx = verticalLn ? dx + bp * dw : dy + bp * dh
-    // Time grows WITH the arrow from the knife, newest against the knife:
-    // → : [img][knife][fn]…[f0]     ↑ : [img]/[fn]…[f0] below knife
-    // ← : [f0]…[fn][knife][img]     ↓ : above knife [f0]…[fn] then knife
-    const outLen = forward
-      ? (verticalLn ? (dx + dw) - kx : (dy + dh) - kx)
-      : (verticalLn ? kx - dx : kx - dy)
-
-    const drawKnife = () => {
-      if (!showKnife) return
-      if (shape === 'sine') {
-        const n = 256
-        const path = buildPath(params, n)
-        ctx.strokeStyle = KNIFE
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        for (let i = 0; i < n; i++) {
-          const x = dx + path[i * 2] * dw
-          const y = dy + path[i * 2 + 1] * dh
-          if (i === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
-        }
-        ctx.stroke()
-        return
-      }
-      ctx.fillStyle = KNIFE
-      if (verticalLn) ctx.fillRect(kx - 1, dy, 2, dh)
-      else ctx.fillRect(dx, kx - 1, dw, 2)
-    }
-
-    const outRect = verticalLn
-      ? { x: forward ? kx : dx, y: dy, w: Math.max(0, outLen), h: dh }
-      : { x: dx, y: forward ? kx : dy, w: dw, h: Math.max(0, outLen) }
-    const regionW = Math.round(outRect.w)
-    const regionH = Math.round(outRect.h)
-
-    if (outRect.w >= 1 && outRect.h >= 1) {
-      ctx.fillStyle = BED
-      ctx.fillRect(outRect.x, outRect.y, outRect.w, outRect.h)
-    }
-
-    if (outRect.w < 2 || outRect.h < 2 || oW < 2 || oH < 2 || filled < 1 || total < 1) {
-      drawKnife()
-      return
-    }
-
-    const n = Math.min(filled, verticalLn ? regionW : regionH)
-    if (n < 1) { drawKnife(); return }
-
-    if (verticalLn) {
-      if (forward) {
-        // lr buffer: late on left … early on right → newest at knife
-        const srcX = Math.max(0, oW - filled)
-        ctx.drawImage(oc, srcX, 0, n, oH, outRect.x, outRect.y, n, regionH)
-      } else {
-        // rl buffer: early on left … late on right → newest at knife
-        const srcX = Math.max(0, filled - n)
-        const destX = outRect.x + (regionW - n)
-        ctx.drawImage(oc, srcX, 0, n, oH, destX, outRect.y, n, regionH)
-      }
-    } else if (forward) {
-      // ud buffer: late on top … early on bottom
-      const srcY = Math.max(0, oH - filled)
-      ctx.drawImage(oc, 0, srcY, oW, n, outRect.x, outRect.y, regionW, n)
-    } else {
-      // du buffer: early on top … late on bottom
-      const srcY = Math.max(0, filled - n)
-      const destY = outRect.y + (regionH - n)
-      ctx.drawImage(oc, 0, srcY, oW, n, outRect.x, destY, regionW, n)
-    }
-
-    drawKnife()
-  }
-
-  function fillGaps(buffer, filled) {
-    const n = filled.length
-    let last = -1
-    for (let i = 0; i < n; i++) {
-      if (filled[i]) last = i
-      else if (last >= 0) {
-        copyStamp(buffer, last, i)
-        filled[i] = 1
-      }
-    }
-    let next = -1
-    for (let i = n - 1; i >= 0; i--) {
-      if (filled[i]) next = i
-      else if (next >= 0) {
-        copyStamp(buffer, next, i)
-        filled[i] = 1
-      }
-    }
-  }
-
-  function renderFull(onProgress) {
-    // One playthrough at quality-scaled rate. Stamp by currentTime → slot,
-    // then copy neighboring columns into gaps. Avoids HEVC/H.264 seek storms.
-    measure()
-    const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0
-    const rate = captureRate(params)
-    const { frames } = planCapture(duration, rate, params.quality)
-    const buffer = makeBuffer(frames)
-    const filled = new Uint8Array(frames)
-    let cancelled = false
-    const prevRate = video.playbackRate || 1
-    const prevLoop = video.loop
-    const prevMuted = video.muted
-    const speed = playSpeed(params.quality)
-
-    const cancel = () => {
-      cancelled = true
-      try { video.pause() } catch (_) {}
-      try { video.playbackRate = prevRate } catch (_) {}
-      try { video.loop = prevLoop } catch (_) {}
-      try { video.muted = prevMuted } catch (_) {}
-    }
-
-    const seekStart = () => new Promise((resolve, reject) => {
-      if (cancelled) {
-        reject(new Error('cancelled'))
-        return
-      }
-      if (!video.seeking && video.currentTime < 0.04) {
-        resolve()
-        return
-      }
-      let settled = false
-      const done = () => {
-        if (settled) return
-        settled = true
-        clearTimeout(timer)
-        video.removeEventListener('seeked', done)
-        resolve()
-      }
-      video.addEventListener('seeked', done)
-      try { video.currentTime = 0 } catch (_) { done(); return }
-      const timer = setTimeout(done, 1500)
-    })
-
-    const waitDecoded = () => new Promise((resolve) => {
-      if (cancelled) {
-        resolve()
-        return
-      }
-      let settled = false
-      const done = () => {
-        if (settled) return
-        settled = true
-        clearTimeout(timer)
-        resolve()
-      }
-      const timer = setTimeout(done, 80)
-      if (video.requestVideoFrameCallback) {
-        video.requestVideoFrameCallback(() => done())
-      } else {
-        requestAnimationFrame(() => requestAnimationFrame(() => done()))
-      }
-    })
-
-    const stampAt = (t) => {
-      if (frames < 1) return
-      const idx = frames < 2 || duration <= 0
-        ? 0
-        : Math.max(0, Math.min(frames - 1, Math.round((t / duration) * (frames - 1))))
-      if (filled[idx]) return
-      stampInto(buffer, idx)
-      filled[idx] = 1
-    }
-
-    const promise = (async () => {
-      video.pause()
-      video.loop = false
-      video.muted = true
-      try {
-        video.playbackRate = speed
-      } catch (_) {
-        video.playbackRate = 1
-      }
-
-      try {
-        await seekStart()
-        if (cancelled) throw new Error('cancelled')
-        await waitDecoded()
-        stampAt(video.currentTime || 0)
-        onProgress && onProgress(0.02)
-        flush(buffer, false)
-
-        try {
-          await video.play()
-        } catch (_) {
-          throw new Error('playback failed')
-        }
-
-        let lastFlush = performance.now()
-        await new Promise((resolve, reject) => {
-          let finished = false
-          const watchdog = setTimeout(() => finish(), Math.ceil((duration + 4) * 1000))
-          const finish = () => {
-            if (finished) return
-            finished = true
-            clearTimeout(watchdog)
-            video.removeEventListener('ended', onEnded)
-            video.removeEventListener('error', onError)
-            if (video.cancelVideoFrameCallback && rvfcId != null) {
-              try { video.cancelVideoFrameCallback(rvfcId) } catch (_) {}
-            }
-            if (rafId) cancelAnimationFrame(rafId)
-            resolve()
-          }
-          const onEnded = () => finish()
-          const onError = () => {
-            if (finished) return
-            finished = true
-            clearTimeout(watchdog)
-            reject(new Error('playback failed'))
-          }
-          let rvfcId = null
-          let rafId = 0
-
-          const tick = () => {
-            if (finished) return
-            if (cancelled) {
-              finished = true
-              clearTimeout(watchdog)
-              video.removeEventListener('ended', onEnded)
-              video.removeEventListener('error', onError)
-              if (video.cancelVideoFrameCallback && rvfcId != null) {
-                try { video.cancelVideoFrameCallback(rvfcId) } catch (_) {}
-              }
-              if (rafId) cancelAnimationFrame(rafId)
-              reject(new Error('cancelled'))
-              return
-            }
-            stampAt(video.currentTime || 0)
-            const now = performance.now()
-            if (now - lastFlush > 80) {
-              lastFlush = now
-              flush(buffer, false)
-            }
-            const t = video.currentTime || 0
-            onProgress && onProgress(Math.min(0.96, duration > 0 ? t / duration : 0.5))
-            if (video.ended || (duration > 0 && t >= duration - 0.04)) {
-              finish()
-              return
-            }
-            if (video.requestVideoFrameCallback) {
-              rvfcId = video.requestVideoFrameCallback(() => tick())
-            } else {
-              rafId = requestAnimationFrame(tick)
-            }
-          }
-
-          video.addEventListener('ended', onEnded)
-          video.addEventListener('error', onError)
-          tick()
-        })
-
-        stampAt(Math.max(0, duration - 1e-3))
-        fillGaps(buffer, filled)
-        onProgress && onProgress(1)
-        flush(buffer, true)
-        return { buffer, frames }
-      } finally {
-        try { video.pause() } catch (_) {}
-        try { video.playbackRate = prevRate } catch (_) {}
-        try { video.loop = prevLoop } catch (_) {}
-        try { video.muted = prevMuted } catch (_) {}
-      }
-    })()
-
-    return { promise, cancel }
-  }
-
+// Straight lines: transform the frame so the segment lands on row 0 of an
+// n×1 canvas and let drawImage do the resampling — only n pixels read back.
+function segmentSampler(video, ax, ay, bx, by, n) {
+  const L = Math.hypot(bx - ax, by - ay)
+  const ux = (bx - ax) / L
+  const uy = (by - ay) / L
+  const k = (n - 1) / L
+  const ox = ax + 0.5
+  const oy = ay + 0.5
+  const canvas = document.createElement('canvas')
+  canvas.width = n
+  canvas.height = 1
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  const index = new Uint32Array(n)
+  for (let i = 0; i < n; i++) index[i] = i * 4
   return {
-    measure,
-    vertical: () => (params.shape || 'v') === 'v',
-    flow: () => params.flow,
-    makeBuffer,
-    stampInto,
-    flush,
-    composeSize,
-    composeFrame,
-    renderFull,
-    setParams: (p) => {
-      Object.assign(params, p)
-      pathCache = null
+    index,
+    read() {
+      // canvas (u, v) = (½ + k·(P−A)·û, ½ + (P−A)·n̂), n̂ = (−uy, ux)
+      ctx.setTransform(k * ux, -uy, k * uy, ux, 0.5 - k * (ux * ox + uy * oy), 0.5 - (ux * oy - uy * ox))
+      ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
+      return ctx.getImageData(0, 0, n, 1).data
     },
   }
+}
+
+// Curves: draw just the path's bounding box and pick pixels from it.
+function boxSampler(video, path, n, scale) {
+  const vw = video.videoWidth
+  const vh = video.videoHeight
+  const px = new Float32Array(n)
+  const py = new Float32Array(n)
+  let x0 = Infinity
+  let y0 = Infinity
+  let x1 = -Infinity
+  let y1 = -Infinity
+  for (let i = 0; i < n; i++) {
+    px[i] = path[i * 2] * (vw - 1)
+    py[i] = path[i * 2 + 1] * (vh - 1)
+    x0 = Math.min(x0, px[i]); x1 = Math.max(x1, px[i])
+    y0 = Math.min(y0, py[i]); y1 = Math.max(y1, py[i])
+  }
+  const sx = Math.floor(x0)
+  const sy = Math.floor(y0)
+  const sw = Math.floor(x1) - sx + 1
+  const sh = Math.floor(y1) - sy + 1
+  const cw = Math.max(1, Math.round(sw * scale))
+  const ch = Math.max(1, Math.round(sh * scale))
+  const canvas = document.createElement('canvas')
+  canvas.width = cw
+  canvas.height = ch
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  ctx.imageSmoothingEnabled = cw < sw || ch < sh
+  const index = new Uint32Array(n)
+  for (let i = 0; i < n; i++) {
+    const cx = clamp(Math.floor(((px[i] - sx + 0.5) * cw) / sw), 0, cw - 1)
+    const cy = clamp(Math.floor(((py[i] - sy + 0.5) * ch) / sh), 0, ch - 1)
+    index[i] = (cy * cw + cx) * 4
+  }
+  return {
+    index,
+    read() {
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, cw, ch)
+      return ctx.getImageData(0, 0, cw, ch).data
+    },
+  }
+}
+
+function createSampler(video, params, plan) {
+  const n = plan.len
+  if (isStraight(params.shape)) {
+    const ends = buildPath(params, 2)
+    const vw = video.videoWidth - 1
+    const vh = video.videoHeight - 1
+    // Snap to pixel centres so a | or — slit reads one column, not a blend of two.
+    const ax = Math.round(ends[0] * vw)
+    const ay = Math.round(ends[1] * vh)
+    const bx = Math.round(ends[2] * vw)
+    const by = Math.round(ends[3] * vh)
+    if (Math.hypot(bx - ax, by - ay) >= 1) return segmentSampler(video, ax, ay, bx, by, n)
+  }
+  return boxSampler(video, buildPath(params, n), n, plan.scale)
+}
+
+// ---- buffer ----
+
+function makeBuffer(plan, flow) {
+  const buffer = timeOnX(flow)
+    ? new ImageData(plan.cols, plan.len)
+    : new ImageData(plan.len, plan.cols)
+  // Paint the bed so the whole output extent shows while it fills.
+  const n = parseInt(BED.slice(1), 16)
+  const rgba = (0xff << 24) | ((n & 0xff) << 16) | (n & 0xff00) | ((n >> 16) & 0xff)
+  new Uint32Array(buffer.data.buffer).fill(rgba >>> 0)
+  return buffer
+}
+
+function writeSlot(buffer, flow, cols, slot, src, index) {
+  const d = buffer.data
+  const W = buffer.width
+  const pos = slotPos(flow, slot, cols)
+  const onX = timeOnX(flow)
+  for (let i = 0; i < index.length; i++) {
+    const s = index[i]
+    const o = (onX ? i * W + pos : pos * W + i) * 4
+    d[o] = src[s]
+    d[o + 1] = src[s + 1]
+    d[o + 2] = src[s + 2]
+    d[o + 3] = 255
+  }
+}
+
+function copySlot(buffer, flow, cols, from, to) {
+  const d = buffer.data
+  const W = buffer.width
+  const a = slotPos(flow, from, cols)
+  const b = slotPos(flow, to, cols)
+  if (!timeOnX(flow)) {
+    d.copyWithin(b * W * 4, a * W * 4, (a + 1) * W * 4)
+    return
+  }
+  for (let y = 0; y < buffer.height; y++) {
+    const s = (y * W + a) * 4
+    const o = (y * W + b) * 4
+    d[o] = d[s]
+    d[o + 1] = d[s + 1]
+    d[o + 2] = d[s + 2]
+    d[o + 3] = d[s + 3]
+  }
+}
+
+/** Hold the last sampled frame across slots the decoder skipped. */
+function fillGaps(buffer, flow, cols, filled) {
+  const first = filled.indexOf(1)
+  if (first < 0) return false
+  for (let i = 0; i < first; i++) copySlot(buffer, flow, cols, first, i)
+  let last = first
+  for (let i = first + 1; i < cols; i++) {
+    if (filled[i]) last = i
+    else copySlot(buffer, flow, cols, last, i)
+  }
+  return true
+}
+
+// ---- capture ----
+
+/**
+ * Play the clip once from the start, stamping each presented frame into its
+ * slot and streaming the result into `output`. Resolves with the ImageData.
+ */
+export async function captureVideo({ video, params, plan, speed = 1, output, signal, onStart, onProgress }) {
+  const { cols, duration } = plan
+  const flow = params.flow
+  const onX = timeOnX(flow)
+  const sampler = createSampler(video, params, plan)
+  const buffer = makeBuffer(plan, flow)
+  const filled = new Uint8Array(cols)
+  output.width = buffer.width
+  output.height = buffer.height
+  const octx = output.getContext('2d')
+  octx.putImageData(buffer, 0, 0)
+  if (onStart) onStart({ w: buffer.width, h: buffer.height })
+
+  let lo = cols
+  let hi = -1
+  let lastFlush = 0
+  const flush = (force) => {
+    if (hi < lo) return
+    const now = performance.now()
+    if (!force && now - lastFlush < FLUSH_MS) return
+    lastFlush = now
+    const a = slotPos(flow, lo, cols)
+    const b = slotPos(flow, hi, cols)
+    const p = Math.min(a, b)
+    const q = Math.abs(a - b) + 1
+    if (onX) octx.putImageData(buffer, 0, 0, p, 0, q, buffer.height)
+    else octx.putImageData(buffer, 0, 0, 0, p, buffer.width, q)
+    lo = cols
+    hi = -1
+  }
+  const stamp = (time) => {
+    if (video.readyState < 2) return
+    // mediaTime lands a hair under k/fps; the bias keeps frame k out of slot k − 1.
+    const slot = clamp(Math.floor((time / duration) * cols + 0.25), 0, cols - 1)
+    if (filled[slot]) return
+    writeSlot(buffer, flow, cols, slot, sampler.read(), sampler.index)
+    filled[slot] = 1
+    lo = Math.min(lo, slot)
+    hi = Math.max(hi, slot)
+  }
+
+  const restore = holdPlayback(video)
+  try {
+    await seekTo(video, 0)
+    stamp(0)
+    flush(true)
+    if (onProgress) onProgress(0)
+    setRate(video, speed)
+    await playThrough(video, {
+      signal,
+      onFrame: (time) => {
+        stamp(time)
+        flush(false)
+        if (onProgress) onProgress(time / duration)
+      },
+    })
+  } finally {
+    restore()
+  }
+
+  if (!fillGaps(buffer, flow, cols, filled)) throw new Error('no frames decoded')
+  octx.putImageData(buffer, 0, 0)
+  if (onProgress) onProgress(1)
+  return buffer
+}
+
+// ---- keep source ----
+
+/** Where the slit sits along the flow axis, 0..1 (curves: their mean). */
+export function slitSplit(params) {
+  const n = 64
+  const path = buildPath(params, n)
+  const axis = timeOnX(params.flow) ? 0 : 1
+  let sum = 0
+  for (let i = 0; i < n; i++) sum += path[i * 2 + axis]
+  return clamp(sum / n, 0, 1)
+}
+
+/**
+ * Range [a, b] (0..1 along the flow axis) the scan flows into when the
+ * source is kept: from the slit to the edge the arrow points at. The other
+ * side stays as video.
+ */
+export function scanRange(params) {
+  const s = slitSplit(params)
+  return params.flow === 'lr' || params.flow === 'du' ? [s, 1] : [0, s]
+}
+
+/**
+ * Layout along the flow axis of a source N px long: the untouched source
+ * behind the slit (when kept) and the scan region the strip flows into.
+ * fit: the scan takes the rest of the frame. Otherwise it is `stripLen` px
+ * (one per sampled frame) and the output grows with the clip.
+ * keep / scan are [srcStart, dstStart, length] / [dstStart, length].
+ */
+export function flowLayout({ N, params, keep, fit, stripLen }) {
+  const forward = params.flow === 'lr' || params.flow === 'du'
+  const cut = Math.round((keep ? slitSplit(params) : forward ? 0 : 1) * N)
+  const scanLen = fit ? (forward ? N - cut : cut) : stripLen
+  return forward
+    ? { forward, total: cut + scanLen, keep: [0, 0, cut], scan: [cut, scanLen] }
+    : { forward, total: scanLen + N - cut, keep: [cut, scanLen, N - cut], scan: [0, scanLen] }
+}
+
+/**
+ * The exported still: the current video frame behind the slit when the
+ * source is kept, and the slit-scan either fitted to the frame or at its
+ * native one-pixel-per-frame length. null when the bare still is the answer.
+ */
+export function composeStill(video, still, params, { keep, fit }) {
+  if (!keep && !fit) return null
+  const vw = video.videoWidth
+  const vh = video.videoHeight
+  const onX = timeOnX(params.flow)
+  const L = flowLayout({ N: onX ? vw : vh, params, keep, fit, stripLen: onX ? still.width : still.height })
+  const rect = (at, len) => (onX ? [at, 0, len, vh] : [0, at, vw, len])
+  const canvas = document.createElement('canvas')
+  canvas.width = onX ? L.total : vw
+  canvas.height = onX ? vh : L.total
+  const ctx = canvas.getContext('2d')
+  const [ks, kd, kl] = L.keep
+  if (kl > 0) ctx.drawImage(video, ...rect(ks, kl), ...rect(kd, kl))
+  if (L.scan[1] > 0) ctx.drawImage(still, 0, 0, still.width, still.height, ...rect(L.scan[0], L.scan[1]))
+  return canvas
 }
